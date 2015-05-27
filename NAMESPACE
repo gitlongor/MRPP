@@ -1,0 +1,44 @@
+importFrom(partitions, setparts)
+#import(gmp)
+#importFrom(pi0,combn2R)
+##importExcept(Matrix, summary, update)
+
+
+
+
+export(
+	mrppBVS,
+	mrppBVS.test,
+	bw.mse.pdf.asym,
+	get.dp.dw.kde,
+	get.p.dd.dw,
+	permuteTrt,
+	nperms.permutedTrt,
+	ntrt.permutedTrt,
+	trt.permutedTrt,
+	mrpp.test, 
+	FR2dec, 
+	dec2FR,
+	dec2permvec,
+	FR2permvec,
+	permvec2dec,
+	permvec2FR, 
+	HSEL.bigz, 
+	rejsample, 
+	sample1, 
+	nparts, 
+	smrpp.test, 
+	smrpp.penWt, 
+	smrppInitSpar
+)
+
+
+S3method(mrpp.test, formula)
+S3method(mrpp.test, dist)
+S3method(mrpp.test, default)
+
+S3method(smrpp.test, default)
+S3method(smrpp.test, formula)
+
+useDynLib(MRPP, .registration=TRUE)
+# mrppstats, radixSort_prealloc, C_FR2permvec are registered
