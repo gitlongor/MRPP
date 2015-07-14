@@ -2,7 +2,7 @@ if (FALSE) {
 HSEL.bigz=function(N, M, seed=0)
 #   Sample M out of N without replacement where N can be a huge integer. 
 #    Ref: Jarmo Ernvall and Olli Nevalainen. 1982. An Algorithm for Unbiased Random Sampling. THE COMPUTER JOURNAL, VOL. 25, NO. 1, 45--47
-#    This implementation store IS, IA, IB as bigz vectors. Rprof() analysis shows that the most majority of time has been spent on [<-.bigz operations, which I guess might have reproduced the whole vector even if the onle one element has been changed. This is very slow. 
+#    This implementation store IS, IA, IB as bigz vectors. Rprof() analysis shows that the most majority of time has been spent on [<-.bigz operations, which I guess might have reproduced the whole vector even if the only one element has been changed. This is very slow. 
 {
 
     M=as.integer(M)
@@ -167,3 +167,38 @@ HSEL.bigz=function(N, M, seed=0)
     }
     as.bigz(IS)
 }
+
+
+imaxz = as.bigz(.Machine$integer.max)
+imax = .Machine$integer.max
+bz0 = as.bigz(0L)
+sample.bigz=function(N, M)
+{
+	if(!is.bigz(N)) N = as.bigz(N)
+	if(!is.integer(M)) M = as.integer(M)
+	quo = as.integer(N %/% imaxz)
+	rem = N %%  imaxz
+	probs = c(rep(as.numeric(imaxz/N), quo), as.numeric(rem/N))
+	block.ssize = drop(rmultinom(1L, M, probs)); rm(probs)
+	ssize.rle = rle(block.ssize[safeseq(1L, quo, 1L)]); last.ssize=tail(block.ssize, 1L); rm(block.ssize)
+	ans = rep('0', M)
+	i=1L
+	prior=bz0
+	
+	for(k in seq_along(ssize.rle$length)) {
+		if(ssize.rle$values[k]==0L){
+			prior = prior + imaxz * ssize.rle$length[k]
+		}else{
+			for(j in seq(ssize.rle$length[k])){
+				ans[i:(i+ssize.rle$values[k]-1L)]=as.character(prior + sample.int(imax, ssize.rle$values[k])) 
+				i = i + ssize.rle$values[k]
+				prior = prior + imaxz
+			}
+		}
+	}
+	if(i<M){
+		ans[i:(i+last.ssize-1L)]=as.character(prior + sample.int(as.integer(rem), last.ssize) ) 
+	}
+	as.bigz(ans)
+}
+
