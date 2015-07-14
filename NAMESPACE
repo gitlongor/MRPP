@@ -1,5 +1,5 @@
 importFrom(partitions, setparts)
-#import(gmp)
+import(gmp)
 #importFrom(pi0,combn2R)
 ##importExcept(Matrix, summary, update)
 

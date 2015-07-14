@@ -130,7 +130,7 @@ mchooseZ=function(N, n)  ## multinomial coef for a vector of n
 }
 
 nparts=function(n)
-  factorialZ(sum(n))/prod(c(factorialZ(n), factorialZ(table(n))))  ## total number of distinct trt assignments 
+  as.bigz(factorialZ(sum(n))/prod(c(factorialZ(n), factorialZ(table(n)))))  ## total number of distinct trt assignments 
 
 permuteTrt <-
 function(trt, B=100L, idxOnly = FALSE) ## permutation matrices for one way design
