@@ -13,7 +13,7 @@ Enumerate or sample permutations of treatment assignments in a one-way design.
 
 \code{permuteTrt} computes (a sample of) permutations given a vector of treatment labels, represented as a \code{permutedTrt} object. 
 
-\code{nparts} computes the total number of non-equivalent permutations of treatment lables. 
+\code{nparts} computes the total number of non-equivalent permutations of treatment labels. 
 
 \code{nperms.permutedTrt} returns the number of permutations generated in a \code{permutedTrt} object. 
 
@@ -30,9 +30,9 @@ trt.permutedTrt(permutedTrt)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{trt}{A vector of treatment labels
+  \item{trt}{A vector or factor of treatment labels
 }
-  \item{B}{A positive integer of the number of permutations requested. 
+  \item{B}{A positive integer of the number of permutations requested. Currently, a \code{bigz} object is not accepted. 
 }
   \item{idxOnly}{A logical scalar, indicating whether only factoradic indices are computed. This has no effect when \code{B} is not smaller than \code{nparts(table(trt))}. See the Value section for details.}
   
@@ -47,7 +47,7 @@ Denote the totality by \code{N}, i.e., \code{length(trt)} or \code{sum(n)}. When
 Otherwise, a sample \code{B} random permutations will be selection from a total of \code{N!} possible permutations (without replacement). 
 }
 \value{
-For \code{permuteTrt}, it returns S3 object of class \code{'permutedTrt'}, which is a named list \code{ANS} of \code{length(unique(trt))} treatment assignment matrices. The names of the list correspond to the levels of \code{trt}. 
+For \code{permuteTrt}, it returns an S3 object of class \code{'permutedTrt'}, which is a named list \code{ANS} of \code{length(unique(trt))} treatment assignment matrices. The names of the list correspond to the levels of \code{trt}. The ordering of the treatment is first determined by the sample size in each treatment and then by lexical order of the treatment labels (both in \emph{decreasing} order). 
 
 When \code{idxOnly} is \code{FALSE}, each matrix has \code{B} columns, where \code{B} may be smaller than requested, such that \code{ANS[[i]][,b]} contains sorted individual indices that are allocated to treatment \code{i} under the \code{b}th random permutation. Note that, here \code{b} should not be interpreted as the factoradic number. That is, the column locations of the matrices have no special meaning. However, an exception is that the first column (i.e., the first permutation) is always equivalent to the original treatment assignment. In other words, it is guaranteed that \code{setequal( split(seq(length(trt)),trt), lapply(ANS, '[', , 1L))} should always be \code{TRUE}. In addition, the \code{'idx'} attribute of the result is set to \code{NA_character_}. 
 
@@ -69,8 +69,8 @@ Long Qu
 }
 \examples{
 set.seed(2340)
-trt=gl(2,10)
-nparts(table(trt))		## 92378 partitions =  choose(20,10)/2
+trt=sample(gl(2,10))[-1] ## two-group comparison with slight imbalance
+nparts(table(trt))		## 92378 partitions =  choose(19,10)
 urand.bigz(0,seed=1032940L) # init seed
 pmat=permuteTrt(trt, 1e3L)		## use 1000 random permutations
 \dontrun{

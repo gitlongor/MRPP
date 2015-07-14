@@ -133,38 +133,44 @@ nparts=function(n)
   as.bigz(factorialZ(sum(n))/prod(c(factorialZ(n), factorialZ(table(n)))))  ## total number of distinct trt assignments 
 
 permuteTrt <-
-function(trt, B=100L, idxOnly = FALSE) ## permutation matrices for one way design
-## returns a length(trt) by B matrix, if B is not larger than multinomial coefficient. 
+function(trt, B=100L, idxOnly = FALSE) ## matrices of permutation vectors for one way design
 {
     n=table(trt)
     cn=cumsum(n)
     ntrts=length(n)
     N=cn[ntrts]
     #mc=mchooseZ(N, n)
-    ordn=order(n, decreasing=TRUE)
+    ordn=order(n, names(n), decreasing=TRUE)
+	trt=ordered(trt, levels=names(n)[ordn])
 
     SP=nparts(n)  
     part0=split(seq_len(N),trt); 
     
     if(B>=SP){ # list all partitions
-        sp=setparts(n)
+        sp=setparts(n) # values are treatment indices
         B=ncol(sp)
 #        for(i in seq(ntrts))  ans[[i]]=matrix( apply(sp==i,2L,function(xx)sort(which(xx)) ), ncol=B)
-        ans=split(row(sp),sp); ## this line and the next replace the previous line
-        for(i in seq(ntrts)) dim(ans[[i]])=c(length(ans[[i]])/B,B)   
+        ## the following 3 lines replace the previous line
+			class(sp)=c('ordered','factor'); levels(sp)=names(n)[ordn]
+			ans=split(rep.int(1:N,B),sp);  ## the previous line and this was originally implemented as ans=split(row(sp),sp) 
+			for(i in seq(ntrts)) dim(ans[[i]])=c(length(ans[[i]])%/%B,B)   ## "/" returns double but %/% returns integer
         names(ans)=names(n)[ordn]
         
-        # swapping the original assignment to the first permutation        
-        flag=TRUE
-        for(b in seq(B))  
-            if(setequal(part0, lapply(ans, '[', , b))){ idx=b; flag=FALSE; break }
-        if(isTRUE(flag)){
-          warning("The first permutaiton may not be the original assignment.")
-        }
+        #### swapping the original assignment to the first permutation        
+        #flag=TRUE
+        #for(b in seq(B)) if(setequal(part0, lapply(ans, '[', , b))){ idx=b; flag=FALSE; break }
+        #if(isTRUE(flag)){
+        #  warning("The first permutaiton may not be the original assignment.")
+        #}
+		#### the above block has be replaced by the following block for better speed
+		part0.vec=do.call('c', part0); ans.vec=do.call('rbind',ans)
+		b = which(.colSums(part0.vec == ans.vec, N, B) == N)
+		stopifnot( length(b) ==1L )
+
         for(i in seq(ntrts)) {tmp=ans[[i]][,b]; ans[[i]][,b]=ans[[i]][,1L]; ans[[i]][,1L]=tmp} 
 
         if(isTRUE(idxOnly)){
-			warning("'idxOnly=TRUE' has not been implemented yet. Full results are returned.")			
+			warning("'idxOnly=TRUE' has not been implemented yet when B is no larger than nparts(table(trt)). Full permutation vectors are returned.")		
         }#else{
             attr(ans, 'idx') = NA_character_
     		class(ans)='permutedTrt'
