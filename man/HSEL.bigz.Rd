@@ -35,8 +35,11 @@ sample.bigz(N, M)
 }
 \note{
 \code{HSEL.bigz}, \code{rejsample} and \code{sample1} are exact algorithms and rely on \code{gmp}'s pseudo-random number generator. But \code{sample.bigz} only uses \code{R}'s default pseudo-random number generator. 
-
+}
+\section{warning}{
 \code{rejsample} can be very slow when M is large. 
+
+\code{sample.bigz} can consume a large amount of memory if N is large. 
 }
 \value{
 For \code{HSEL.bigz}, \code{rejsample}, and \code{sample.bigz}, a \code{bigz} vector of length \code{N}, between 1 and N. 

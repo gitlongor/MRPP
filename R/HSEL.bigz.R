@@ -170,13 +170,16 @@ HSEL.bigz=function(N, M, seed=0)
 
 
 imaxz = as.bigz(.Machine$integer.max)
+imaxz2 = imaxz*imaxz
 imax = .Machine$integer.max
 bz0 = as.bigz(0L)
 sample.bigz=function(N, M)
 {
 	if(!is.bigz(N)) N = as.bigz(N)
 	if(!is.integer(M)) M = as.integer(M)
-	quo = as.integer(N %/% imaxz)
+	quo = N %/% imaxz
+	if(quo > imaxz) return(HSEL.bigz(N, M))
+	quo = as.integer(quo)
 	rem = N %%  imaxz
 	probs = c(rep(as.numeric(imaxz/N), quo), as.numeric(rem/N))
 	block.ssize = drop(rmultinom(1L, M, probs)); rm(probs)
