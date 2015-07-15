@@ -8,7 +8,6 @@ function(trt, B=100L, idxOnly = FALSE) ## matrices of permutation vectors for on
     cn=cumsum(n)
     ntrts=length(n)
     N=cn[ntrts]
-    #mc=mchooseZ(N, n)
     ordn=order(n, names(n), decreasing=TRUE)
 	trt=ordered(trt, levels=names(n)[ordn])
 
@@ -50,27 +49,24 @@ function(trt, B=100L, idxOnly = FALSE) ## matrices of permutation vectors for on
 		if(facN < as.bigz(6e15)){
 				decfr=sample.bigz(facN, B) 	# faster for smaller facN
 		}else   decfr=HSEL.bigz(facN, B)	# 	faster for larger facN
-        idx=which(decfr==0L)
-        if(length(idx)>0L) decfr[idx]=decfr[1L]
-        decfr[1L]=as.bigz(0L)
+		idx1=which(decfr==0L)
 		
-		decfrCC=drop(as.character(decfr))  ## for speed only
 		if(isTRUE(idxOnly)) {	## save memory
 			ans = lapply(part0, as.matrix)
+			decfrCC = as.character(decfr)
+				if(length(idx1)>0L) decfrCC[idx1]=decfrCC[1L]
+				decfrCC[1L]='0'
 			attr(ans, 'idx') = decfrCC
 			class(ans) = 'permutedTrt'
 			return(ans)
 		}
 		
-       ans=lapply(sapply(part0,length), matrix, data=NA_integer_, ncol=B)
-		buff = integer(N); buff[1L]
-       for(b in seq(B)){
-            # perm=dec2permvec(decfr[b],N)  ## This subsetting decfr[b] is the slowest part!
-            perm=dec2permvec(decfrCC[b],N)  ## This change speeds up for about 8~9X.
-            # for(i in seq(ntrts)) ans[[i]][,b]=sort.int(perm[part0[[i]]])
-			 for(i in seq(ntrts)) ans[[i]][,b]=.Call(radixSort_prealloc, perm[part0[[i]]], buff)  ## radix sort with pre-allocated buffer space
-       }
-       names(ans)=names(part0)
+		perms = sapply(decfr, dec2permvec, N=N)
+			if(length(idx1)>0L) perms[,idx1]=perms[,1L]
+			perms[,1L] = seq(N)
+		ans = split.data.frame(perms, trt)
+	   for(i in seq(ntrts)) ans[[i]] = .Call(radixSort1PassByCol, ans[[i]], N)
+	   
 		attr(ans, 'idx') = NA_character_
 		class(ans)='permutedTrt'
     }
