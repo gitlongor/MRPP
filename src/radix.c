@@ -63,7 +63,7 @@ static inline void radixsort1pass(int *a, int n, int max1p, int *out, int* buff)
 }
 
 SEXP radixSort1PassByCol(SEXP x, SEXP maxx)
-/* Single-pass radix sort using pre-allocated buffer space for each col of x.
+/* Single-pass radix sort using a common buffer space for each col of x.
  * For speed, this does not check any assertions.
  * This is only used when inputs are relatively small integers in the range of 1..maxx
  */ 
