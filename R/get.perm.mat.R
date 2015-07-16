@@ -8,8 +8,10 @@ function(trt, B=100L, idxOnly = FALSE) ## matrices of permutation vectors for on
     cn=cumsum(n)
     ntrts=length(n)
     N=cn[ntrts]
-    ordn=order(n, names(n), decreasing=TRUE)
+    ordn=order(-n, names(n), decreasing=FALSE)
 	trt=ordered(trt, levels=names(n)[ordn])
+	trtc=as.character(trt)
+	n=n[ordn]
 
     SP=nparts(n)  
     part0=split(seq_len(N),trt); 
@@ -17,13 +19,28 @@ function(trt, B=100L, idxOnly = FALSE) ## matrices of permutation vectors for on
     if(B>=SP){ # list all partitions
         sp=setparts(n) # values are treatment indices
         B=ncol(sp)
+			## matching sp group labels with desired label orders
+            b=seq(B)
+            for(i in seq_along(n)){
+                if(n[i]<=1L)break;
+                j0=part0[[i]][1]
+                for(j in part0[[i]][-1L])
+                    b=b[which(sp[j0,b]==sp[j,b])]
+            }
+            stopifnot(length(b)==1L)
+            tmp=sp[,b]; sp[,b]=sp[,1L]; sp[,1L]=tmp
+            
 #        for(i in seq(ntrts))  ans[[i]]=matrix( apply(sp==i,2L,function(xx)sort(which(xx)) ), ncol=B)
         ## the following 3 lines replace the previous line
-			class(sp)=c('ordered','factor'); levels(sp)=names(n)[ordn]
+            levs=levels(trt)
+            levs[sp[sapply(part0,'[[',1L),1]]=levs
+            class(sp)='factor'; attr(sp,'levels')=levs
 			ans=split(rep.int(1:N,B),sp);  ## the previous line and this was originally implemented as ans=split(row(sp),sp) 
 			for(i in seq(ntrts)) dim(ans[[i]])=c(length(ans[[i]])%/%B,B)   ## "/" returns double but %/% returns integer
-        names(ans)=names(n)[ordn]
-        
+			ans = ans[levels(trt)]
+			stopifnot(identical(part0, lapply(ans,'[',,1L)))
+			
+		if(FALSE){
         #### swapping the original assignment to the first permutation        
         #flag=TRUE
         #for(b in seq(B)) if(setequal(part0, lapply(ans, '[', , b))){ idx=b; flag=FALSE; break }
@@ -34,8 +51,8 @@ function(trt, B=100L, idxOnly = FALSE) ## matrices of permutation vectors for on
 		part0.vec=do.call('c', part0); ans.vec=do.call('rbind',ans)
 		b = which(.colSums(part0.vec == ans.vec, N, B) == N)
 		stopifnot( length(b) ==1L )
-
-        for(i in seq(ntrts)) {tmp=ans[[i]][,b]; ans[[i]][,b]=ans[[i]][,1L]; ans[[i]][,1L]=tmp} 
+		for(i in seq(ntrts)) {tmp=ans[[i]][,b]; ans[[i]][,b]=ans[[i]][,1L]; ans[[i]][,1L]=tmp} 
+		}
 
         if(isTRUE(idxOnly)){
 			warning("'idxOnly=TRUE' has not been implemented yet when B is no larger than nparts(table(trt)). Full permutation vectors are returned.")		

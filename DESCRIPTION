@@ -8,7 +8,7 @@ Maintainer: Long Qu <long.qu@wright.edu>
 Description: Multiresponse permutation procedure, permutation-based variable importance, backward response variable selection, penalized response variable selection.
 Depends: R (>= 2.14.0), gmp
 Imports: partitions
-Suggests: ks
+Suggests: ks, microbenchmark
 NeedsCompilation: yes
 License: GPL (>=2)
 LazyLoad: yes
