@@ -5,12 +5,15 @@
 
 extern SEXP radixSort_prealloc(SEXP, SEXP); 
 extern SEXP radixSort1PassByCol(SEXP, SEXP); 
+extern SEXP radixSort_preallocMax(SEXP, SEXP, SEXP); 
 extern SEXP mrppstats(SEXP , SEXP , SEXP ); 
 extern SEXP FR2permvec(const SEXP , const SEXP);
+
 
 R_CallMethodDef callMethods[]  = {
        {"radixSort1PassByCol", (DL_FUNC) &radixSort1PassByCol, 2},
        {"radixSort_prealloc", (DL_FUNC) &radixSort_prealloc, 2},
+       {"radixSort_preallocMax", (DL_FUNC) &radixSort_preallocMax, 3},
        {"mrppstats", (DL_FUNC) &mrppstats, 3},
        {"C_FR2permvec", (DL_FUNC) &FR2permvec, 2},
        {NULL, NULL, 0}
