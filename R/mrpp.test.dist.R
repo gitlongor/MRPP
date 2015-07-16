@@ -3,8 +3,8 @@ function(y, trt, B=as.integer(min(nparts(table(trt)), 1e4L)), permutedTrt, wtmet
 ## y is a dist object; wtmethod: 0=sample size-1; 1=sample size
 {
     if(missing(y) || !inherits(y,'dist')) stop('dist object missing or incorrect')
-    N= as.integer( ( 1 + sqrt(1.0 + 8.0 * length(y))) * .5   +.5);          ### i.e.,   attr(y,'Size'), howerver, attributes might be lost during subsetting. 
-    if(missing(trt)) {  ## recoving trt from the first permutation
+    N= as.integer( ( 1 + sqrt(1.0 + 8.0 * length(y))) * .5   +.5);          ### i.e.,   attr(y,'Size'), however, attributes might be lost during subsetting. 
+    if(missing(trt)) {  ## recovering trt from the first permutation
       trt=trt.permutedTrt(permutedTrt)
     }
     if(missing(permutedTrt)) {
@@ -14,16 +14,17 @@ function(y, trt, B=as.integer(min(nparts(table(trt)), 1e4L)), permutedTrt, wtmet
     }else dname=paste('"dist" object',deparse(substitute(y)), 
                              'and permuted treatment', deparse(substitute(permutedTrt)))
     B=nperms.permutedTrt(permutedTrt)
-    #if(missing(cperm.mat)) cperm.mat=apply(permutedTrt, 2, function(kk)(1:N)[-kk])
+
     tabtrt=table(trt)
     ntrt=length(tabtrt)
     stats=.Call(mrppstats,y,permutedTrt, as.numeric(wtmethod[1L]), PACKAGE='MRPP')
-#    stats0=.Call(mrppstats, y, 
-#        lapply(names(tabtrt), function(z)matrix(which(as.character(trt)==z))), 
-#        as.numeric(wtmethod[1L]),         PACKAGE='MRPP')
-    ans=list(statistic=c("MRPP statistic"=stats[1]), all.statistics=stats, 
-             p.value=mean(stats[1]-stats>=-eps), parameter=c("number of permutations"=B, 'weight method'=wtmethod[1L]),
-             data.name=dname, #  .Random.seed=attr(permutedTrt,'.Random.seed'),  ## this is commented out since the random number seed in gmp:::urand.bigz will be used. 
+
+    ans=list(statistic=c("MRPP statistic"=stats[1L]), 
+			 all.statistics=stats, 
+             p.value=mean(stats[1L]-stats>=-eps), 
+			 parameter=c("number of permutations"=B, 'weight method'=wtmethod[1L]),
+             data.name=dname, 
+			 #  .Random.seed=attr(permutedTrt,'.Random.seed'),  ## this is commented out since the random number seed in gmp:::urand.bigz will be used. 
              method=sprintf('%d-sample MRPP test',ntrt)
              )
     class(ans)='htest'

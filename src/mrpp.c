@@ -2,6 +2,8 @@
 #include <Rinternals.h>
 #include <Rdefines.h>
 
+#include "adaRad.h"
+
 #undef DEBUG
 
 #ifdef DEBUG
@@ -16,7 +18,7 @@
 	}
 #endif
 
-extern void radixsort(int *, int , int *);
+extern void radixsort(int *, int , int *, int);
 /*
 //void unisqeuc(double *x, int *nr,  double *dist)
 *********** CALL FROM R ***************
@@ -274,7 +276,7 @@ static R_INLINE SEXP mrppstats_string(double * ptrY, SEXP permString, SEXP perm0
 #ifdef DEBUG
 			printIntVec(permBuf0, ns[t], "Pre-sort  :"); 
 #endif	
-			radixsort(permBuf0, ns[t] , sortBuf);
+			radixsort(permBuf0, ns[t] , sortBuf, adaRad(ns[t]));
 #ifdef DEBUG
 			printIntVec(permBuf0, ns[t], "PermMatCol:"); 
 #endif			

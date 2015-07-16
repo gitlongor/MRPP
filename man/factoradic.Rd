@@ -9,7 +9,7 @@
 \title{Factoradic numbers
 }
 \description{
-Utility functions for factoradic numbers 
+Utility functions to convert factoradic numbers among the vector , decimal  and permutation index representation  
 }
 \usage{
 FR2dec(FR)
@@ -22,24 +22,30 @@ permvec2dec(permvec)
 \arguments{
   \item{FR}{Vector representation of factoradic number. 
 }
-  \item{dec}{Decimal representation of factoradic number.
+  \item{dec}{A \code{\link{bigz}} or \code{character} decimal representation of factoradic number. 
 }
-  \item{N}{An integer}
+  \item{N}{An integer indicating the length of vector or permutation vector representation.}
+  
   \item{base}{ 0 or 1, indicating the start index for a vector.}
-  \item{permvec}{An integer vector of permutations of integers of size N.}
+  
+  \item{permvec}{An integer vector of permutations of integers of size \code{N}.}
 }
 \details{
-\code{FR2dec} and \code{dec2FR} convert factoradic numbers from/to decimal to/from vector representations. 
-\code{FR2permvec} and \code{permvec2FR} converst factoradic numbers in vector representations from/to permutatin indices. 
-\code{dec2permvec} and \code{permvec2dec} are convenient wrappers that converst factoradic numbers in vector representations from/to permutatin indices. 
+\code{FR2dec} / \code{dec2FR} converts factoradic numbers to/from decimal from/to vector representations. 
+
+\code{FR2permvec} / \code{permvec2FR} converts factoradic numbers from/to vector representations to/from permutation indices. 
+
+\code{dec2permvec} / \code{permvec2dec} are convenient wrappers that convert factoradic numbers from/to decimal representations to/from permutation indices. 
 }
 \value{
-For \code{FR2dec} and \code{permvec2dec}, an integer; 
-for \code{dec2FR} and \code{permvec2FR}, a numeric vector;
-for \code{FR2permvec} and \code{dec2permvec}, an integer vector.
+For \code{FR2dec} and \code{permvec2dec}, a \code{bigz} integer; 
+
+for \code{dec2FR} and \code{permvec2FR}, an integer vector;
+
+for \code{FR2permvec} and \code{dec2permvec}, an integer vector of permutations.
 }
 \references{
-Chapter 10 of .NET Test Automation Recipes
+James McCaffrey (2012) .NET Test Automation Recipes: A Problem-Solution Approach. Apress [Chapter 10]
 
 http://en.wikipedia.org/wiki/Factoradic
 

@@ -1,4 +1,4 @@
-\name{mrpp.test.dist}
+\name{mrpp.test}
 \Rdversion{1.1}
 \alias{mrpp.test.dist}
 \alias{mrpp.test.default}
