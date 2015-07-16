@@ -19,41 +19,29 @@ function(trt, B=100L, idxOnly = FALSE) ## matrices of permutation vectors for on
     if(B>=SP){ # list all partitions
         sp=setparts(n) # values are treatment indices
         B=ncol(sp)
-			## matching sp group labels with desired label orders
-            b=seq(B)
-            for(i in seq_along(n)){
-                if(n[i]<=1L)break;
-                j0=part0[[i]][1]
-                for(j in part0[[i]][-1L])
-                    b=b[which(sp[j0,b]==sp[j,b])]
-            }
-            stopifnot(length(b)==1L)
-            tmp=sp[,b]; sp[,b]=sp[,1L]; sp[,1L]=tmp
-            
-#        for(i in seq(ntrts))  ans[[i]]=matrix( apply(sp==i,2L,function(xx)sort(which(xx)) ), ncol=B)
-        ## the following 3 lines replace the previous line
-            levs=levels(trt)
-            levs[sp[sapply(part0,'[[',1L),1]]=levs
-            class(sp)='factor'; attr(sp,'levels')=levs
-			ans=split(rep.int(1:N,B),sp);  ## the previous line and this was originally implemented as ans=split(row(sp),sp) 
-			for(i in seq(ntrts)) dim(ans[[i]])=c(length(ans[[i]])%/%B,B)   ## "/" returns double but %/% returns integer
-			ans = ans[levels(trt)]
-			stopifnot(identical(part0, lapply(ans,'[',,1L)))
-			
-		if(FALSE){
-        #### swapping the original assignment to the first permutation        
-        #flag=TRUE
-        #for(b in seq(B)) if(setequal(part0, lapply(ans, '[', , b))){ idx=b; flag=FALSE; break }
-        #if(isTRUE(flag)){
-        #  warning("The first permutaiton may not be the original assignment.")
-        #}
-		#### the above block has be replaced by the following block for better speed
-		part0.vec=do.call('c', part0); ans.vec=do.call('rbind',ans)
-		b = which(.colSums(part0.vec == ans.vec, N, B) == N)
-		stopifnot( length(b) ==1L )
-		for(i in seq(ntrts)) {tmp=ans[[i]][,b]; ans[[i]][,b]=ans[[i]][,1L]; ans[[i]][,1L]=tmp} 
+		## locating/swapping the original treatment assignment
+		b=seq(B)
+		for(i in seq_along(n)){ ## pretty fast as the size of b is keeping shrinking
+			if(n[i]<=1L)break;
+			j0=part0[[i]][1]
+			for(j in part0[[i]][-1L])
+				b=b[which(sp[j0,b]==sp[j,b])]
 		}
-
+		stopifnot(length(b)==1L)
+		tmp=sp[,b]; sp[,b]=sp[,1L]; sp[,1L]=tmp
+		
+		## matching sp treatment indices with treatment labels
+		levs=levels(trt)
+		levs[sp[sapply(part0,'[[',1L),1L]]=levs
+		class(sp)='factor'; attr(sp,'levels')=levs
+		ans=split(rep.int(1:N,B),sp);  
+		## the previous block was originally implemented as ans=split(row(sp),sp) 
+		for(i in seq(ntrts)) dim(ans[[i]])=c(length(ans[[i]])%/%B,B)   ## "/" returns double but %/% returns integer
+		## the previous block was initially implemented as for(i in seq(ntrts))  ans[[i]]=matrix( apply(sp==i,2L,function(xx)sort(which(xx)) ), ncol=B)
+		
+		ans = ans[levels(trt)]
+		stopifnot(identical(part0, lapply(ans,'[',,1L)))
+			
         if(isTRUE(idxOnly)){
 			warning("'idxOnly=TRUE' has not been implemented yet when B is no larger than nparts(table(trt)). Full permutation vectors are returned.")		
         }#else{
@@ -103,10 +91,10 @@ ntrt.permutedTrt=function(permutedTrt)
 }
 
 trt.permutedTrt=function(permutedTrt)
-{ ## previous implementation was bugged; this is the corrected version. 
+{
 	ans=rep(NA_integer_, sum(sapply(permutedTrt,NROW)))#, levels=seq_along(permutedTrt))
 	for(i in seq_along(permutedTrt)) ans[permutedTrt[[i]][,1L]] = i
 	class(ans)='factor'
-	levels(ans)=names(permutedTrt)
+	attr(ans, 'levels')=names(permutedTrt)
 	ans
 }
