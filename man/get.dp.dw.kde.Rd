@@ -78,7 +78,7 @@ urand.bigz(0,seed=1032940L) # init seed
 pmat=permuteTrt(trt, 5e2L)		## use 500 random permutations
 ir1=get.dp.dw.kde(x, pmat)
 ir2=get.p.dd.dw(x, pmat)
-cor(ir1, ir2, method='s')
+cor(ir1, ir2, method="s")
 
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the

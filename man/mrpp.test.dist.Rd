@@ -4,7 +4,7 @@
 \alias{mrpp.test.default}
 \alias{mrpp.test.formula}
 \alias{mrpp.test}
-%- Also NEED an '\alias' for EACH other topic documented here.
+%- Also NEED an "\alias" for EACH other topic documented here.
 \title{
 MRPP test for one-way design
 }
@@ -18,7 +18,7 @@ mrpp.test(y, \dots)
 \method{mrpp.test}{formula}(y, data, \dots)
 \method{mrpp.test}{default}(y, \dots)
 }
-%- maybe also 'usage' for other objects documented here.
+%- maybe also "usage" for other objects documented here.
 \arguments{
   \item{y}{A N*P data matrix, \code{\link{dist}} object of the data matrix, or a \code{\link{formula}}. 
 }
@@ -77,11 +77,11 @@ mrpp.test(x, trt, permutedTrt=pmat, wtmethod=0 )
 
 ### Formula interface
 dat=data.frame(x, trt)
-fmla=as.formula(sprintf('cbind(\%s)~trt',paste('X',1:5,sep='',collapse=',')))
+fmla=as.formula(sprintf("cbind(\%s)~trt",paste("X",1:5,sep="",collapse=",")))
 mrpp.test(fmla, dat, permutedTrt=pmat, wtmethod=0 )
 
 }
-% Add one or more standard keywords, see file 'KEYWORDS' in the
+% Add one or more standard keywords, see file "KEYWORDS" in the
 % R documentation directory.
 \keyword{htest}
 \keyword{multivariate}

@@ -1,4 +1,5 @@
 \name{transform}
+\alias{transform}
 \alias{transform.matrix}
 \alias{transform.numeric}
 \alias{binom.symm}
@@ -15,15 +16,15 @@
 \alias{norm.vst}
 \alias{norm.symm}
 \alias{norm.quadLL}
-%- Also NEED an '\alias' for EACH other topic documented here.
+%- Also NEED an "\alias" for EACH other topic documented here.
 \title{
-Common Transformation Functions for Common Exponential Family Distributions
+Transformation of Matrices or Numeric Vectors
 }
 \description{
-The \code{transform} method for \code{matrix} and \code{numeric} vectors is a wrapper that perform common tranformations for common exponential family distributions. 
+The \code{transform} method for \code{matrix} and \code{numeric} vectors is a wrapper that perform common transformations for common exponential family distributions. 
 }
 \usage{
-\method{transform}{matrix}(`_data`, method = 'I', \dots)
+\method{transform}{matrix}(`_data`, method = "I", \dots)
 \method{transform}{numeric}(`_data`, \dots)
 
 binom.symm(y, ...)
@@ -42,7 +43,7 @@ norm.quadLL(x)
 fisher.z(x)
 
 }
-%- maybe also 'usage' for other objects documented here.
+%- maybe also "usage" for other objects documented here.
 \arguments{
   \item{_data, x, y}{
 	A numeric vector or matrix of data to be transformed. 
@@ -66,14 +67,14 @@ fisher.z(x)
 
 \details{
 \code{method} argument can be any (full) function name. 
-If \code{method} is any one of \\
-\code{c("nbinom.vst", "nbinom.quadLL", "nbinom.symm", \\
-"pois.vst", "pois.quadLL", "pois.symm", \\
-"binom.vst", "binom.quadLL", "binom.symm", \\
-"norm.vst", "norm.quadLL", "norm.symm", \\
-"chisq.vst", "chisq.quadLL", "chisq.symm", \\
-"fisher.z")}, \\
-partial string matching is allowed, if no other function in the search path has a name that matches \code{method} perfectly. Most of the above function names have the form of ``distribution.transform'' where the ``distribution'' part is typically the abbreviated distribution name as those used in the suffices in functions like \code{\link{rnorm}}. The ``transform'' part is one of \code{'vst', 'quadLL'} and \code{'symm'}, indicating the asymptotic variance stabilizing transformation, asymptotic quadratic log-likelihood transformation, and asymptotic zero skewness transformation. 
+If \code{method} is any one of 
+\preformatted{c("nbinom.vst", "nbinom.quadLL", "nbinom.symm", 
+"pois.vst", "pois.quadLL", "pois.symm", 
+"binom.vst", "binom.quadLL", "binom.symm", 
+"norm.vst", "norm.quadLL", "norm.symm", 
+"chisq.vst", "chisq.quadLL", "chisq.symm", 
+"fisher.z"),} 
+partial string matching is allowed, if no other function in the search path has a name that matches \code{method} perfectly. Most of the above function names have the form of \dQuote{distribution.transform} where the \dQuote{distribution} part is typically the abbreviated distribution name as those used in the suffices in functions like \code{\link{rnorm}}. The \dQuote{transform} part is one of \code{"vst", "quadLL"} and \code{"symm"}, indicating the asymptotic variance stabilizing transformation, asymptotic quadratic log-likelihood transformation, and asymptotic zero skewness transformation. 
 
 Only \code{transform.matrix} and \code{transform.numeric} are exported. 
 
@@ -84,7 +85,7 @@ A numeric vector or a numeric matrix of transformed data.
 }
 \references{
 F. J. Anscombe (1948) The transformation of Poisson, Binomial and Negative-binomial Data. \emph{Biometrika}. \bold{35}, 246-254.
-Philip Hougaard (1982) Parametrization of Non-linear Models. J R Statist Soc B. 44(2), 244-252.
+Philip Hougaard (1982) Parametrization of Non-linear Models. \emph{J R Statist Soc B}. \bold{44}(2), 244-252.
 }
 \author{
 Long Qu
@@ -96,10 +97,10 @@ Long Qu
 \examples{
 y=rnbinom(1e3, size=10, prob=.5)  ## simulate example data
 identical(y, transform(y))
-y.log1p=transform(y, method='log1p')      ## base::log1p
-y.vst=transform(y, method='nbinom.vst', tau=0.2)  ## towards variance stabilizatopm
-y.quadll=transform(y, method='nbinom.quadLL', tau=0.2)  ## towards quadratic log-likelihood
-y.symm=transform(y, method='nbinom.symm', tau=0.2)  ## towards symmetry
+y.log1p=transform(y, method="log1p")      ## base::log1p
+y.vst=transform(y, method="nbinom.vst", tau=0.1)  ## towards variance stabilization
+y.quadll=transform(y, method="nbinom.quadLL", tau=0.1)  ## towards quadratic log-likelihood
+y.symm=transform(y, method="nbinom.symm", tau=0.1)  ## towards symmetry
 
 if(interactive()){ ## visually assessing normality thru QQ plot
 	qqnorm(y ); 	qqline(y)

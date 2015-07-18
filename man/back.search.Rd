@@ -2,7 +2,7 @@
 \Rdversion{1.1}
 \alias{mrppBVS}
 \alias{mrppBVS.test}
-%- Also NEED an '\alias' for EACH other topic documented here.
+%- Also NEED an "\alias" for EACH other topic documented here.
 \title{
 Backward variable selection for the MRPP
 }
@@ -11,15 +11,15 @@ Backward variable selection for the MRPP
 }
 \usage{
 mrppBVS(y,permutedTrt, 
-         importance=c('dp.dw','p.dd.dw'),
-         alpha.in, #=if(match.arg(importance)=='dp.dw') 0 else 0.1, 
+         importance=c("dp.dw","p.dd.dw"),
+         alpha.in, #=if(match.arg(importance)=="dp.dw") 0 else 0.1, 
          alpha.del=0, size.in=0L, stepwise=FALSE, niter=Inf, verbose=TRUE, ...)
 mrppBVS.test(y,permutedTrt, Bperm=nperms.permutedTrt(permutedTrt), 
-         importance=c('dp.dw','p.dd.dw'),
+         importance=c("dp.dw","p.dd.dw"),
          alpha.in, alpha.del=0, 
 	 size.in=1L, stepwise=FALSE, verbose=TRUE, niter=Inf, ...)
 }
-%- maybe also 'usage' for other objects documented here.
+%- maybe also "usage" for other objects documented here.
 \arguments{
   \item{y}{
 	Numeric data matrix, with columns being variables and rows being observations.
@@ -28,10 +28,10 @@ mrppBVS.test(y,permutedTrt, Bperm=nperms.permutedTrt(permutedTrt),
 	list of matrices specifying random treatment assignments, computed from \code{\link{permuteTrt}}. 
 }
   \item{importance}{
-	Either \code{'dp.dw'} or \code{'p.dd.dw'}. The importance measure. \code{'dp.dw'} means the derivative of approximate p-value with respect to weights. \code{'p.dd.dw'} means the permutation p-value using the derivative of Euclidean distance with respect to weights as the new distance measure. 
+	Either \code{"dp.dw"} or \code{"p.dd.dw"}. The importance measure. \code{"dp.dw"} means the derivative of approximate p-value with respect to weights. \code{"p.dd.dw"} means the permutation p-value using the derivative of Euclidean distance with respect to weights as the new distance measure. 
 }
   \item{alpha.in}{
-	Desired minimally allowable level of importance for selected variables. By default, this is set to 0 if \code{importance='dp.dw'}; and 0.1 if \code{importance='p.dd.dw'}.
+	Desired minimally allowable level of importance for selected variables. By default, this is set to 0 if \code{importance="dp.dw"}; and 0.1 if \code{importance="p.dd.dw"}.
 }
   \item{alpha.del}{
 	Desired minimally allowable MRPP p-value for excluded variables. If this is set to zero, then even if the MRPP p-value for the deleted variables becomes small, the iterations continue until any other exit criteria is met.
@@ -70,7 +70,7 @@ For \code{mrppBVS}, the result is a list with each component being list of :
   \item{influence }{The variable importance measures (multiplied by the number of permutations, if \code{importance} is \code{dp.dw}) for the remaining variables;}
   \item{p.value }{The raw MRPP p-value for the remaining variables;}
   \item{deleted.p.value }{The raw MRPP p-value for the excluded variables.}
-In addition, the result also has the attribute \code{'parameter'}, which is a list of \code{importance, alpha.in, alpha.del, size.in, stepwise, niter} of input parameters, and the attribute \code{'status'}, which is a character vector giving the exit status(es).
+In addition, the result also has the attribute \code{"parameter"}, which is a list of \code{importance, alpha.in, alpha.del, size.in, stepwise, niter} of input parameters, and the attribute \code{"status"}, which is a character vector giving the exit status(es).
 
 
 \code{mrppBVS.test} returns an \code{htest} object with the last element of the result from \code{mrppBVS}, and 
@@ -112,7 +112,7 @@ mrppBVS.test(x, pmat) ## nested permutation test with backward variable selectio
 }
 
 }
-% Add one or more standard keywords, see file 'KEYWORDS' in the
+% Add one or more standard keywords, see file "KEYWORDS" in the
 % R documentation directory.
 \keyword{ models }
 \keyword{htest}
