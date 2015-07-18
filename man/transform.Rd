@@ -83,7 +83,8 @@ FIXME: Give details of each transformation here...
 A numeric vector or a numeric matrix of transformed data. 
 }
 \references{
-Philip Hougaard (1982) Parametrization of Non-linear Models. J R Statist Soc B. 44(2):244-252.
+F. J. Anscombe (1948) The transformation of Poisson, Binomial and Negative-binomial Data. \emph{Biometrika}. \bold{35}, 246-254.
+Philip Hougaard (1982) Parametrization of Non-linear Models. J R Statist Soc B. 44(2), 244-252.
 }
 \author{
 Long Qu
