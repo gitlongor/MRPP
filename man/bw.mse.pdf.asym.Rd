@@ -1,7 +1,7 @@
 \name{bw.mse.pdf.asym}
 \Rdversion{1.1}
 \alias{bw.mse.pdf.asym}
-%- Also NEED an '\alias' for EACH other topic documented here.
+%- Also NEED an "\alias" for EACH other topic documented here.
 \title{
 Find asymptotically optimal bandwidth for KDE by minimizing MSE at the first data point
 }
@@ -11,7 +11,7 @@ Find asymptotically optimal bandwidth for Gaussian kernel density estimation by 
 \usage{
 bw.mse.pdf.asym(x,iter.max=1L,eps=1e-6,start.bw=bw.nrd, verbose=FALSE)
 }
-%- maybe also 'usage' for other objects documented here.
+%- maybe also "usage" for other objects documented here.
 \arguments{
   \item{x}{A numeric vector whose density is to be estimated. 
 }
@@ -54,10 +54,10 @@ bw.mse.pdf.asym(x)
 \dontrun{
 plot(density(x, bw.mse.pdf.asym(x)), ylim=c(0,dnorm(0)))
 abline(v=x[1L])
-curve(dnorm, lty=3, col='grey', add=TRUE)
+curve(dnorm, lty=3, col="grey", add=TRUE)
 }
 }
-% Add one or more standard keywords, see file 'KEYWORDS' in the
+% Add one or more standard keywords, see file "KEYWORDS" in the
 % R documentation directory.
 \keyword{distribution}
 \keyword{smooth}

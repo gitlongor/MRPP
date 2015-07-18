@@ -3,7 +3,7 @@
 \alias{smrpp.test}
 \alias{smrpp.test.default}
 \alias{smrpp.test.formula}
-%- Also NEED an '\alias' for EACH other topic documented here.
+%- Also NEED an "\alias" for EACH other topic documented here.
 \title{
 Sparse Weighted MRPP Test for One-way Design
 }
@@ -13,10 +13,10 @@ K-sample sparse MRPP test with penalization. Variable selection is through penal
 \usage{
 smrpp.test(y, \dots)
 \method{smrpp.test}{default}(y, trt, B=nparts(table(trt)), permutedTrt, wtmethod=0, 
-	outerStat=c('WDISCO 1/F','WMRPP P'), eps=1e-8, spar, verbose=TRUE, \dots)
+	outerStat=c("WDISCO 1/F","WMRPP P"), eps=1e-8, spar, verbose=TRUE, \dots)
 \method{smrpp.test}{formula}(y, data, \dots)
 }
-%- maybe also 'usage' for other objects documented here.
+%- maybe also "usage" for other objects documented here.
 \arguments{
   \item{y}{An N*R data matrix, with rows representing samples and columns representing variables.
 }
@@ -28,7 +28,7 @@ smrpp.test(y, \dots)
 }
   \item{wtmethod}{0 or 1, where 0 stands for weighting each treatment group by sample size - 1, and 1 stands for weighting by sample size. 
 }
-  \item{outerStat}{A character value specifying which test statistic to use for the outer permutation. 'WDISCO 1/F' uses the weighted DISCO inverse F-statistic. 'WMRPP P' uses weighted MRPP raw p-value. 
+  \item{outerStat}{A character value specifying which test statistic to use for the outer permutation. "WDISCO 1/F" uses the weighted DISCO inverse F-statistic. "WMRPP P" uses weighted MRPP raw p-value. 
 }
   \item{eps}{A small non-negative number, differences below which among permuted test statistics are treated as equal.
 }
@@ -76,16 +76,16 @@ nparts( table(trt))		## 92378 partitions =  choose(20,10)/2
 urand.bigz(0,seed=1032940L) # init seed
 pmat=permuteTrt(trt, 5e2L)		## use 500 random permutations
 dat=data.frame(x, trt)
-fmla=as.formula(sprintf('cbind(\%s)~trt',paste('X',1:5,sep='',collapse=',')))
+fmla=as.formula(sprintf("cbind(\%s)~trt",paste("X",1:5,sep="",collapse=",")))
 
-#\dontrun{
+\dontrun{
 smrpp.test(x, trt, permutedTrt=pmat, wtmethod=0 ) 
 smrpp.test(fmla, dat, permutedTrt=pmat, wtmethod=0 )
-#}
+}
 
 }
 
-% Add one or more standard keywords, see file 'KEYWORDS' in the
+% Add one or more standard keywords, see file "KEYWORDS" in the
 % R documentation directory.
 \keyword{htest}
 \keyword{multivariate}
