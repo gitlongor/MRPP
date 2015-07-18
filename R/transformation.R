@@ -1,17 +1,29 @@
-transform <- function(y,
-	method=c('nbinom.vst',	'nbinom.quadLL',	'nbinom.symm',
-			 'pois.vst',  	'pois.quadLL',  	'pois.symm', 
-			 'binom.vst', 	'binom.quadLL',  	'binom.symm', 
-			 'chisq.vst',	'chisq.quadLL',		'chisq.symm',
-			 'fisher.z',), 
-	...)
+known.transform.methods=c(
+	'nbinom.vst',	'nbinom.quadLL',	'nbinom.symm',
+	 'pois.vst',  	'pois.quadLL',  	'pois.symm', 
+	 'binom.vst', 	'binom.quadLL',  	'binom.symm', 
+	 'norm.vst', 	'norm.quadLL',  	'norm.symm', 
+	 'chisq.vst',	'chisq.quadLL',		'chisq.symm',
+	 'fisher.z'
+)
+			 
+transform.matrix <- function(`_data`,	method='I', ...)
 {
-	stopifnot(is.numeric(y))
-	att=attributes(y)
-	if(!exists(method[1L], mode='function')) method=match.arg(method)
-	ans=do.call(method[1L], list(y, ...))
+	stopifnot(is.numeric(`_data`))
+	att=attributes(`_data`)
+	if(!exists(method[1L], mode='function')) method=match.arg(method, known.transform.methods)
+	if(length(formals(args(get(method[1L],mode='function'))))==1L){
+			ans=do.call(method[1L], list(`_data`))
+	}else 	ans=do.call(method[1L], list(`_data`,...))
 	attributes(ans)=att
 	ans
+}
+
+transform.numeric <- function(`_data`, ...)
+{
+	dim(`_data`)=c(NROW(`_data`), 1L)
+	.Class=c(.Class, 'matrix')
+	drop(NextMethod(.Generic))
 }
 
 constEnv=new.env()
@@ -60,13 +72,19 @@ nbinom.symm = local({  # just to shut up CRAN checker
 })
 environment(nbinom.symm) = constEnv
 
-pois.vst = sqrt
+pois.vst = function(y) 2*base::sqrt(y)
 pois.quadLL = local({oneThird = 1/3; function(y) y^oneThird})
 pois.symm = local({twoThirds = 2/3; function(y) y^twoThirds})
 environment(pois.quadLL)=environment(pois.symm) = constEnv
 
+norm.vst = 
+norm.quadLL = 
+norm.symm = base::I
+
+
 binom.vst = function(y) asin(sqrt(y))
-chisq.symm = local{oneThird = 1/3; function(y) y^oneThird})
+
+chisq.symm = local({oneThird = 1/3; function(y) y^oneThird})
 
 binom.quadLL = 
 binom.symm = 

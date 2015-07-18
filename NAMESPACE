@@ -31,8 +31,9 @@ export(
 	nparts, 
 	smrpp.test, 
 	smrpp.penWt, 
-	smrppInitSpar， 
-	transform
+	smrppInitSpar, 
+	transform.matrix, 
+	transform.numeric
 )
 
 
@@ -42,6 +43,9 @@ S3method(mrpp.test, default)
 
 S3method(smrpp.test, default)
 S3method(smrpp.test, formula)
+
+S3method(transform, matrix)
+S3method(transform, numeric)
 
 useDynLib(MRPP, .registration=TRUE)
 # mrppstats, radixSort_prealloc, C_FR2permvec are registered
