@@ -31,7 +31,8 @@ export(
 	nparts, 
 	smrpp.test, 
 	smrpp.penWt, 
-	smrppInitSpar
+	smrppInitSpar， 
+	transform
 )
 
 
