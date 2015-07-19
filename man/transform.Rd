@@ -84,8 +84,10 @@ FIXME: Give details of each transformation here...
 A numeric vector or a numeric matrix of transformed data. 
 }
 \references{
-F. J. Anscombe (1948) The transformation of Poisson, Binomial and Negative-binomial Data. \emph{Biometrika}. \bold{35}, 246-254.
-Philip Hougaard (1982) Parametrization of Non-linear Models. \emph{J R Statist Soc B}. \bold{44}(2), 244-252.
+Francis J. Anscombe (1948) The transformation of Poisson, Binomial and Negative-binomial Data. \emph{Biometrika}. \bold{35}, 246--254.
+Francis J. Anscombe (1964) Normal Likelihood Functions. \emph{Ann Inst Stat Math}. \bold{16}, 1--19.
+Philip Hougaard (1982) Parametrization of Non-linear Models. \emph{J R Statist Soc B}. \bold{44}(2), 244--252.
+Edwin B. Wilson and Margaret M. Hilferty (1931) The Distribution of Chi-Square. \emph{Proc Nat Acad Sci USA}. \bold{17}, 684--688.
 }
 \author{
 Long Qu

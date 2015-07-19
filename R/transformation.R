@@ -30,10 +30,12 @@ constEnv=new.env()
 constEnv$oneThird = 1/3
 constEnv$oneSixth = 1/6
 constEnv$twoThirds = 2/3
+constEnv$oneNinth = 1/9
 constEnv$beta13.13=beta(1/3,1/3)
 constEnv$beta23.23=beta(2/3,2/3)
 constEnv$twoThree.192=23/192
 constEnv$twoThree.96 =23/96
+constEnv$sqrt2.3 = sqrt(2)/3
 
 nbinom.vst = local({
 	twoThree.192=23/192
@@ -70,9 +72,9 @@ nbinom.quadLL = local({  # just to shut up CRAN checker
 		stopifnot(all(size==1/invsize || invsize==1/size))
 		d=dim(y); 
 		if(length(d)==2L && length(invsize)==d[2L]) invsize=rep(invsize,each=d[1L])
-		ans = pbeta(invsize*y/(1+invsize*y), oneThird, oneThird) * beta13.13/invsize^oneThird
+		ans = pbeta(invsize*y/(1+invsize*y), oneThird, oneThird) 
 		structure(
-			if(standardize) ans *(y*(1+invsize*y))^oneSixth else ans
+			if(standardize) ans *(y*(1+invsize*y))^oneSixth * beta13.13/invsize^oneThird else ans
 			,dim=d
 		)
 	}
@@ -83,7 +85,7 @@ nbinom.symm = local({  # just to shut up CRAN checker
 	oneThird = 1/3
 	twoThirds = 2/3
 	beta23.23=beta(2/3,2/3)
-	function(y,size = 1/tau, invsize=1/size,)
+	function(y,size = 1/tau, invsize=1/size)
 	{
 		stopifnot(all(size==1/invsize || invsize==1/size))
 		d=dim(y); 
@@ -99,9 +101,25 @@ pois.vst = function(y, adjust=c('anscombe','none'))
 	adjust=match.arg(adjust)
 	const = if(adjust=='anscombe') 0.375 else 0
 	2*base::sqrt(y+const)
-}	
-pois.quadLL = local({oneThird = 1/3; function(y) y^oneThird})
-pois.symm = local({twoThirds = 2/3; function(y) y^twoThirds})
+}
+pois.quadLL = local({
+	oneThird = 1/3; 
+	oneSixth = 1/6
+	function(y, standardize=FALSE)
+	{
+		ans = y^oneThird
+		if(standardize) ans * y^oneSixth * 3 else ans
+	}
+})
+pois.symm = local({
+	twoThirds = 2/3; 
+	function(y, adjust=c('none','anscombe'))
+	{
+		adjust=match.arg(adjust)
+		const = if(adjust=='anscombe') twoThirds else 0
+		(y + const)^twoThirds
+	}
+})
 environment(pois.quadLL)=environment(pois.symm) = constEnv
 
 norm.vst = 
@@ -116,11 +134,47 @@ binom.vst = function(y, size, adjust=c('anscombe','none'))
 			2*sqrt(size+.5)*asin(sqrt((y+const)/(size+2*const)))
 	}else 	2*sqrt(size)*asin(sqrt(y/size))
 }
-binom.quadLL = 
-binom.symm   = .NotYetImplemented()
+binom.quadLL = local({
+	oneThird = 1/3
+	oneSixth = 1/6
+	oneNinth = 1/9
+	beta13.13=beta(oneThird,oneThird)
+	function(y, size, standardize=FALSE)
+	{
+		d=dim(y)
+		if(length(d)==2L && length(size)==d[2L]) size=rep(size, each=d[1L])
+		ans = pbeta(y/size, oneThird, oneThird) 
+		structure(
+			if(standardize) ans * beta13.13 * (y *(size-y)*size)^oneSixth else ans,
+			dim=d
+		)
+	}
+})
+environment(binom.quadLL) = constEnv
+binom.symm   = function(y, ...).NotYetImplemented()
 
-chisq.symm = local({oneThird = 1/3; function(y) y^oneThird})
+chisq.vst = function(y, df, ncp = 0)
+{
+	if(ncp!=0) .NotYetImplemented()
+	sqrt(2*y) - sqrt(2*df-1)
+}
+chisq.symm = local({
+	oneThird = 1/3; 
+	oneSixth= 1/6; 
+	sqrt2.3 = sqrt(2)/3
+	function(y, df, ncp=0, standardize=FALSE)
+	{
+		if(ncp!=0) .NotYetImplemented()
+		ans = y^oneThird
+		if(standardize) {
+			sqrt(df)/sqrt2.3 ->tmp
+			ans*df^oneSixth/sqrt2.3 - tmp+1/tmp 
+		}else ans
+	}
+})
+environment(chisq.symm) = constEnv
 
+chisq.quadLL =
 binom.quadLL = 
 binom.symm = 
 function(y, ...).NotYetImplemented()
