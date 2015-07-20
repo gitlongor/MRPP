@@ -140,13 +140,18 @@ binom.quadLL = local({
 	oneSixth = 1/6
 	oneNinth = 1/9
 	beta13.13=beta(oneThird,oneThird)
-	function(y, size, standardize=FALSE)
+	function(y, size, adjust=c('none','borges'), standardize=FALSE)
 	{
+		adjust=match.arg(adjust)
+		if(adjust=='borges'){
+			y=y+oneSixth; size=size+oneThird
+			const = oneSixth
+		}else const = 0
 		d=dim(y)
 		if(length(d)==2L && length(size)==d[2L]) size=rep(size, each=d[1L])
 		ans = pbeta(y/size, oneThird, oneThird) 
 		structure(
-			if(standardize) ans * beta13.13 * (y *(size-y)*size)^oneSixth else ans,
+			if(standardize) ans * beta13.13 * (y *(size-y)*size)^oneSixth * sqrt(1+const/size) else ans,
 			dim=d
 		)
 	}
