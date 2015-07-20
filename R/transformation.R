@@ -36,6 +36,7 @@ constEnv$beta23.23=beta(2/3,2/3)
 constEnv$twoThree.192=23/192
 constEnv$twoThree.96 =23/96
 constEnv$sqrt2.3 = sqrt(2)/3
+constEnv$fourThirds =4/3
 
 nbinom.vst = local({
 	twoThree.192=23/192
@@ -186,14 +187,25 @@ chisq.symm = local({
 	oneThird = 1/3; 
 	oneSixth= 1/6; 
 	sqrt2.3 = sqrt(2)/3
-	function(y, df, ncp=0, standardize=FALSE)
+	function(y, df, ncp=0, adjust=c('abdel-aty','none'), standardize=FALSE)
 	{
-		if(ncp!=0) .NotYetImplemented()
-		ans = y^oneThird
-		if(standardize) {
-			sqrt(df)/sqrt2.3 ->tmp
-			ans*df^oneSixth/sqrt2.3 - tmp+1/tmp 
-		}else ans
+		adjust = match.arg(adjust)
+		if(adjust=='abdel-aty') {
+			dfncp=df+ncp
+			df2ncp=dfncp+ncp
+			ans=(y/dfncp)^oneThird
+			if(standardize) {
+				ans =(ans - 1 +2*df2ncp/9/dfncp^2 ) *
+					3*dfncp/sqrt(2*df2ncp)
+			}else ans
+		}else{
+			if(ncp!=0).NotYetImplemented()
+			ans = y^oneThird
+			if(standardize) {
+				sqrt(df)/sqrt2.3 ->tmp
+				ans*df^oneSixth/sqrt2.3 - tmp+1/tmp 
+			}else ans
+		}
 	}
 })
 environment(chisq.symm) = constEnv
@@ -202,8 +214,15 @@ chisq.quadLL =
 function(y, ...).NotYetImplemented()
 
 
-fisher.z = atanh
-
+fisher.z = local({
+	fourThirds =4/3
+	function(y, df, adjust=c('none','hotelling'))
+	{
+		ans = atanh(y)
+		adjust=match.arg(adjust)
+		if(adjust=='hotelling') (ans-y/2/(df-1.5))*sqrt(df-fourThirds) else ans 
+	}
+}
 
 if(FALSE){  ## penglh's original version
 	Transform <- function(y,a,method="Log"){

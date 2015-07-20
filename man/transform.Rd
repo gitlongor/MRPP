@@ -84,11 +84,14 @@ FIXME: Give details of each transformation here...
 A numeric vector or a numeric matrix of transformed data. 
 }
 \references{
+S. H. Abdel-Aty (1954) Approximate Formulae for the Percentage Points and the Probability Integral of the Non-Central χ2 Distribution. \emph{Biometrika}. \bold{41}, 538--540.
 Francis J. Anscombe (1948) The transformation of Poisson, Binomial and Negative-binomial Data. \emph{Biometrika}. \bold{35}, 246--254.
 
 Francis J. Anscombe (1964) Normal Likelihood Functions. \emph{Ann Inst Stat Math}. \bold{16}, 1--19.
 
 Rudolf Borges (1971) Derivation of Normalising Transformations with an Error of Order 1/n. \emph{Sankhya, A}. \bold{33}, 441--460.
+
+Harold Hotelling (1953) New light on the correlation coefficient and its transforms. \emph{J R Statist Soc B}. \bold{15}(2), 193--232.
 
 Philip Hougaard (1982) Parametrization of Non-linear Models. \emph{J R Statist Soc B}. \bold{44}(2), 244--252.
 
