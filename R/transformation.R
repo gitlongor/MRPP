@@ -151,7 +151,31 @@ binom.quadLL = local({
 	}
 })
 environment(binom.quadLL) = constEnv
-binom.symm   = function(y, ...).NotYetImplemented()
+binom.symm   = local({
+	oneSixth = 1/6
+	oneThird = 1/3; 
+	twoThirds = 2/3; 
+	function(y, size, adjust=c('none','borges'), standardize=FALSE)
+	{
+		adjust=match.arg(adjust)
+		d=dim(y)
+		if(length(d)==2L && length(size)==d[2L]) size=rep(size, each=d[1L])
+		if(adjust=='borges') {
+			const.numerator = oneSixth
+			const.denominator = oneThird
+		}else{
+			const.numerator =
+			const.denominator = 0
+		}
+		ans = pbeta((y+const.numerator)/(size+const.denominator), twoThirds, twoThirds) 
+		structure(
+			if(standardize) ans * beta23.23 / (y/size *(1-y/size))^oneSixth * sqrt(size+const.denominator) else ans,
+			dim=d
+		)
+	}
+})
+environment(binom.symm) = constEnv
+
 
 chisq.vst = function(y, df, ncp = 0)
 {
@@ -175,8 +199,6 @@ chisq.symm = local({
 environment(chisq.symm) = constEnv
 
 chisq.quadLL =
-binom.quadLL = 
-binom.symm = 
 function(y, ...).NotYetImplemented()
 
 

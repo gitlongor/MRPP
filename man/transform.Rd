@@ -32,9 +32,9 @@ binom.quadLL(y, ...)
 pois.vst(y)
 pois.symm(y)
 pois.quadLL(y)
-nbinom.vst(y, size, tau = 1/size)
-nbinom.symm(y, size, tau = 1/size)
-nbinom.quadLL(y, size, tau = 1/size, standardize = FALSE)
+nbinom.vst(y, size, invsize = 1/size)
+nbinom.symm(y, size, invsize = 1/size)
+nbinom.quadLL(y, size, invsize = 1/size, standardize = FALSE)
 chisq.symm(y)
 binom.vst(y)
 norm.vst(x)
@@ -54,7 +54,7 @@ fisher.z(x)
   \item{size}{
 	A positive numeric (not necessarily integer) scalar or vector as in \code{\link{dnbinom}}. In case of a vector when \code{_data} (\code{y}) is a matrix, then if  \code{length(size}==ncol(y) (or \code{ncol(`_data`)}, it is assumed that the \code{size} parameter is applicable to each whole column.  
 }
-  \item{tau}{
+  \item{invsize}{
 	A reparameterization that should always be \code{1/size}.
 }
   \item{standardize}{
@@ -85,8 +85,13 @@ A numeric vector or a numeric matrix of transformed data.
 }
 \references{
 Francis J. Anscombe (1948) The transformation of Poisson, Binomial and Negative-binomial Data. \emph{Biometrika}. \bold{35}, 246--254.
+
 Francis J. Anscombe (1964) Normal Likelihood Functions. \emph{Ann Inst Stat Math}. \bold{16}, 1--19.
+
+Rudolf Borges (1971) Derivation of Normalising Transformations with an Error of Order 1/n. \emph{Sankhya, A}. \bold{33}, 441--460.
+
 Philip Hougaard (1982) Parametrization of Non-linear Models. \emph{J R Statist Soc B}. \bold{44}(2), 244--252.
+
 Edwin B. Wilson and Margaret M. Hilferty (1931) The Distribution of Chi-Square. \emph{Proc Nat Acad Sci USA}. \bold{17}, 684--688.
 }
 \author{
@@ -100,9 +105,9 @@ Long Qu
 y=rnbinom(1e3, size=10, prob=.5)  ## simulate example data
 identical(y, transform(y))
 y.log1p=transform(y, method="log1p")      ## base::log1p
-y.vst=transform(y, method="nbinom.vst", tau=0.1)  ## towards variance stabilization
-y.quadll=transform(y, method="nbinom.quadLL", tau=0.1)  ## towards quadratic log-likelihood
-y.symm=transform(y, method="nbinom.symm", tau=0.1)  ## towards symmetry
+y.vst=transform(y, method="nbinom.vst", invsize=0.1)  ## towards variance stabilization
+y.quadll=transform(y, method="nbinom.quadLL", invsize=0.1)  ## towards quadratic log-likelihood
+y.symm=transform(y, method="nbinom.symm", invsize=0.1)  ## towards symmetry
 
 if(interactive()){ ## visually assessing normality thru QQ plot
 	qqnorm(y ); 	qqline(y)
