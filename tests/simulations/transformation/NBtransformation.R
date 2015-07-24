@@ -51,33 +51,47 @@ mean.nontumor = rowMeans(sweep(counts.nontumor, 2L, y$samples$norm.factors, '/')
 
 
 ################### start to simulate 
-taus = quantile(c(nbdisp.tumor, nbdisp.nontumor), 0:10/10)
+invsizes = quantile(c(nbdisp.tumor, nbdisp.nontumor), 0:10/10)
 mus = quantile(c(mean.tumor, mean.nontumor), c(.01,1:9/10, .99))
 n.mu=length(mus)
-n.tau = length(taus)
+n.invsize = length(invsizes)
 reps=1e4L
 N=1L
-trans = c('I', 'log1p', 'nbinom.vst','nbinom.quadLL','nbinom.symm')
-#trans.nargs=c(1L,1L, 2L ,2L, 2L)
+trans = c('I', 'log1p', 
+	'nbinom.vst','nbinom.vst','nbinom.vst','nbinom.vst',
+	'nbinom.quadLL','nbinom.quadLL',
+	'nbinom.symm'
+)
+trans.args=list(I=NULL, log1p=NULL, 
+	nbinom.vst=c(adjust='none'),  nbinom.vst=c(adjust='anscombe1'), 	nbinom.vst=c(adjust='anscombe2'), 	nbinom.vst=c(adjust='anscombe3'), 
+	nbinom.quadLL = c(standardize=FALSE), nbinom.quadLL = c(standardize=TRUE), 
+	nbinom.symm=NULL
+)	
 n.trans = length(trans)
+trans.name = function(i)
+{
+	ans = gsub('^[^.]*\\.','',trans[i])
+	if(is.null(trans.args[[i]])) return(ans)
+	sprintf("%s\n%s=%s", ans, names(trans.args[[i]]), as.character(trans.args[[i]]))
+}
+trans.names=sapply(seq(n.trans), trans.name)
 
 plot.factor=500
-for(tau.i in seq_along(taus)) {
-	png(sprintf('kidney.qq.tau%d.png',tau.i), width = plot.factor*n.trans, height = plot.factor * n.mu, pointsize=30)
+for(invsize.i in seq_along(invsizes)) {
+	png(sprintf('kidney.nb.qq.invsize%d.png',invsize.i), width = plot.factor*n.trans, height = plot.factor * n.mu, pointsize=30)
 		par(mfcol=c(n.mu, n.trans), mai=rep(2,4))
-	y=rnbinom(reps*n.mu, size=1/taus[tau.i], mu=mus)
+	y=rnbinom(reps*n.mu, size=1/invsizes[invsize.i], mu=mus)
 	dim(y)=c(n.mu, reps)
 	
 	for(tr.i in seq_along(trans)){
-		#if(trans.nargs[tr.i]==1L){
-		#	transy=MRPP::transform(y, method=trans[tr.i])
-		#}else {
-			transy=MRPP::transform(y, method=trans[tr.i], tau=taus[tau.i])
-		#}
+		lst = c(list(`_data`=y, method=trans[tr.i], invsize=invsizes[invsize.i]), as.list( trans.args[[tr.i]]))
+		transy=do.call('transform', lst)
 		for(mu.i in seq_along(mus)){
-			qqnorm(transy[mu.i,], main=sprintf('mu=%.2f; tau=%.2f', mus[mu.i], taus[tau.i]),
-				xlab='N(0,1) quantile', ylab=sprintf('%s quantile', trans[tr.i]), pch='.',cex=3)
-			qqline(transy[mu.i,])
+			qqnorm(transy[mu.i,], sub=sprintf('mu=%.2f; invsize=%.2f', mus[mu.i], invsizes[invsize.i]),
+				xlab='N(0,1) quantile', ylab=sprintf('%s quantile', trans[tr.i]), 
+				main = trans.names[tr.i], 
+				pch='.',cex=5)
+			qqline(transy[mu.i,], probs=c(.1, .9))
 		}
 	}
 	dev.off()

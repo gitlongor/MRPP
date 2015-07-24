@@ -12,9 +12,15 @@ transform.matrix <- function(`_data`,	method='I', ...)
 	stopifnot(is.numeric(`_data`))
 	att=attributes(`_data`)
 	if(!exists(method[1L], mode='function')) method=match.arg(method, known.transform.methods)
-	if(length(formals(args(get(method[1L],mode='function'))))==1L){
+	toCallArgs=names(formals(args(get(method[1L],mode='function'))))
+	ddd=list(...)
+	if(! ('...'%in%toCallArgs) ) {
+		nmddd=names(ddd)
+		ddd = ddd[nmddd=='' | nmddd %in% toCallArgs]
+	}
+	if(length(ddd) == 0L){
 			ans=do.call(method[1L], list(`_data`))
-	}else 	ans=do.call(method[1L], list(`_data`,...))
+	}else 	ans=do.call(method[1L], c(list(`_data`), ddd))
 	attributes(ans)=att
 	ans
 }
@@ -38,11 +44,11 @@ constEnv$twoThree.96 =23/96
 constEnv$sqrt2.3 = sqrt(2)/3
 constEnv$fourThirds =4/3
 
-nbinom.vst = local({
+nbinom.vst = local({ 
 	twoThree.192=23/192
 	twoThree.96 =23/96
 	
-	function(y, size = 1/tau, invsize=1/size, adjust=c('none','anscombe1','anscombe2','anscombe3'))
+	function(y, size = 1/invsize, invsize=1/size, adjust=c('none','anscombe1','anscombe2','anscombe3'))  ## this is in fact Beta(1/2,1/2) transformation [Blom, 1954, Biometrika]
 	{
 		stopifnot(all(size==1/invsize || invsize==1/size))
 		d=dim(y); 
@@ -68,7 +74,7 @@ nbinom.quadLL = local({  # just to shut up CRAN checker
 	oneThird = 1/3
 	oneSixth = 1/6
 	beta13.13=beta(oneThird,oneThird)
-	function(y, size = 1/tau, invsize=1/size,  standardize = FALSE)
+	function(y, size = 1/invsize, invsize=1/size,  standardize = FALSE)
 	{
 		stopifnot(all(size==1/invsize || invsize==1/size))
 		d=dim(y); 
@@ -86,7 +92,7 @@ nbinom.symm = local({  # just to shut up CRAN checker
 	oneThird = 1/3
 	twoThirds = 2/3
 	beta23.23=beta(2/3,2/3)
-	function(y,size = 1/tau, invsize=1/size)
+	function(y,size = 1/invsize, invsize=1/size)
 	{
 		stopifnot(all(size==1/invsize || invsize==1/size))
 		d=dim(y); 
@@ -227,7 +233,7 @@ fisher.z = local({
 		adjust=match.arg(adjust)
 		if(adjust=='hotelling') (ans-y/2/(df-1.5))*sqrt(df-fourThirds) else ans 
 	}
-}
+})
 
 if(FALSE){  ## penglh's original version
 	Transform <- function(y,a,method="Log"){
