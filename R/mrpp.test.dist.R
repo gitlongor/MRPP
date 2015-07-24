@@ -22,6 +22,7 @@ function(y, trt, B=as.integer(min(nparts(table(trt)), 1e4L)), permutedTrt, wtmet
     ans=list(statistic=c("MRPP statistic"=stats[1L]), 
 			 all.statistics=stats, 
              p.value=mean(stats[1L]-stats>=-eps), 
+			 midp = midp(stats, eps),
 			 parameter=c("number of permutations"=B, 'weight method'=wtmethod[1L]),
              data.name=dname, 
 			 #  .Random.seed=attr(permutedTrt,'.Random.seed'),  ## this is commented out since the random number seed in gmp:::urand.bigz will be used. 

@@ -55,7 +55,7 @@ mrppBVS.test(y,permutedTrt, Bperm=nperms.permutedTrt(permutedTrt),
 	Number of outer permutations. 
 }
   \item{\dots}{
-	Additional arguments passed to \code{mrpp.test.dist}, \code{get.dp.dw.kde} or \code{get.p.dd.dw}.
+	Additional arguments passed to \code{mrpp.test.dist}, \code{grad.smoothp} or \code{get.p.dd.dw}.
 }
 }
 \details{
@@ -94,7 +94,7 @@ In the results, the variable importance measures are multiplied by the number of
 }
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 \seealso{
-\code{\link{mrpp.test}}, \code{\link{get.p.dd.dw}}, \code{\link{get.dp.dw.kde}}, \code{\link{permuteTrt}}
+\code{\link{mrpp.test}}, \code{\link{get.p.dd.dw}}, \code{\link{grad.smoothp}}, \code{\link{permuteTrt}}
 }
 \examples{
 

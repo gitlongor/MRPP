@@ -12,7 +12,7 @@ smrppInitSpar(dp.dw, max.ratio=2, nspar=100L, denseProp= .25)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{dp.dw}{A vector or matrix of derivative of MRPP p-value to the weights. If it is a matrix, each row is treated as a permutation, as returned from \code{\link{get.dp.dw.kde}} with \code{test=TRUE}.
+  \item{dp.dw}{A vector or matrix of derivative of MRPP p-value to the weights. If it is a matrix, each row is treated as a permutation, as returned from \code{\link{grad.smoothp}} with \code{test=TRUE}.
 }
   \item{max.ratio}{A positive numeric scalar. Let \code{k} be the ratio of maximum weight to the minimum weight.
  When spar increases, \code{k}  decreases. 

@@ -1,21 +1,26 @@
 \name{MRPP importance}
 \Rdversion{1.1}
-\alias{get.dp.dw.kde}
+\alias{grad.smoothp}
+\alias{hessian.smoothp}
 \alias{get.p.dd.dw}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
 Permutation-based variable importance measure
 }
 \description{
-\code{get.dp.dw.kde} computes variable importance measure of partial derivative of continuous approximation to MRPP p-values with respect to hypothetical weights. 
+\code{grad.smoothp} computes variable importance measure of partial derivative of continuous approximation to MRPP p-values with respect to hypothetical weights. 
 \code{get.p.dd.dw} computes variable importance measure by using partial derivative of distance function with respect to hypothetical weights as the new distance function in MRPP
 }
 \usage{
-get.dp.dw.kde(y, permutedTrt, r = seq_len(ncol(y)), test = FALSE, distObj = dist(y), 
+grad.smoothp(y, permutedTrt, r = seq_len(ncol(y)), test = FALSE, distObj = dist(y), 
 	mrpp.stats = mrpp.test.dist(distObj, permutedTrt = permutedTrt,
-	wtmethod=wtmethod[1])$all.statistics, bw = bw.mse.pdf.asym(mrpp.stats), 
+	wtmethod=wtmethod[1])$all.statistics, kernel='gaussian', bw = bw.mse.pdf.asym(mrpp.stats), 
 	wtmethod=0, scale=1, standardized=FALSE)
 get.p.dd.dw(y, permutedTrt, r = seq_len(ncol(y)), wtmethod=0, eps=1e-8)
+hessian.smoothp(y, permutedTrt, r = seq_len(ncol(y)), test = FALSE, distObj = dist(y), 
+	mrpp.stats = mrpp.test.dist(distObj, permutedTrt = permutedTrt,
+	wtmethod=wtmethod[1])$all.statistics, kernel='gaussian', bw = bw.mse.pdf.asym(mrpp.stats), 
+	wtmethod=0, scale=1, standardized=FALSE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -31,6 +36,8 @@ get.p.dd.dw(y, permutedTrt, r = seq_len(ncol(y)), wtmethod=0, eps=1e-8)
 }
   \item{mrpp.stats}{A vector of all observed MRPP test statistics. 
 }
+  \item{kernel}{A character scalar among \code{c("gaussian", "biweight", 'triweight', 'tricube',"logistic")}
+}
   \item{bw}{A numeric scalar giving the bandwidth used for kernel density estimation of \code{mrpp.stats}. This might be positive infinity. 
 }
 %  \item{cperm.mat}{}
@@ -45,19 +52,19 @@ get.p.dd.dw(y, permutedTrt, r = seq_len(ncol(y)), wtmethod=0, eps=1e-8)
 }
 }
 \details{
-\code{get.dp.dw.kde} first uses kernel density estimator to approximate the distribution of \code{mrpp.stats} and obtain a continous approximate p-value for the MRPP test. Then it computes the partial derivative of the approximate p-value with respect to the hypothetical weight of each variable, evaluated at weight 1. 
+\code{grad.smoothp} first uses kernel density estimator to approximate the distribution of \code{mrpp.stats} and obtain a continous approximate p-value for the MRPP test. Then it computes the partial derivative of the approximate p-value with respect to the hypothetical weight of each variable, evaluated at weight 1. 
 That is, if the partial derivative is negatively large, then the corresponding variable will be more important, because increasing its weight will quickly decreasing the approximate MRPP p-value. Vice versa. 
 
 \code{get.p.dd.dw} first computes the partial derivative of the Euclidian distance measure with respect to the hypothetical weights for each variable. This is then used as the distance function for the variable to be used in MRPP. The resulting MRPP p-value is returned as the variable importance. The smaller, the more important.
 }
 \value{
-For \code{get.dp.dw.kde}, when \code{test} is \code{FALSE}, the result is an \code{length(r)}-vector of importance measure (multiplied by \code{scale}). 
+For \code{grad.smoothp}, when \code{test} is \code{FALSE}, the result is an \code{length(r)}-vector of importance measure (multiplied by \code{scale}). 
 When \code{test} is \code{TRUE}, the result is an \code{B}-by-\code{length(r)} matrix of importance measure, where \code{B} is the number of permutations in \code{permutedTrt}. The (\code{i,j})th element is the importance measure for the \code{r[j]}th variable when the \code{i}th column of each component of \code{permutedTrt} is treated as the original treatment assignment. 
 
 For \code{get.p.dd.dw}, the result is an \code{length(r)}-vector of importance measure. 
 }
 \note{
-When \code{test} is \code{TRUE} and when the number of permutations is large, \code{get.dp.dw.kde} will consume a large amount of memory. 
+When \code{test} is \code{TRUE} and when the number of permutations is large, \code{grad.smoothp} will consume a large amount of memory. 
 }
 
 \references{
@@ -76,7 +83,7 @@ x=matrix(rnorm(20*5),20)
 trt=gl(2,10)
 urand.bigz(0,seed=1032940L) # init seed
 pmat=permuteTrt(trt, 5e2L)		## use 500 random permutations
-ir1=get.dp.dw.kde(x, pmat)
+ir1=grad.smoothp(x, pmat)
 ir2=get.p.dd.dw(x, pmat)
 cor(ir1, ir2, method="s")
 

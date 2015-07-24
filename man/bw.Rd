@@ -54,7 +54,7 @@ bw.mse.pdf.asym(x)
 bw.constr.midp(x)
 if(interactive()) {
 plot(density(x, bw.mse.pdf.asym(x)), ylim=c(0,dnorm(0)))
-lines(density(x, bw.constr.midp(x)), ylim=c(0,dnorm(0)))
+lines(density(x, bw.constr.midp(x)), col='blue')
 abline(v=x[1L])
 curve(dnorm, lty=3, col="grey", add=TRUE)
 }

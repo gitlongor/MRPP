@@ -13,7 +13,7 @@ smrpp.penWt(dp.dw, spar, simplify=TRUE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{dp.dw}{A vector or matrix of derivative of MRPP p-value to the weights. If it is a matrix, each row is treated as a permutation, as returned from \code{\link{get.dp.dw.kde}} with \code{test=TRUE}.
+  \item{dp.dw}{A vector or matrix of derivative of MRPP p-value to the weights. If it is a matrix, each row is treated as a permutation, as returned from \code{\link{grad.smoothp}} with \code{test=TRUE}.
 }
   \item{spar}{A nonnegative numeric vector of smoothing parameters, or a matrix. If it is a matrix, \code{dp.dw} needs also be a matrix with the same number of rows. All computation will be performed for each row separately.  
 }

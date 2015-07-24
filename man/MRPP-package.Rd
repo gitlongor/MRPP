@@ -20,12 +20,12 @@ LazyLoad: \tab yes\cr
 }
 \itemize{
 \item{\code{\link{mrpp.test}}} {The MRPP, a permutation test applicable to high dimensional data.}
-\item{\code{\link{get.dp.dw.kde}}} {Variable importance measure: approximate derivative of p-values to weights.}
+\item{\code{\link{grad.smoothp}}} {Variable importance measure: approximate derivative of p-values to weights.}
 \item{\code{\link{get.p.dd.dw}}} {Variable importance measure: permutation p-value using the derivative of Euclidean distance with respect to weights as the distance measure.}
 \item{\code{\link{mrppBVS}}} {Backward variable selection for the MRPP.}
 \item{\code{\link{mrppBVS.test}}} {Backward variable selection nested within outer permutations.}
 \item{\code{\link{smrpp.test}}} {Sparse Weighted MRPP within outer permutations.}
-\item{\code{\link{smrpp.penWt}}} {Sparse Weights given MRPP importance measures from \code{\link{get.dp.dw.kde}}.}
+\item{\code{\link{smrpp.penWt}}} {Sparse Weights given MRPP importance measures from \code{\link{grad.smoothp}}.}
 \item{\code{\link{permuteTrt}}} {Generate random treatment assignments.}
 \item{\code{\link{FR2permvec}}} {Conversions among decimal factoradic number, radix factoradic number, and permutation vector.}
 \item{\code{\link{HSEL.bigz}}} {Generate a random sample of size m from a \emph{large} population of size n.}
