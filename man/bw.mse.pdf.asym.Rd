@@ -49,10 +49,12 @@ Wand, M. P. and Jones, M. C. (1995). Kernel Smoothing. Chapman and Hall, London.
 }
 \examples{
 set.seed(23490)
-x=rnorm(100)
+x=rnorm(1000)
 bw.mse.pdf.asym(x)
-\dontrun{
+bw.constr.midp(x)
+if(interactive()) {
 plot(density(x, bw.mse.pdf.asym(x)), ylim=c(0,dnorm(0)))
+lines(density(x, bw.constr.midp(x)), ylim=c(0,dnorm(0)))
 abline(v=x[1L])
 curve(dnorm, lty=3, col="grey", add=TRUE)
 }

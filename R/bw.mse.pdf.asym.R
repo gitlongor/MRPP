@@ -24,6 +24,26 @@ bw.mse.pdf.asym=function(x,iter.max=1L,eps=1e-6,start.bw=bw.nrd, verbose=FALSE)
     }
 }
 
+
+bw.constr.midp=function(x, eps = 1e-8, verbose=FALSE)
+{
+	midp = mean(x<=x[1L]-eps) + .5* mean(x>x[1L]-eps & x<x[1L]+eps)
+	B=length(x)
+	
+	xdiff=x[1]-x
+	
+	eqn =function(logbw){
+		bw=exp(logbw)
+		mean(pnorm(xdiff/bw))/bw - midp
+	}
+	
+	lans = nlsolve(log(bw.nrd(x)), eqn, 
+		control=list(verbose = FALSE, maxit=25L, tol=sqrt(.Machine$double.eps) )
+	)
+	exp(lans)
+}
+
+
 if(FALSE){
     f.1=kdde(x, bw0, deriv.order=0, eval.points=x[1])$estimate
     ddf.1=kdde(x, bw0, deriv.order=2, eval.points=x[1])$estimate

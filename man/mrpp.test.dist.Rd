@@ -4,6 +4,7 @@
 \alias{mrpp.test.default}
 \alias{mrpp.test.formula}
 \alias{mrpp.test}
+\alias{mrpp}
 %- Also NEED an "\alias" for EACH other topic documented here.
 \title{
 MRPP test for one-way design

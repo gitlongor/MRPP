@@ -3,7 +3,7 @@ import(gmp)
 #importFrom(varComp,safeseq)
 #importFrom(pi0,combn2R)
 ##importExcept(Matrix, summary, update)
-
+importFrom(QuasiSeq, nlsolve)
 
 
 
@@ -11,6 +11,7 @@ export(
 	mrppBVS,
 	mrppBVS.test,
 	bw.mse.pdf.asym,
+	bw.constr.midp,
 	get.dp.dw.kde,
 	get.p.dd.dw,
 	permuteTrt,
