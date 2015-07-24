@@ -12,9 +12,15 @@ transform.matrix <- function(`_data`,	method='I', ...)
 	stopifnot(is.numeric(`_data`))
 	att=attributes(`_data`)
 	if(!exists(method[1L], mode='function')) method=match.arg(method, known.transform.methods)
-	if(length(formals(args(get(method[1L],mode='function'))))==1L){
+	toCallArgs=names(formals(args(get(method[1L],mode='function'))))
+	ddd=list(...)
+	if(! ('...'%in%toCallArgs) ) {
+		nmddd=names(ddd)
+		ddd = ddd[nmddd=='' | nmddd %in% toCallArgs]
+	}
+	if(length(ddd) == 0L){
 			ans=do.call(method[1L], list(`_data`))
-	}else 	ans=do.call(method[1L], list(`_data`,...))
+	}else 	ans=do.call(method[1L], c(list(`_data`), ddd))
 	attributes(ans)=att
 	ans
 }
