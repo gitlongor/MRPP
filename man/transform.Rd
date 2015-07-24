@@ -2,6 +2,7 @@
 \alias{transform}
 \alias{transform.matrix}
 \alias{transform.numeric}
+\alias{binom.vst}
 \alias{binom.symm}
 \alias{binom.quadLL}
 \alias{pois.vst}
@@ -10,12 +11,12 @@
 \alias{nbinom.vst}
 \alias{nbinom.symm}
 \alias{nbinom.quadLL}
-\alias{fisher.z}
+\alias{chisq.vst}
 \alias{chisq.symm}
-\alias{binom.vst}
 \alias{norm.vst}
 \alias{norm.symm}
 \alias{norm.quadLL}
+\alias{fisher.z}
 %- Also NEED an "\alias" for EACH other topic documented here.
 \title{
 Transformation of Matrices or Numeric Vectors
@@ -27,20 +28,22 @@ The \code{transform} method for \code{matrix} and \code{numeric} vectors is a wr
 \method{transform}{matrix}(`_data`, method = "I", \dots)
 \method{transform}{numeric}(`_data`, \dots)
 
-binom.symm(y, ...)
-binom.quadLL(y, ...)
-pois.vst(y)
-pois.symm(y)
-pois.quadLL(y)
-nbinom.vst(y, size, invsize = 1/size)
+binom.vst(y, size, adjust=c('anscombe','none'))
+binom.symm(y, size, adjust=c('none','borges'), standardize=FALSE)
+binom.quadLL(y, size, adjust=c('none','borges'), standardize=FALSE)
+pois.vst(y, adjust=c('anscombe','none'))
+pois.symm(y, adjust=c('none','anscombe'))
+pois.quadLL(y, standardize=FALSE)
+nbinom.vst(y, size, invsize = 1/size,
+		adjust=c('none','anscombe1','anscombe2','anscombe3'))
 nbinom.symm(y, size, invsize = 1/size)
 nbinom.quadLL(y, size, invsize = 1/size, standardize = FALSE)
-chisq.symm(y)
-binom.vst(y)
+chisq.vst(y, df, ncp = 0)
+chisq.symm(y, df, ncp=0, adjust=c('abdel-aty','none'), standardize=FALSE)
 norm.vst(x)
 norm.symm(x)
 norm.quadLL(x)
-fisher.z(x)
+fisher.z(y, df, adjust=c('none','hotelling'))
 
 }
 %- maybe also "usage" for other objects documented here.
@@ -52,13 +55,17 @@ fisher.z(x)
 	A character name of the function that performs the actual transformation. The default is \code{base::I} function, i.e., no transformation at all. See details. 
 }
   \item{size}{
-	A positive numeric (not necessarily integer) scalar or vector as in \code{\link{dnbinom}}. In case of a vector when \code{_data} (\code{y}) is a matrix, then if  \code{length(size}==ncol(y) (or \code{ncol(`_data`)}, it is assumed that the \code{size} parameter is applicable to each whole column.  
+	A positive numeric (not necessarily integer) scalar or vector as in \code{\link{dnbinom}} or \code{\link{dbinom}}. In case of a vector when \code{_data} (\code{y}) is a matrix, then if  \code{length(size}==ncol(y) (or \code{ncol(`_data`)}, it is assumed that the \code{size} parameter is applicable to each whole column.  
 }
   \item{invsize}{
 	A reparameterization that should always be \code{1/size}.
 }
+  \item{adjust}{A character scalar, indicating different variations of the transformation. See details. 
+}
   \item{standardize}{
-	Logical; if \code{TRUE}, the quadratic log-likelihood transformation is further multiplied by a factor depending on \code{y}. See details. 
+	Logical; if \code{TRUE}, the transformation is further multiplied by a factor depending on \code{y}. See details. 
+}
+  \item{df, ncp}{As in \code{\link{dchisq}}
 }
   \item{\dots}{
 	Optional arguments to be passed to the function determined by the \code{method} argument. 
@@ -72,7 +79,7 @@ If \code{method} is any one of
 "pois.vst", "pois.quadLL", "pois.symm", 
 "binom.vst", "binom.quadLL", "binom.symm", 
 "norm.vst", "norm.quadLL", "norm.symm", 
-"chisq.vst", "chisq.quadLL", "chisq.symm", 
+"chisq.vst",               "chisq.symm", 
 "fisher.z"),} 
 partial string matching is allowed, if no other function in the search path has a name that matches \code{method} perfectly. Most of the above function names have the form of \dQuote{distribution.transform} where the \dQuote{distribution} part is typically the abbreviated distribution name as those used in the suffices in functions like \code{\link{rnorm}}. The \dQuote{transform} part is one of \code{"vst", "quadLL"} and \code{"symm"}, indicating the asymptotic variance stabilizing transformation, asymptotic quadratic log-likelihood transformation, and asymptotic zero skewness transformation. 
 
@@ -84,7 +91,8 @@ FIXME: Give details of each transformation here...
 A numeric vector or a numeric matrix of transformed data. 
 }
 \references{
-S. H. Abdel-Aty (1954) Approximate Formulae for the Percentage Points and the Probability Integral of the Non-Central χ2 Distribution. \emph{Biometrika}. \bold{41}, 538--540.
+S. H. Abdel-Aty (1954) Approximate Formulae for the Percentage Points and the Probability Integral of the Non-Central \eqn{\chi^2}{X^2} Distribution. \emph{Biometrika}. \bold{41}, 538--540.
+
 Francis J. Anscombe (1948) The transformation of Poisson, Binomial and Negative-binomial Data. \emph{Biometrika}. \bold{35}, 246--254.
 
 Francis J. Anscombe (1964) Normal Likelihood Functions. \emph{Ann Inst Stat Math}. \bold{16}, 1--19.

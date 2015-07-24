@@ -3,7 +3,7 @@ known.transform.methods=c(
 	 'pois.vst',  	'pois.quadLL',  	'pois.symm', 
 	 'binom.vst', 	'binom.quadLL',  	'binom.symm', 
 	 'norm.vst', 	'norm.quadLL',  	'norm.symm', 
-	 'chisq.vst',	'chisq.quadLL',		'chisq.symm',
+	 'chisq.vst',				 		'chisq.symm',
 	 'fisher.z'
 )
 			 
@@ -42,7 +42,7 @@ nbinom.vst = local({
 	twoThree.192=23/192
 	twoThree.96 =23/96
 	
-	function(y, size = 1/tau, invsize=1/size, adjust=c('none','anscombe1','anscombe2','anscombe3'))
+	function(y, size = 1/invsize, invsize=1/size, adjust=c('none','anscombe1','anscombe2','anscombe3'))
 	{
 		stopifnot(all(size==1/invsize || invsize==1/size))
 		d=dim(y); 
@@ -68,7 +68,7 @@ nbinom.quadLL = local({  # just to shut up CRAN checker
 	oneThird = 1/3
 	oneSixth = 1/6
 	beta13.13=beta(oneThird,oneThird)
-	function(y, size = 1/tau, invsize=1/size,  standardize = FALSE)
+	function(y, size = 1/invsize, invsize=1/size,  standardize = FALSE)
 	{
 		stopifnot(all(size==1/invsize || invsize==1/size))
 		d=dim(y); 
@@ -86,7 +86,7 @@ nbinom.symm = local({  # just to shut up CRAN checker
 	oneThird = 1/3
 	twoThirds = 2/3
 	beta23.23=beta(2/3,2/3)
-	function(y,size = 1/tau, invsize=1/size)
+	function(y,size = 1/invsize, invsize=1/size)
 	{
 		stopifnot(all(size==1/invsize || invsize==1/size))
 		d=dim(y); 
@@ -132,7 +132,7 @@ binom.vst = function(y, size, adjust=c('anscombe','none'))
 {
 	adjust=match.arg(adjust)
 	if(adjust=='anscombe') {
-			2*sqrt(size+.5)*asin(sqrt((y+const)/(size+2*const)))
+			2*sqrt(size+.5)*asin(sqrt((y+0.375)/(size+0.75)))
 	}else 	2*sqrt(size)*asin(sqrt(y/size))
 }
 binom.quadLL = local({
@@ -215,8 +215,7 @@ chisq.symm = local({
 })
 environment(chisq.symm) = constEnv
 
-chisq.quadLL =
-function(y, ...).NotYetImplemented()
+#chisq.quadLL = function(y, ...).NotYetImplemented()
 
 
 fisher.z = local({
@@ -227,7 +226,7 @@ fisher.z = local({
 		adjust=match.arg(adjust)
 		if(adjust=='hotelling') (ans-y/2/(df-1.5))*sqrt(df-fourThirds) else ans 
 	}
-}
+})
 
 if(FALSE){  ## penglh's original version
 	Transform <- function(y,a,method="Log"){
