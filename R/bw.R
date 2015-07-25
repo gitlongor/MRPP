@@ -113,7 +113,7 @@ bw.mse.pdf.asym=function(x,iter.max=1L,eps=1e-6,start.bw=bw.nrd, verbose=FALSE)
 bw.grad.smoothp <-
 function(y, permutedTrt, r=seq_len(NCOL(y)), bw, 
 	test=FALSE, distFunc=dist,  kernel='gaussian', wtmethod=0, 
-	drop=FALSE, ...)
+	drop=FALSE, verbose=FALSE, ...)
 ## y=N-by-p data matrix; b=permutation index for the 1st trt; r=dimension index; 
 {
 	permp = if(drop){
@@ -132,20 +132,24 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw,
 		lo = quantile(diff(sort(uniqstat)), .05)
 		hi = diff(quantile(uniqstat, prob=c(.05, .95)))
 		fact=100; lf = log10(fact)
-		bw = 10^seq(log10(lo)-lf, log10(hi)+lf, length=1000)
+		bw = 10^seq(log10(lo)-lf, log10(hi)+lf, length=100)
 	}
 	
-	sig = if(drop) -1 else 1
+	sig = if(drop) 1 else 1-diag(1, length(r), length(r))
 	unip.approx=function(bw)
 	{
 		smp = smoothp(mrpp$all.statistics, bw=bw, kernel=kernel)$p.value
 		grad = grad.smoothp(y, permutedTrt=permutedTrt,r=r,kernel=kernel, wtmethod=wtmethod, bw=bw, distObj=distObj, mrpp.stats=mrpp$all.statistics)
-		smp + sig * grad
+		smp - base::drop(sig %*% grad)
 	}
 	approxp = sapply(bw, unip.approx)
 	sse = colSums((approxp - unips)^2)
 	idx=which.min(sse)
 	ans=bw[idx]
+	if(verbose){
+		plot(log10(bw), sse, xlab='log10(bandwidth)', ylab='SSE', type='l', ylim=c(0, min(max(sse),10*sse[idx])))
+		abline(v=log10(ans), h=sse[idx], col='gray', lty=3)
+	}
 	if(idx==1L || idx==length(bw))warning('optimal bandwidth occurs at the boundary')
 	ans
 }
