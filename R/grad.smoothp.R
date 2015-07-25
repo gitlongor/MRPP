@@ -19,7 +19,7 @@ function(y, permutedTrt, bw, r=seq_len(NCOL(y)), test=FALSE,
 #    weight=matrix(NA_real_, B, length(b))   ## this may require large memory when test=TRUE
 #    for(b.i in 1:length(b))
 #      weight[,b.i]=pmax(min.wts,dnorm((mrpp.stats[b[b.i]]-mrpp.stats),0,bw))
-	weight = dkernel(kernel)( (mrpp.stats-rep(mrpp.stats[b],each=B) )/ bw)   
+	weight = dkernel(kernel)( (mrpp.stats-rep(mrpp.stats[b],each=B) )/ bw)/bw
 	dim(weight)=c(B, length(b))
 
 #    contrast.mat=matrix(0,choose(N,2),N); k=1
@@ -68,7 +68,8 @@ expression( ## simplified from grad.smoothp; allowing a vector of bw's; only use
 	all.ddelta.dw=apply(y[,r,drop=FALSE],2L,dist)^2/distObj*0.5   
 	all.ddelta.dw[is.nan(all.ddelta.dw)]=0
 	
-	weights=dkernel(kernel)((mrpp.stats-mrpp.stats[b])/rep(bw, each=B))
+	bw0=rep(bw, each=B)
+	weights=dkernel(kernel)((mrpp.stats-mrpp.stats[b])/bw0)/bw0
 	dim(weights) = c(B, n.bw)
 	for(r.i in seq(along=r)){
 		dz.dw=.Call(mrppstats, all.ddelta.dw[,r.i], permutedTrt, as.numeric(wtmethod[1]), PACKAGE='MRPP')
