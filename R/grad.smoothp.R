@@ -2,7 +2,7 @@ grad.smoothp <-
 function(y, permutedTrt, bw, r=seq_len(NCOL(y)), test=FALSE, 
         distObj=dist(y), 
         mrpp.stats=mrpp.test.dist(distObj,permutedTrt=permutedTrt,wtmethod=wtmethod[1])$all.statistics,
-        kernel='gaussian', wtmethod=0, scale=1, standardized=FALSE)
+        kernel='biweight', wtmethod=0, scale=1, standardized=FALSE)
 ## y=N-by-p data matrix; b=permutation index for the 1st trt; r=dimension index; 
 {
     ## min.wts=1e-8  ### CHECKME: I cannot remember why the weight was introduced. Set it to zero for now to see what problems show up...
@@ -14,15 +14,13 @@ function(y, permutedTrt, bw, r=seq_len(NCOL(y)), test=FALSE,
     #if(missing(cperm.mat)) cperm.mat=apply(permutedTrt,2,function(kk)(1:N)[-kk])
 
 	if(missing(bw)){
-		bw.drop=bw.grad.smoothp(y,permutedTrt=permutedTrt,r=r, kernel=kernel, wtmethod=wtmethod, drop=TRUE)
-		bw.keep=bw.grad.smoothp(y,permutedTrt=permutedTrt,r=r, kernel=kernel, wtmethod=wtmethod, drop=FALSE)
-		bw=sqrt(bw.drop * bw.keep)
+		bw=bw.grad.smoothp(y,permutedTrt=permutedTrt,r=r, kernel=kernel, wtmethod=wtmethod)
 	}
 #    weight=matrix(NA_real_, B, length(b))   ## this may require large memory when test=TRUE
 #    for(b.i in 1:length(b))
 #      weight[,b.i]=pmax(min.wts,dnorm((mrpp.stats[b[b.i]]-mrpp.stats),0,bw))
-    if(is.finite(bw)) weight = dkernel(kernel)(outer(mrpp.stats, mrpp.stats[b], '-'), 0, bw)    ## this replaces the above 3 lines
-
+	weight = dkernel(kernel)( (mrpp.stats-rep(mrpp.stats[b],each=B) )/ bw)   
+	dim(weight)=c(B, length(b))
 
 #    contrast.mat=matrix(0,choose(N,2),N); k=1
 #    for(i in 1:(N-1))for(j in (i+1):N){contrast.mat[k,i]=1;contrast.mat[k,j]=-1;k=k+1}
@@ -31,7 +29,7 @@ function(y, permutedTrt, bw, r=seq_len(NCOL(y)), test=FALSE,
 #        all.ddelta.dw[is.nan(all.ddelta.dw)]=0
     all.ddelta.dw=apply(y[,r,drop=FALSE],2L,dist)^2/distObj*0.5   ## these 2 lines replace the above 5 lines
         all.ddelta.dw[is.nan(all.ddelta.dw)]=0
-
+	
     if(is.finite(bw)){
         for(r.i in seq(along=r)){
             #dz.dw=.C('mrppstats',all.ddelta.dw[,r.i],permutedTrt,cperm.mat,nrow(permutedTrt),B,N,as.integer(wtmethod[1]),ans=double(B),PACKAGE='MRPP',DUP=FALSE)$ans
@@ -40,7 +38,7 @@ function(y, permutedTrt, bw, r=seq_len(NCOL(y)), test=FALSE,
     #            dd.dw=dz.dw[b[b.i]]-dz.dw
     #            ans[r.i, b[b.i]]=sum(weight[,b.i]*dd.dw)/B  #length(b)
     #        }
-            ans[, r.i] = scale/B* colSums(weight * outer(-dz.dw, dz.dw[b], '+'))    ## this lines replace the above 3 lines
+            ans[, r.i] = scale/B* .colSums(weight * (rep(dz.dw[b], each=B)-dz.dw), B, length(b))    ## this lines replace the above 3 lines
         }
     }else{  ## infinite bw (the same as finite bw, except no weights(i.e. weight=1)
         if(isTRUE(standardized)){
@@ -57,6 +55,27 @@ function(y, permutedTrt, bw, r=seq_len(NCOL(y)), test=FALSE,
     }
     drop(ans)
 }
+
+grad.smoothp.bw <-
+expression( ## simplified from grad.smoothp; allowing a vector of bw's; only used in bw.grad.smoothp
+{
+    B=length(mrpp.stats)
+    b=1L
+	n.bw=length(bw)
+    ans=matrix(NA_real_, n.bw, length(r))
+    N=as.integer(nrow(y))
+
+	all.ddelta.dw=apply(y[,r,drop=FALSE],2L,dist)^2/distObj*0.5   
+	all.ddelta.dw[is.nan(all.ddelta.dw)]=0
+	
+	weights=dkernel(kernel)((mrpp.stats-mrpp.stats[b])/rep(bw, each=B))
+	dim(weights) = c(B, n.bw)
+	for(r.i in seq(along=r)){
+		dz.dw=.Call(mrppstats, all.ddelta.dw[,r.i], permutedTrt, as.numeric(wtmethod[1]), PACKAGE='MRPP')
+		ans[, r.i] = scale/B* .colSums(weights* (dz.dw[b]-dz.dw), B, n.bw)
+	}
+})
+
 
 hessian.smoothp <-
 function(y, permutedTrt, r=seq_len(NCOL(y)), test=FALSE, 

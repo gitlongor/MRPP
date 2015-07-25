@@ -24,32 +24,39 @@ smoothp=function(x, bw=bw.mse.pdf.asym, kernel = c("gaussian", "biweight", 'triw
 }
 
 pkernel=function(kernel= c("gaussian", "biweight", 'triweight', 'tricube',"logistic"), eps=1e-8)
-{
+{## Optimized based on the fact that ^2 and * are faster than other ^ powers
 	kernel=match.arg(kernel)
 	switch(kernel,
 	gaussian=pnorm,
 	biweight = function(x){
-		ans=numeric(0, length(x))
+		ans=numeric( length(x))
 		idx = which(abs(x)<1)
 		x0=x[idx]
-		ans[idx]=1/16 * x0 *(15 - 10 * x0 *x0  + 3 *x0^4)
+		x02=x0^2
+		ans[idx]=0.5 + x0 * ( 0.9375  - 0.625 * x02 + 0.1875 * x02 ^2)
 		ans[x>=1]=1
+		attributes(ans)=attributes(x)
 		ans
 	},
 	triweight = function(x){
-		ans=numeric(0, length(x))
+		ans=numeric( length(x))
 		idx = which(abs(x)<1)
 		x0=x[idx]
-		ans[idx]=1/32 * (35 * x0 - 35 * x0^3 + 21 * x0^5 - 5 * x0^7)
+		x02 = x0 ^2; x03 = x02 * x0
+		ans[idx]=0.5  -0.03125 * x0 * (35 * x02 - 21 * x02^2 + 5 * x03^2 -35) 
 		ans[x>=1]=1
+		attributes(ans)=attributes(x)
 		ans
 	},
 	tricube = function(x){
-		ans=numeric(0, length(x))
+		ans=numeric( length(x))
 		idx = which(abs(x)<1)
 		x0=x[idx]
-		ans[idx]=1/162 *(81 + 140 *x0 -sign(x0)* 105 *x0^4 + 60 *x0^7 -sign(x0)* 14 *x0^10)
+		sig = sign(x0)
+		x02 = x0^2; x03=x02*x0; x04=x02^2
+		ans[idx]=0.00617284 * (81 + 140 * x0 - sig * 105 * x04 + 60 * x03*x04 - sig * 14 * x04 * x03^2)
 		ans[x>=1]=1
+		attributes(ans)=attributes(x)
 		ans
 	},
 	logistic =plogis)
@@ -61,24 +68,27 @@ dkernel=function(kernel= c("gaussian", "biweight", 'triweight', 'tricube',"logis
 	switch(kernel,
 	gaussian=dnorm,
 	biweight = function(x){
-		ans=numeric(0, length(x))
+		ans=numeric( length(x))
 		idx = which(abs(x)<1)
 		x0=x[idx]
 		ans[idx]=15/16 * (1 - x0 *x0)^2
+		attributes(ans)=attributes(x)
 		ans
 	},
 	triweight = function(x){
-		ans=numeric(0, length(x))
+		ans=numeric( length(x))
 		idx = which(abs(x)<1)
 		x0=x[idx]
 		ans[idx]=35/32 * (1  - x0 *x0)^3
+		attributes(ans)=attributes(x)
 		ans
 	},
 	tricube = function(x){
-		ans=numeric(0, length(x))
+		ans=numeric( length(x))
 		idx = which(abs(x)<1)
 		x0=x[idx]
 		ans[idx]=70/81 * (1  - abs(x0^3))^3
+		attributes(ans)=attributes(x)
 		ans
 	},
 	logistic =dlogis)
@@ -113,17 +123,11 @@ bw.mse.pdf.asym=function(x,iter.max=1L,eps=1e-6,start.bw=bw.nrd, verbose=FALSE)
 bw.grad.smoothp <-
 function(y, permutedTrt, r=seq_len(NCOL(y)), bw, 
 	test=FALSE, distFunc=dist,  kernel='gaussian', wtmethod=0, 
-	drop=FALSE, verbose=FALSE, ...)
+	drop=c(FALSE,TRUE), verbose=FALSE, ...)
 ## y=N-by-p data matrix; b=permutation index for the 1st trt; r=dimension index; 
 {
-	permp = if(drop){
-		function(rr)mrpp.test.dist(distFunc(y[,-rr,drop=FALSE]), permutedTrt=permutedTrt, wtmethod=0, ...)$midp
-	}else{
-		function(rr)mrpp.test.dist(distFunc(y[,rr,drop=FALSE]), permutedTrt=permutedTrt, wtmethod=0, ...)$midp
-	}
     if(!is.matrix(y) && !is.data.frame(y)) y = as.matrix(y)
-	unips=sapply(r, permp)
-	
+
 	mrpp = mrpp.test(y[,r,drop=FALSE], permutedTrt=permutedTrt, wtmethod=0, ...)
 	distObj = distFunc(y[,r,drop=FALSE])
 	
@@ -135,23 +139,35 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw,
 		bw = 10^seq(log10(lo)-lf, log10(hi)+lf, length=100)
 	}
 	
-	sig = if(drop) 1 else 1-diag(1, length(r), length(r))
-	unip.approx=function(bw)
-	{
-		smp = smoothp(mrpp$all.statistics, bw=bw, kernel=kernel)$p.value
-		grad = grad.smoothp(y, permutedTrt=permutedTrt,r=r,kernel=kernel, wtmethod=wtmethod, bw=bw, distObj=distObj, mrpp.stats=mrpp$all.statistics)
-		smp - base::drop(sig %*% grad)
+	
+	## pre-computing all.ddelta.dw in grad.smoothp
+	gradEnv=new.env()
+	gradEnv$mrpp.stats=mrpp$all.statistics
+	gradEnv$scale=1
+	eval(grad.smoothp.bw, env=gradEnv)
+	
+	smps = sapply(bw, function(bw) smoothp(mrpp$all.statistics, bw=bw, kernel=kernel)$p.value)
+	
+	ans=numeric(length(drop))
+	for(d.i in seq_along(drop)) {
+		if(drop[d.i]){
+			permp = function(rr)mrpp.test.dist(distFunc(y[,-rr,drop=FALSE]), permutedTrt=permutedTrt, wtmethod=0, ...)$midp
+			approxp = t(smps - gradEnv$ans)
+		}else{
+			permp = function(rr)mrpp.test.dist(distFunc(y[,rr,drop=FALSE]), permutedTrt=permutedTrt, wtmethod=0, ...)$midp
+			approxp = t(smps - gradEnv$ans%*%(1-diag(1, length(r), length(r))))
+		}
+		unips=sapply(r, permp)
+		sse = colSums((approxp - unips)^2)
+		idx=which.min(sse)
+		ans[d.i]=bw[idx]
+		if(verbose){
+			plot(log10(bw), sse, xlab='log10(bandwidth)', ylab='SSE', type='l', ylim=c(0, min(max(sse),10*sse[idx])))
+			abline(v=log10(ans), h=sse[idx], col='gray', lty=3)
+		}
+		if(idx==1L || idx==length(bw))warning('optimal bandwidth occurs at the boundary')
 	}
-	approxp = sapply(bw, unip.approx)
-	sse = colSums((approxp - unips)^2)
-	idx=which.min(sse)
-	ans=bw[idx]
-	if(verbose){
-		plot(log10(bw), sse, xlab='log10(bandwidth)', ylab='SSE', type='l', ylim=c(0, min(max(sse),10*sse[idx])))
-		abline(v=log10(ans), h=sse[idx], col='gray', lty=3)
-	}
-	if(idx==1L || idx==length(bw))warning('optimal bandwidth occurs at the boundary')
-	ans
+	structure(exp(mean(log(ans))), candidates=ans)
 }
 
 
