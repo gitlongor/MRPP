@@ -1,15 +1,25 @@
-\name{bw.mse.pdf.asym}
+\name{bandwidth}
 \Rdversion{1.1}
 \alias{bw.mse.pdf.asym}
+\alias{bw.grad.smoothp}
+\alias{bw.range}
 %- Also NEED an "\alias" for EACH other topic documented here.
 \title{
-Find asymptotically optimal bandwidth for KDE by minimizing MSE at the first data point
+Bandwidth Selection for Kernel Approximation to Discrete Cumulative Distribution Functions
 }
 \description{
-Find asymptotically optimal bandwidth for Gaussian kernel density estimation by minimizing mean squared error at the first data point. 
+\code{bw.mse.pdf.asym} finds asymptotically optimal bandwidth for Gaussian kernel density estimation by minimizing mean squared error at the first data point. 
+
+\code{bw.grad.smoothp} chooses bandwidth based the derivative of smoothed permutation p-values. 
+
+\code{bw.range} returns a vector of candidate bandwidths that cover a large range of reasonable values. 
 }
 \usage{
 bw.mse.pdf.asym(x,iter.max=1L,eps=1e-6,start.bw=bw.nrd, verbose=FALSE)
+bw.grad.smoothp(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL, 
+	distFunc=dist,  kernel='gaussian', wtmethod=0, 
+	method=c('drop1','keep1','dropkeep1','ss.gradp'), verbose=FALSE, \dots)
+bw.range(x, length=200, lower=.05, upper=.95, safety=100)
 }
 %- maybe also "usage" for other objects documented here.
 \arguments{
@@ -20,17 +30,63 @@ bw.mse.pdf.asym(x,iter.max=1L,eps=1e-6,start.bw=bw.nrd, verbose=FALSE)
 }
   \item{start.bw}{A function, a character, or a positive number. If being a function or a character, the corresponding function will be called with \code{x} as the only argument to get the initial bandwidth. When it is a number, it will be used as the starting bandwidth directly.
 }
-  \item{verbose}{Logical, when \code{TRUE}, the bandwidth for each iteration will be printed. 
+  \item{verbose}{Logical. When \code{TRUE}, the bandwidth for each iteration will be printed for \code{bw.mse.pdf.asym}, and diagnostic plots will be produced for \code{bw.grad.smoothp}. 
 }
+  
+  \item{y}{A data matrix with rows being observations and columns being variables. 
+}
+  \item{permutedTrt}{A \code{"permutedTrt"} object from calling \code{\link{permuteTrt}}.
+}
+  \item{r}{An integer vector, indicating the columns (variables) of \code{y} that needs to be considered. 
+}
+  \item{bw}{Either a vector of positive real bandwidths to be searched from, or \code{NULL}. If \code{NULL}, then \code{bw.range} will be called to obtain a vector of candidate of bandwidths.
+}
+  \item{distFunc}{A function that returns a \code{"dist"} object, as in the \code{\link{dist}} function. 
+}
+  \item{kernel}{A character scalar indicating the kernel to be used. Allowed values are given at \code{\link{pkernel}}.
+}
+  \item{wtmethod}{A numeric scalar, as in \code{\link{mrpp.test.dist}}.
+}
+  \item{method}{A character scalar specifying the bandwidth selection method. See details. 
+}
+  \item{\dots}{Additional arguments passed on to \code{\link{mrpp.test}}.
+}
+  \item{length}{A positive integer, specifying the number of candidate bandwidths to be searched from. 
+}
+  \item{lower, upper}{Numeric values between 0 and 1, indicate the quantiles. See details. 
+}
+  \item{safety}{A positive number, indicating the safety zone to be expanded. See details. 
+}
+
 }
 \details{
-The procedure starts from the starting bandwidth specified by \code{start.bw}. The new bandwidth will be computed as 
+The \code{bw.mse.pdf.asym} procedure starts from the starting bandwidth specified by \code{start.bw}. The new bandwidth will be computed as 
 \deqn{
 \left[\frac{Rf(x_1)}{N\lbrace f''(x_1) \rbrace^2} \right]^{1/5}
 }{
 ( {Rf(x_1)} / [N{f''(x_1)}^2] )^{1/5}
 }
 where \code{R} is approximately 0.2821, \code{N} is the sample size and \code{f} is the density estimate using the current bandwidth. 
+
+For \code{bw.grad.smoothp},  if \code{method='drop1'}, the bandwidth best approximating MRPP mid-p-values from dropping one variable at a time will be selected. 
+
+If \code{method='keep1'}, the bandwidth best approximating univariate MRPP mid-p-values will be selection. 
+
+If \code{method='dropkeep1'}, the geometric mean from bandwidths based on \code{method='drop1'} and \code{method='keep1'} will be selected. 
+
+If \code{method='ss.gradp'}, the bandwidth that maximize the sum of squared derivatives of smoothed p-values will be selected.
+
+\code{bw.range} is currently implemented as 
+\preformatted{
+bw.range=function(x, length=200, lower=.05, upper=.95, safety=100)
+{
+	uniqstat=sort(unique(x))
+	lo = quantile(diff(uniqstat), lower)
+	hi = diff(quantile(uniqstat, prob=c(lower, upper)))
+	lf = log10(safety)
+	10^seq(log10(lo)-lf, log10(hi)+lf, length=length)
+}
+}
 }
 \value{
 A numeric positive scalar, giving the final bandwidth. 
@@ -51,13 +107,21 @@ Wand, M. P. and Jones, M. C. (1995). Kernel Smoothing. Chapman and Hall, London.
 set.seed(23490)
 x=rnorm(1000)
 bw.mse.pdf.asym(x)
-bw.constr.midp(x)
-if(interactive()) {
-plot(density(x, bw.mse.pdf.asym(x)), ylim=c(0,dnorm(0)))
-lines(density(x, bw.constr.midp(x)), col='blue')
-abline(v=x[1L])
-curve(dnorm, lty=3, col="grey", add=TRUE)
-}
+
+set.seed(2340)
+x=matrix(rnorm(20*5),20)
+trt=gl(2,10)
+urand.bigz(0,seed=1032940L) # init seed
+pmat=permuteTrt(trt, 5e3L)		## use 500 random permutations
+bw.grad.smoothp(x, pmat, method='drop1', verbose=interactive())
+bw.grad.smoothp(x, pmat, method='keep1', verbose=interactive())
+bw.grad.smoothp(x, pmat, method='dropkeep1', verbose=interactive())
+bw.grad.smoothp(x, pmat, method='ss.gradp', verbose=interactive())
+
+mrpp=mrpp.test(x~trt, permutedTrt=pmat)
+summary( bw.range(mrpp$all.statistics) )
+
+
 }
 % Add one or more standard keywords, see file "KEYWORDS" in the
 % R documentation directory.

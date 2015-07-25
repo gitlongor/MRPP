@@ -1,99 +1,3 @@
-midp = function(x, eps=1e-8)
-{
-	mean(x<=x[1L]-eps) + .5* mean(x>x[1L]-eps & x<x[1L]+eps)
-}
-smoothp=function(x, bw=bw.mse.pdf.asym, kernel = c("gaussian", "biweight", 'triweight', 'tricube',"logistic"), eps=1e-8)
-{
-    if(is.character(bw)) bw=get(bw, mode='function')
-    if(is.function(bw))  bw=bw(x)
-    stopifnot(is.numeric(bw))
-	if(is.character(kernel)) {
-		Kernel = pkernel(kernel)
-	}else if(is.function(kernel)) Kernel = kernel
-	stopifnot(Kernel(-Inf)==0 && Kernel(Inf)==1)
-
-	midp = midp(x, eps)
-	knots=x; n=length(knots); rm(x, eps)
-	f0=function(x)
-	{	nx=length(x)
-		xdiff=x-rep(knots, each=nx)
-		dim(xdiff) = c(nx, n)
-		.rowMeans(Kernel(xdiff/bw), nx, n)
-	}
-	structure(list(p.value = f0(knots[1L]), statistic=knots[1L], cdf=f0, midp=midp, kernel=kernel), class = 'smoothp')
-}
-
-pkernel=function(kernel= c("gaussian", "biweight", 'triweight', 'tricube',"logistic"), eps=1e-8)
-{## Optimized based on the fact that ^2 and * are faster than other ^ powers
-	kernel=match.arg(kernel)
-	switch(kernel,
-	gaussian=pnorm,
-	biweight = function(x){
-		ans=numeric( length(x))
-		idx = which(abs(x)<1)
-		x0=x[idx]
-		x02=x0^2
-		ans[idx]=0.5 + x0 * ( 0.9375  - 0.625 * x02 + 0.1875 * x02 ^2)
-		ans[x>=1]=1
-		attributes(ans)=attributes(x)
-		ans
-	},
-	triweight = function(x){
-		ans=numeric( length(x))
-		idx = which(abs(x)<1)
-		x0=x[idx]
-		x02 = x0 ^2; x03 = x02 * x0
-		ans[idx]=0.5  -0.03125 * x0 * (35 * x02 - 21 * x02^2 + 5 * x03^2 -35) 
-		ans[x>=1]=1
-		attributes(ans)=attributes(x)
-		ans
-	},
-	tricube = function(x){
-		ans=numeric( length(x))
-		idx = which(abs(x)<1)
-		x0=x[idx]
-		sig = sign(x0)
-		x02 = x0^2; x03=x02*x0; x04=x02^2
-		ans[idx]=0.00617284 * (81 + 140 * x0 - sig * 105 * x04 + 60 * x03*x04 - sig * 14 * x04 * x03^2)
-		ans[x>=1]=1
-		attributes(ans)=attributes(x)
-		ans
-	},
-	logistic =plogis)
-}
-
-dkernel=function(kernel= c("gaussian", "biweight", 'triweight', 'tricube',"logistic"), eps=1e-8)
-{
-	kernel=match.arg(kernel)
-	switch(kernel,
-	gaussian=dnorm,
-	biweight = function(x){
-		ans=numeric( length(x))
-		idx = which(abs(x)<1)
-		x0=x[idx]
-		ans[idx]=15/16 * (1 - x0 *x0)^2
-		attributes(ans)=attributes(x)
-		ans
-	},
-	triweight = function(x){
-		ans=numeric( length(x))
-		idx = which(abs(x)<1)
-		x0=x[idx]
-		ans[idx]=35/32 * (1  - x0 *x0)^3
-		attributes(ans)=attributes(x)
-		ans
-	},
-	tricube = function(x){
-		ans=numeric( length(x))
-		idx = which(abs(x)<1)
-		x0=x[idx]
-		ans[idx]=70/81 * (1  - abs(x0^3))^3
-		attributes(ans)=attributes(x)
-		ans
-	},
-	logistic =dlogis)
-}
-
 bw.mse.pdf.asym=function(x,iter.max=1L,eps=1e-6,start.bw=bw.nrd, verbose=FALSE)
 {#require(ks)
     if(is.function(start.bw)) bw0=start.bw(x)
@@ -120,58 +24,119 @@ bw.mse.pdf.asym=function(x,iter.max=1L,eps=1e-6,start.bw=bw.nrd, verbose=FALSE)
     }
 }
 
+bw.range=function(x, length=200, lower=.05, upper=.95, safety=100)
+{
+	uniqstat=sort(unique(x))
+	lo = quantile(diff(uniqstat), lower)
+	hi = diff(quantile(uniqstat, prob=c(lower, upper)))
+	lf = log10(safety)
+	10^seq(log10(lo)-lf, log10(hi)+lf, length=length)
+}
+
 bw.grad.smoothp <-
-function(y, permutedTrt, r=seq_len(NCOL(y)), bw, 
-	test=FALSE, distFunc=dist,  kernel='gaussian', wtmethod=0, 
-	drop=c(FALSE,TRUE), verbose=FALSE, ...)
+function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL, 
+	distFunc=dist,  kernel='gaussian', wtmethod=0, 
+	method=c('drop1','keep1','dropkeep1','ss.gradp'), verbose=FALSE, ...)
 ## y=N-by-p data matrix; b=permutation index for the 1st trt; r=dimension index; 
 {
+	method=match.arg(method)
     if(!is.matrix(y) && !is.data.frame(y)) y = as.matrix(y)
 
-	mrpp = mrpp.test(y[,r,drop=FALSE], permutedTrt=permutedTrt, wtmethod=0, ...)
+	mrpp = mrpp.test(y[,r,drop=FALSE], permutedTrt=permutedTrt, wtmethod=wtmethod, ...)
 	distObj = distFunc(y[,r,drop=FALSE])
 	
-	if(missing(bw)) {
-		uniqstat=unique(mrpp$all.statistics)
-		lo = quantile(diff(sort(uniqstat)), .05)
-		hi = diff(quantile(uniqstat, prob=c(.05, .95)))
-		fact=100; lf = log10(fact)
-		bw = 10^seq(log10(lo)-lf, log10(hi)+lf, length=100)
-	}
-	
+	if(missing(bw) || is.null(bw)) bw = bw.range(mrpp$all.statistics)	
 	
 	## pre-computing all.ddelta.dw in grad.smoothp
 	gradEnv=new.env()
 	gradEnv$mrpp.stats=mrpp$all.statistics
 	gradEnv$scale=1
-	eval(grad.smoothp.bw, env=gradEnv)
+	eval(grad.smoothp.bw, envir=gradEnv)
 	
-	smps = sapply(bw, function(bw) smoothp(mrpp$all.statistics, bw=bw, kernel=kernel)$p.value)
+	drop=switch(method, drop1 = TRUE, keep1 = FALSE, dropkeep1 = c(FALSE, TRUE), NA)
+	if(!any(is.na(drop))) {
+		smps = sapply(bw, function(bw) pkde(mrpp$all.statistics, bw=bw, kernel=kernel)(mrpp$all.statistics[1L]) )
+		ans=numeric(length(drop))
+		sses = matrix(NA_real_, length(drop), length(bw))
 	
-	ans=numeric(length(drop))
-	for(d.i in seq_along(drop)) {
-		if(drop[d.i]){
-			permp = function(rr)mrpp.test.dist(distFunc(y[,-rr,drop=FALSE]), permutedTrt=permutedTrt, wtmethod=0, ...)$midp
-			approxp = t(smps - gradEnv$ans)
-		}else{
-			permp = function(rr)mrpp.test.dist(distFunc(y[,rr,drop=FALSE]), permutedTrt=permutedTrt, wtmethod=0, ...)$midp
-			approxp = t(smps - gradEnv$ans%*%(1-diag(1, length(r), length(r))))
+		for(d.i in seq_along(drop)) {
+			if(drop[d.i]){
+				permp = function(rr)mrpp.test.dist(distFunc(y[,-rr,drop=FALSE]), permutedTrt=permutedTrt, wtmethod=wtmethod, ...)$midp
+				approxp = t(smps - gradEnv$ans)
+			}else{
+				permp = function(rr)mrpp.test.dist(distFunc(y[,rr,drop=FALSE]), permutedTrt=permutedTrt, wtmethod=wtmethod, ...)$midp
+				approxp = t(smps - gradEnv$ans%*%(1-diag(1, length(r), length(r))))
+			}
+			unips=sapply(r, permp)
+			sses[d.i,] = colSums((approxp - unips)^2)
+			idx=which.min(sses[d.i,])
+			ans[d.i]=bw[idx]
+
+			if(idx==1L || idx==length(bw))warning('optimal bandwidth occurs at the boundary')
 		}
-		unips=sapply(r, permp)
-		sse = colSums((approxp - unips)^2)
-		idx=which.min(sse)
-		ans[d.i]=bw[idx]
 		if(verbose){
-			plot(log10(bw), sse, xlab='log10(bandwidth)', ylab='SSE', type='l', ylim=c(0, min(max(sse),10*sse[idx])))
-			abline(v=log10(ans), h=sse[idx], col='gray', lty=3)
+			min.sse=apply(sses, 1L, min)
+			plot(log10(bw), sses[1L,], xlab='bandwidth', ylab='SS of p-value approx errors', type='l', ylim=c(min(min.sse), min(max(sses),10*max(min.sse))), main='', axes=FALSE)
+			title(main=switch(method, drop1='Drop 1 Variable', keep1='Keep 1 Variable', dropkeep1='Drop 1 and/or Keep 1 Variable'))
+			axis(3, at = log10(ans[1L]), labels=sprintf('%.1g',ans[1L]), col='red',col.ticks='red',col.axis='red')
+			for(d.i in safeseq(2L, length(drop), by=1L)){
+				lines(log10(bw), sses[d.i,])
+				axis(3, at = log10(ans[d.i]), labels=sprintf('%.1g',ans[d.i]), col='red',col.ticks='red',col.axis='red')
+			}
+			axis(2)
+			ats=axTicks(1)
+			axis(1, at=ats, labels=parse(text=paste0('10^',ats))  )
+			abline(v=log10(ans), h=min.sse, col='red', lty=3); box()
+			
+			ans=exp(mean(log(ans)))
+			axis(1, at = log10(ans), labels=sprintf('%.1g',ans), col='blue',col.ticks='blue', col.axis='blue')
+			abline(v=log10(ans), col='blue', lty=3)
+		}else ans=exp(mean(log(ans)))
+	}else if(method=='ss.gradp'){
+		ss = rowSums(gradEnv$ans^2)
+		idx = which.max(ss)
+		ans=bw[idx]
+		if(verbose){
+			plot(log10(bw), ss, xlab='bandwidth', ylab='SS of p-value gradients', type='l', axes=FALSE )
+			axis(2)
+			axis(1, at = log10(ans), labels=sprintf('%.1g',ans), col='blue',col.ticks='blue', col.axis='blue')
+			ats=axTicks(1)
+			axis(1, at=ats, labels=parse(text=paste0('10^',ats))  )
+			abline(v=log10(ans), h=ss[idx], col='blue', lty=3)
+			box()
 		}
 		if(idx==1L || idx==length(bw))warning('optimal bandwidth occurs at the boundary')
-	}
-	structure(exp(mean(log(ans))), candidates=ans)
+		ans = exp(mean(log(ans)))
+	}else stop('unknown method argument')
+	ans
 }
 
 
 if(FALSE){
+
+smoothp=function(x, bw=bw.mse.pdf.asym, kernel = c("gaussian", "biweight", 'triweight', 'tricube',"logistic"), eps=1e-8)
+{
+    if(is.character(bw)) bw=get(bw, mode='function')
+    if(is.function(bw))  bw=bw(x)
+    stopifnot(is.numeric(bw))
+	if(is.character(kernel)) {
+		Kernel = pkernel(kernel)
+	}else if(is.function(kernel)) Kernel = kernel
+	stopifnot(Kernel(-Inf)==0 && Kernel(Inf)==1)
+
+	midp = midp(x, eps)
+	knots=x; n=length(knots); rm(x, eps)
+	f0=function(x)
+	{	nx=length(x)
+		xdiff=x-rep(knots, each=nx)
+		dim(xdiff) = c(nx, n)
+		.rowMeans(Kernel(xdiff/bw), nx, n)
+	}
+	structure(list(p.value = f0(knots[1L]), statistic=knots[1L], cdf=f0, midp=midp, kernel=kernel), class = 'smoothp')
+}
+
+
+
 bw.constr.midp=function(x, eps = 1e-8, verbose=FALSE)
 {## this won't work when x[1]==min(x)
 	midp = mean(x<=x[1L]-eps) + .5* mean(x>x[1L]-eps & x<x[1L]+eps)

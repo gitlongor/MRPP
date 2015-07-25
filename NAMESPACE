@@ -3,7 +3,7 @@ import(gmp)
 #importFrom(pi0,combn2R)
 ##importExcept(Matrix, summary, update)
 importFrom(QuasiSeq, nlsolve)
-
+importFrom(ks, vech)
 
 
 export(
@@ -11,6 +11,7 @@ export(
 	mrppBVS.test,
 	bw.mse.pdf.asym,
 	bw.grad.smoothp,
+	bw.range,
 	grad.smoothp,
 	get.p.dd.dw,
 	permuteTrt,
@@ -33,7 +34,10 @@ export(
 	smrpp.penWt, 
 	smrppInitSpar, 
 	transform.matrix, 
-	transform.numeric
+	transform.numeric, 
+	pkernel, 
+	dkernel, 
+	pkde
 )
 
 

@@ -40,7 +40,7 @@ function(y,permutedTrt,
         mrpp.rslt=mrpp.test.dist(dist0,permutedTrt=permutedTrt,...)
         mrpp.stats0=mrpp.rslt$all.statistics
         imptnc=if(importance=='dp.dw') 
-                    grad.smoothp(y[,idx,drop=FALSE],permutedTrt,distObj=dist0,mrpp.stats=mrpp.stats0, scale=B, ...) 
+                    grad.smoothp(y[,idx,drop=FALSE],permutedTrt,distObj=dist0,mrpp.stats=mrpp.stats0, ...) 
                else get.p.dd.dw(y[,idx,drop=FALSE],permutedTrt,...)
 
         var.rank=order(imptnc)

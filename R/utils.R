@@ -7,3 +7,9 @@ function (from = 1L, to = 1L, by = 1L, ...)
     }
     else seq(from = from, to = to, by = by, ...)
 }
+
+
+midp = function(x, eps=1e-8)
+{
+	mean(x<x[1L]-eps) + .5* mean(x>=x[1L]-eps & x<=x[1L]+eps)
+}
