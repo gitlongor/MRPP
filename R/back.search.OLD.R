@@ -1,3 +1,4 @@
+if(FALSE){
 mrppBVS <-
 function(y,permutedTrt, 
          importance=c('dp.dw','p.dd.dw'),
@@ -77,3 +78,4 @@ function(y,permutedTrt,
     }
 }
 
+}
