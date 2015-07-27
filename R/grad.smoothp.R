@@ -14,9 +14,10 @@ function(y, permutedTrt, bw, r=seq_len(NCOL(y)), test=FALSE,
     #if(missing(cperm.mat)) cperm.mat=apply(permutedTrt,2,function(kk)(1:N)[-kk])
 	adjust=match.arg(adjust, c('none','weighted.mean','scale'))
 
-	if(missing(bw)){
-		bw=bw.grad.smoothp(y,permutedTrt=permutedTrt,r=r, kernel=kernel, wtmethod=wtmethod, method='ss.gradp')
-	}
+	if(missing(bw)) bw='dropkeep1'
+	if(is.character(bw))
+		bw=bw.grad.smoothp(y,permutedTrt=permutedTrt,r=r, kernel=kernel, wtmethod=wtmethod, method=bw)
+	
 #    weight=matrix(NA_real_, B, length(b))   ## this may require large memory when test=TRUE
 #    for(b.i in 1:length(b))
 #      weight[,b.i]=pmax(min.wts,dnorm((mrpp.stats[b[b.i]]-mrpp.stats),0,bw))
