@@ -2,7 +2,7 @@ if (FALSE) {
 ### This is obsoleted code that relies on Witten & Tibshirani (JASA, 2010) criterion. 
 
 smrpp.test.default <-
-function(y, trt, B=nparts(table(trt)), permutedTrt, wtmethod=0, eps=1e-8, spar=seq(1,sqrt(ncol(y)),length=100L), ...) ## this uses C code
+function(y, trt, B=nparts(table(trt)), permutedTrt, weight.trt="df", eps=1e-8, spar=seq(1,sqrt(ncol(y)),length=100L), ...) ## this uses C code
 ## y is a dist object; wtmethod: 0=sample size-1; 1=sample size
 {
     p1=2  ## order of univariate minkowski dist, to the power of p1
@@ -12,7 +12,7 @@ function(y, trt, B=nparts(table(trt)), permutedTrt, wtmethod=0, eps=1e-8, spar=s
     R=ncol(y)
     N= nrow(y)
     spar=sort(spar[spar>=1 & spar<=sqrt(R)])
-    wtmethod=as.numeric(wtmethod[1])
+    wtmethod=as.numeric(weight.trt)
     if(missing(trt)) {  ## recoving trt from the first permutation
       trt=trt.permutedTrt(permutedTrt)
 
@@ -241,14 +241,14 @@ function(dp.dw, spar, simplify=TRUE)
 
 if(FALSE){
 smrpp.test.default <-
-function(y, trt, B=nparts(table(trt)), permutedTrt, wtmethod=0, eps=1e-8, spar, verbose=TRUE, ...) ## this uses C code and treats lambda as spar
+function(y, trt, B=nparts(table(trt)), permutedTrt, weight.trt="df", eps=1e-8, spar, verbose=TRUE, ...) ## this uses C code and treats lambda as spar
 ## y is a dist object; wtmethod: 0=sample size-1; 1=sample size
 {
     if(missing(y) ) stop('dist object missing or incorrect')
     if(!is.matrix(y) && !is.data.frame(y)) y= as.matrix(y)
     R=ncol(y)
     N= nrow(y)
-    wtmethod=as.numeric(wtmethod[1])
+    wtmethod=as.numeric(weight.trt)
     if(missing(trt)) {  ## recoving trt from the first permutation
       trt=trt.permutedTrt(permutedTrt)
 
@@ -264,7 +264,7 @@ function(y, trt, B=nparts(table(trt)), permutedTrt, wtmethod=0, eps=1e-8, spar, 
     tabtrt=table(trt)
     ntrt=length(tabtrt)
 
-    dp.dw=grad.smoothp(y, permutedTrt, test = TRUE, wtmethod=wtmethod)  # B x R matrix
+    dp.dw=grad.smoothp(y, permutedTrt, test = TRUE, weight.trt=weight.trt)  # B x R matrix
     sparMinMax=apply(dp.dw, 1L, smrpp.defaultSpar, nspar=3L, ...)
     sparMin=min(sparMinMax[1L,])
     if(missing(spar)){
@@ -365,7 +365,7 @@ function(y, trt, B=nparts(table(trt)), permutedTrt, wtmethod=0, eps=1e-8, spar, 
 }
 
 smrpp.test.default <-
-function(y, trt, B=nparts(table(trt)), permutedTrt, wtmethod=0,  outerStat=c('WDISCO 1/F','WMRPP P'), eps=1e-8, spar, verbose=TRUE, ...) ## treats delta as spar
+function(y, trt, B=nparts(table(trt)), permutedTrt, weight.trt="df",  outerStat=c('WDISCO 1/F','WMRPP P'), eps=1e-8, spar, verbose=TRUE, ...) ## treats delta as spar
 ## y is a dist object; wtmethod: 0=sample size-1; 1=sample size
 {
     if(missing(y) ) stop('dist object missing or incorrect')
@@ -373,7 +373,7 @@ function(y, trt, B=nparts(table(trt)), permutedTrt, wtmethod=0,  outerStat=c('WD
     if(!is.matrix(y) && !is.data.frame(y)) y= as.matrix(y)
     R=ncol(y)
     N= nrow(y)
-    wtmethod=as.numeric(wtmethod[1])
+    wtmethod=as.numeric(weight.trt)
     if(missing(trt)) {  ## recoving trt from the first permutation
       trt=trt.permutedTrt(permutedTrt)
 
@@ -389,7 +389,7 @@ function(y, trt, B=nparts(table(trt)), permutedTrt, wtmethod=0,  outerStat=c('WD
     tabtrt=table(trt)
     ntrt=length(tabtrt)
 
-    dp.dw=grad.smoothp(y, permutedTrt, test = TRUE, wtmethod=wtmethod)  # B x R matrix
+    dp.dw=grad.smoothp(y, permutedTrt, test = TRUE, weight.trt=weight.trt)  # B x R matrix
 #    sparMinMax=apply(dp.dw, 1L, smrppInitSpar, nspar=3L, ...)
 #    sparMin=max(sparMinMax[1L,])
     sparMin=max(apply(dp.dw, 1L, min)) #sparMinMax[1L,])

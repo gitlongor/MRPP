@@ -1,6 +1,6 @@
 R_CHECK_TIMINGS_ = Sys.getenv('_R_CHECK_TIMINGS_') != ''
 
-require(MRPP)
+library(MRPP)
 set.seed(2340)
 trt=ordered(sample(gl(2,10)), levels=c('1','2'))
 nparts(table(trt)) == 92378L		## 92378 partitions =  choose(20,10)/2
@@ -48,6 +48,10 @@ if(!R_CHECK_TIMINGS_){
 			pmat=permuteTrt(trt, 1e7L)
 			stopifnot(ncol(pmat[[1L]])==np)
 			stopifnot(identical(part0, lapply(pmat, '[',,1L)))
+			
+			trt0=trt.permutedTrt(pmat)
+			pmat2=permuteTrt(trt0, 1e7L)
+			stopifnot(identical(pmat, pmat2))
 		}
 		
 	}

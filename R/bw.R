@@ -35,14 +35,17 @@ bw.range=function(x, length=200, lower=.05, upper=.95, safety=100)
 
 bw.grad.smoothp <-
 function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL, 
-	distFunc=dist,  kernel='gaussian', wtmethod=0, 
+	distFunc=dist,  kernel='gaussian', weight.trt="df", 
 	method=c('drop1','keep1','dropkeep1','ss.gradp'), verbose=FALSE, ...)
 ## y=N-by-p data matrix; b=permutation index for the 1st trt; r=dimension index; 
 {
 	method=match.arg(method)
     if(!is.matrix(y) && !is.data.frame(y)) y = as.matrix(y)
+	R=NCOL(y)
+	if(R==1L ) method='ss.gradp'
 
-	mrpp = mrpp.test(y[,r,drop=FALSE], permutedTrt=permutedTrt, wtmethod=wtmethod, ...)
+	mrpp = mrpp.test(y[,r,drop=FALSE], permutedTrt=permutedTrt, weight.trt=weight.trt, ...)
+	weight.trt = attr(mrpp$parameter, 'weight.trt')
 	distObj = distFunc(y[,r,drop=FALSE])
 	
 	if(missing(bw) || is.null(bw)) bw = bw.range(mrpp$all.statistics)	
@@ -61,10 +64,10 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 	
 		for(d.i in seq_along(drop)) {
 			if(drop[d.i]){
-				permp = function(rr)mrpp.test.dist(distFunc(y[,-rr,drop=FALSE]), permutedTrt=permutedTrt, wtmethod=wtmethod, ...)$midp
+				permp = function(rr)mrpp.test.dist(distFunc(y[,-rr,drop=FALSE]), permutedTrt=permutedTrt, weight.trt=weight.trt, ...)$midp
 				approxp = t(smps - gradEnv$ans)
 			}else{
-				permp = function(rr)mrpp.test.dist(distFunc(y[,rr,drop=FALSE]), permutedTrt=permutedTrt, wtmethod=wtmethod, ...)$midp
+				permp = function(rr)mrpp.test.dist(distFunc(y[,rr,drop=FALSE]), permutedTrt=permutedTrt, weight.trt=weight.trt, ...)$midp
 				approxp = t(smps - gradEnv$ans%*%(1-diag(1, length(r), length(r))))
 			}
 			unips=sapply(r, permp)

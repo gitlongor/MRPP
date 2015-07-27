@@ -14,8 +14,8 @@ Permutation-based variable importance measure
 \usage{
 grad.smoothp(y, permutedTrt, bw, r=seq_len(NCOL(y)), test=FALSE, 
         distObj=dist(y), mrpp.stats=NULL, 
-        kernel='biweight', wtmethod=0, adjust='none')
-get.p.dd.dw(y, permutedTrt, r = seq_len(ncol(y)), wtmethod=0, eps=1e-8)
+        kernel='biweight', weight.trt="df", adjust='none')
+get.p.dd.dw(y, permutedTrt, r = seq_len(ncol(y)), weight.trt="df", eps=1e-8)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -31,7 +31,7 @@ get.p.dd.dw(y, permutedTrt, r = seq_len(ncol(y)), wtmethod=0, eps=1e-8)
 }
   \item{mrpp.stats}{A vector of all observed MRPP test statistics. If this is \code{NULL}, then 
   
- \code{mrpp.test.dist(distObj,permutedTrt=permutedTrt,wtmethod=wtmethod[1])$all.statistics}
+ \code{mrpp.test.dist(distObj,permutedTrt=permutedTrt,weight.trt=weight.trt)$all.statistics}
 
   will be called to obtain it.  
 }
@@ -40,7 +40,7 @@ get.p.dd.dw(y, permutedTrt, r = seq_len(ncol(y)), wtmethod=0, eps=1e-8)
   \item{bw}{A numeric scalar giving the bandwidth used for kernel density estimation of \code{mrpp.stats}. This might be positive infinity. 
 }
 %  \item{cperm.mat}{}
-  \item{wtmethod}{0 or 1. If 0, the treatment group weight for MRPP statistic will be sample size minus 1. If 1, the sample size of the treatment group.
+  \item{weight.trt}{As in \code{\link{mrpp.test.dist}}.
 }
   \item{adjust}{A character scalar being one of \code{c('none','weighted.mean','scale')}. See details. 
 }
@@ -83,7 +83,7 @@ set.seed(2340)
 x=matrix(rnorm(20*5),20)
 trt=gl(2,10)
 urand.bigz(0,seed=1032940L) # init seed
-pmat=permuteTrt(trt, 5e3L)		## use 500 random permutations
+pmat=permuteTrt(trt, 5e3L)		## use 5000 random permutations
 (ir1=grad.smoothp(x, pmat))
 grad.smoothp(x, pmat, adjust='weighted.mean')
 grad.smoothp(x, pmat, adjust='scale')

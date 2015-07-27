@@ -52,12 +52,12 @@ trt=gl(2,10)
 nparts( table(trt))		## 92378 partitions =  choose(20,10)/2
 urand.bigz(0,seed=1032940L) # init seed
 pmat=permuteTrt(trt, 5e2L)		## use 500 random permutations
-mrpp.test(dist(x), trt, permutedTrt=pmat, wtmethod=0 ) ## MRPP for all variables
+mrpp.test(dist(x), trt, permutedTrt=pmat, weight.trt="df" ) ## MRPP for all variables
 
 \dontrun{
 mrppBVS(x, pmat) ## backward selection of variables
 mrppBVS.test(x, pmat) ## nested permutation test with backward variable selection
-smrpp.test(x, trt, permutedTrt=pmat, wtmethod=0 ) 
+smrpp.test(x, trt, permutedTrt=pmat, weight.trt="df" ) 
 }
 
 }

@@ -73,8 +73,14 @@ trt=sample(gl(2,10))[-1] ## two-group comparison with slight imbalance
 nparts(table(trt))		## 92378 partitions =  choose(19,10)
 urand.bigz(0,seed=1032940L) # init seed
 pmat=permuteTrt(trt, 1e3L)		## use 1000 random permutations
+ntrt.permutedTrt(pmat)  ## 2 treatments
+nperms.permutedTrt(pmat) ## 1e3L permutations
 \dontrun{
 pmat=permuteTrt(trt, 1e6L)		## use all partitions, as 1e6L >= 92378 
+stopifnot(identical(
+  permuteTrt(trt.permutedTrt(pmat), 1e6L), 
+  pmat
+))
 }
 
 }

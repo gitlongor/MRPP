@@ -17,7 +17,7 @@ Bandwidth Selection for Kernel Approximation to Discrete Cumulative Distribution
 \usage{
 bw.mse.pdf.asym(x,iter.max=1L,eps=1e-6,start.bw=bw.nrd, verbose=FALSE)
 bw.grad.smoothp(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL, 
-	distFunc=dist,  kernel='gaussian', wtmethod=0, 
+	distFunc=dist,  kernel='gaussian', weight.trt="df", 
 	method=c('drop1','keep1','dropkeep1','ss.gradp'), verbose=FALSE, \dots)
 bw.range(x, length=200, lower=.05, upper=.95, safety=100)
 }
@@ -45,7 +45,7 @@ bw.range(x, length=200, lower=.05, upper=.95, safety=100)
 }
   \item{kernel}{A character scalar indicating the kernel to be used. Allowed values are given at \code{\link{pkernel}}.
 }
-  \item{wtmethod}{A numeric scalar, as in \code{\link{mrpp.test.dist}}.
+  \item{weight.trt}{As in \code{\link{mrpp.test.dist}}.
 }
   \item{method}{A character scalar specifying the bandwidth selection method. See details. 
 }

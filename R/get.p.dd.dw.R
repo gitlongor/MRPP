@@ -2,7 +2,7 @@ get.p.dd.dw <-
 function(y, permutedTrt, r=seq_len(ncol(y)), #test=F, 
                         #distObj=dist(y), 
                         #cperm.mat, 
-                        wtmethod=0, 
+                        weight.trt="df", 
                         eps=1e-8
                     )      
 ## b=permutation index; r=dimension index; 
@@ -23,8 +23,9 @@ function(y, permutedTrt, r=seq_len(ncol(y)), #test=F,
     all.ddelta.dw=apply(y[,r,drop=FALSE],2L,dist)^2/dist(y)*0.5   ## these 2 lines replace the above 5 lines
         all.ddelta.dw[is.nan(all.ddelta.dw)]=0
 
+	weight.trt = mrpp.weight.trt(weight.trt, trt.permutedTrt(permutedTrt))$weight.trt[names(permutedTrt)]
     for(r.i in seq(along=r)){
-        dz.dw=.Call(mrppstats,all.ddelta.dw[,r.i],permutedTrt, as.numeric(wtmethod[1]), PACKAGE='MRPP')
+        dz.dw=.Call(mrppstats,all.ddelta.dw[,r.i],permutedTrt, weight.trt, PACKAGE='MRPP')
         ans[r.i]=mean(dz.dw[1]-dz.dw>= -eps)
     }
     drop(ans)

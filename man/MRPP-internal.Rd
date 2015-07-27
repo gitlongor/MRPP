@@ -9,7 +9,7 @@ Internal functions not be used by the end user
 \code{get.p.L1dEuc} computes variable importance measure by using (dimension specific L1 distance divided by Euclidean distance across all dimensions) as the new distance function in MRPP
 }
 \usage{
-get.p.L1dEuc(y, permutedTrt, r = seq_len(ncol(y)), wtmethod=0, eps=1e-8)
+get.p.L1dEuc(y, permutedTrt, r = seq_len(ncol(y)), weight.trt="df", eps=1e-8)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -19,7 +19,7 @@ get.p.L1dEuc(y, permutedTrt, r = seq_len(ncol(y)), wtmethod=0, eps=1e-8)
 }
   \item{r}{A positive integer vector, specifying variables for which variable importance measure is requested. 
 }
-  \item{wtmethod}{0 or 1. If 0, the treatment group weight for MRPP statistic will be sample size minus 1. If 1, the sample size of the treatment group.
+  \item{weight.trt}{As in \code{\link{mrpp.test.dist}}.
 }
   \item{eps}{A small positive tolerance, the same as described in \code{\link{mrpp.test}}. 
 }

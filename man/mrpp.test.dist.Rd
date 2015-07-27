@@ -15,7 +15,7 @@ K-sample MRPP test
 \usage{
 mrpp.test(y, \dots)
 \method{mrpp.test}{dist}(y, trt, B = as.integer(min(nparts(table(trt)), 1e4L)), 
-		permutedTrt, wtmethod=0, eps=1e-8, \dots)
+		permutedTrt, weight.trt='df', eps=1e-8, \dots)
 \method{mrpp.test}{formula}(y, data, \dots)
 \method{mrpp.test}{default}(y, \dots)
 }
@@ -29,7 +29,7 @@ mrpp.test(y, \dots)
 }
   \item{permutedTrt}{An optional permutation index matrix. If missing, this will be computed as \code{permuteTrt(trt,B)}. See \code{\link{permuteTrt}}. 
 }
-  \item{wtmethod}{0 or 1, where 0 stands for weighting each treatment group by sample size - 1, and 1 stands for weighting by sample size. 
+  \item{weight.trt}{Either a character scalar being one of \code{c("df", "n", "equal", "terms")} or a positive numeric vector of length \code{nlevels(trt)} subject to sum-to-1 constraint. See details. 
 }
   \item{eps}{A small non-negative number, differences below which among permuted test statistics are treated as equal.
 }
@@ -37,11 +37,21 @@ mrpp.test(y, \dots)
   \item{\dots}{Additional arguments passed to the methods. 
 }
 }
+\details{
+For the \code{weight.trt} argument, suppose that \code{n} denote the vector sample sizes for each treatment. Then, 
+\itemize{
+\item{\code{weight.trt="df"} uses group (treatment) weights proportional to \code{n-1};}
+\item{ \code{weight.trt="df"} uses group (treatment) weights proportional to \code{n};}
+\item{\code{weight.trt="equal"} uses equal group (treatment) weights; and }
+\item{\code{weight.trt="terms"} uses group (treatment) weights proportional to \code{choose(n,2)}.}
+} 
+
+}
 
 \value{
 An \code{htest} object with the following components:
 \item{statistic }{The observed test statistic.}
-\item{all.statistics }{All permuted test statistics.}
+\item{all.statistics }{\emph{All} permuted test statistics.}
 \item{p.value }{The permutation p-value.}
 \item{parameter }{A vector of the number of permutations and the weighting method.}
 \item{data.name }{The character name of the data.}
@@ -71,15 +81,15 @@ pmat=permuteTrt(trt, 5e2L)		## use 500 random permutations
 pmat=permuteTrt(trt, 1e6L)		## use all partitions, as 1e6L >= 92378 
 }
 ### Distance matrix interface
-mrpp.test(dist(x), trt, permutedTrt=pmat, wtmethod=0 ) 
+mrpp.test(dist(x), trt, permutedTrt=pmat, weight.trt="df" ) 
 
 ### Data matrix interface
-mrpp.test(x, trt, permutedTrt=pmat, wtmethod=0 ) 
+mrpp.test(x, trt, permutedTrt=pmat, weight.trt="df" ) 
 
 ### Formula interface
 dat=data.frame(x, trt)
 fmla=as.formula(sprintf("cbind(\%s)~trt",paste("X",1:5,sep="",collapse=",")))
-mrpp.test(fmla, dat, permutedTrt=pmat, wtmethod=0 )
+mrpp.test(fmla, dat, permutedTrt=pmat, weight.trt="df" )
 
 }
 % Add one or more standard keywords, see file "KEYWORDS" in the

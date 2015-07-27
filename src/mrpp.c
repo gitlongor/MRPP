@@ -161,15 +161,15 @@ void mrppstats2(double const * const x, int const * const perm, int const * cons
 #endif
 
 	
-static R_INLINE SEXP mrppstats_listOfMatrix(double * ptrY, SEXP permMats, double wt, R_len_t N)
+static R_INLINE SEXP mrppstats_listOfMatrix(double * ptrY, SEXP permMats, double * wt, R_len_t N)
 {
 	/* ptrY is the REAL pointer to the vector of a 'dist' object with each element being double */
 	/* permMats is a 'list', of n * B permutation indices; see permuteTrt. */
-	/* wt is a double scaler of 0 or 1 weighting method: 0.0=sample size-1; 1.0=sample size */
+	/* wt is a double vector group weights (C_k in Mielke & Berry) */
 	/* N is the total sample size */
     SEXP ans;
     R_len_t t, B, ntrt, b, n;
-    double  * ptrAns, denom, dn;
+    double  * ptrAns, fact, dn;
 	int * ptrPerm;
     
     ntrt=LENGTH(permMats);
@@ -186,30 +186,32 @@ static R_INLINE SEXP mrppstats_listOfMatrix(double * ptrY, SEXP permMats, double
 
     for(t=ntrt-1; t>=0; --t){
         n = Rf_nrows(VECTOR_ELT(permMats, t));
-        dn = (double) n;
-        denom = 1.0 / (dn - wt) ;
+		if (n<=1) continue;
+        dn = (double) n;		
+        fact = wt[t] / dn / (dn - 1.0) ;
 #ifdef DEBUG
-		Rprintf("t=%d\tn=%d\tdn=%f\tdenom=%f\n", t, n, dn, denom);
+		Rprintf("t=%d\tn=%d\tdn=%f\tdenom=%f\n", t, n, dn, fact);
 #endif
         ptrPerm = INTEGER(VECTOR_ELT(permMats, t)); 
         for(b=0; b<B; ++b){
-            ptrAns[b] += sumSubMatSorted(ptrY,  ptrPerm + (b * n)  , n, N) * denom;
+            ptrAns[b] += sumSubMatSorted(ptrY,  ptrPerm + (b * n)  , n, N) * fact;
         }
     }
     UNPROTECT(1);
     return(ans);
 }
 
-static R_INLINE SEXP mrppstats_string(double * ptrY, SEXP permString, SEXP perm0, double wt, R_len_t N)
+static R_INLINE SEXP mrppstats_string(double * ptrY, SEXP permString, SEXP perm0, double * wt, R_len_t N)
 {
 	/* ptrY is the REAL pointer to the vector of a 'dist' object with each element being double */
-	/* permMats is a permutedTrt object with 'idx' attribute being a character vector. */
-	/* wt is a double scaler of 0 or 1 weighting method: 0.0=sample size-1; 1.0=sample size */
+	/* permString is a character vector of factoradic numbers. */
+	/* perm0 is a 'list', of n * 1 permutation indices; see permuteTrt. */
+	/* wt is a double vector group weights (C_k in Mielke & Berry) */
 	/* N is the total sample size */
     SEXP ans, perm, NSEXP, string1;
     R_len_t j, t, B, ntrt, b, *ns, **ptrPerm0, *permBuf, *permBuf0, *sortBuf, * ptrPerm;
-    double  * ptrAns,  dn, *denoms;
-	SEXP dec2pvCall, dec2pvCall2;
+    double  * ptrAns,  dn, *facts;
+	SEXP dec2pv, dec2pvCall, dec2pvCall2;
 	 
 	PROTECT(NSEXP = NEW_INTEGER(1));
 	*(INTEGER(NSEXP)) = N;
@@ -227,7 +229,7 @@ static R_INLINE SEXP mrppstats_string(double * ptrY, SEXP permString, SEXP perm0
 #endif
 
 	ns = (int *) R_alloc(ntrt, sizeof(int)); 
-	denoms = (double *) R_alloc(ntrt, sizeof(double)); 
+	facts = (double *) R_alloc(ntrt, sizeof(double)); 
 	ptrPerm0 = (int **) R_alloc(ntrt, sizeof(int *)); 
 	permBuf0 = permBuf = (int *) R_alloc(N, sizeof(int));
 	sortBuf = (int *) R_alloc(N, sizeof(int));
@@ -235,7 +237,7 @@ static R_INLINE SEXP mrppstats_string(double * ptrY, SEXP permString, SEXP perm0
 	for(t=0; t < ntrt; ++t){
 		ns[t] = LENGTH(VECTOR_ELT(perm0, t));
 		dn = (double) ns[t];
-        denoms[t] = 1.0 / (dn - wt) ;
+        facts[t] = wt[t] / dn / (dn - 1.0) ;
 		ptrPerm0[t] = INTEGER(VECTOR_ELT(perm0, t)); 
 #ifdef DEBUG
 		Rprintf("ns[%d]=%d\tptrPerm0[%d]=%d\n", t, ns[t], t, *(ptrPerm0[t]));
@@ -243,11 +245,11 @@ static R_INLINE SEXP mrppstats_string(double * ptrY, SEXP permString, SEXP perm0
 	}
 
 
-	
+	PROTECT(dec2pv = install("dec2permvec"));
 	PROTECT(string1 = NEW_STRING(1));
 	PROTECT(dec2pvCall = dec2pvCall2 = allocList(3));
 	SET_TYPEOF(dec2pvCall, LANGSXP);
-		SETCAR(dec2pvCall, install("dec2permvec"));  // this is a call. 
+		SETCAR(dec2pvCall, dec2pv);  // this is a call. 
 	dec2pvCall2 = CDR(dec2pvCall);
 		SETCAR(dec2pvCall2, string1);				 // this string is not bound to any name but a literal
 	dec2pvCall2 = CDR(dec2pvCall2);
@@ -280,30 +282,30 @@ static R_INLINE SEXP mrppstats_string(double * ptrY, SEXP permString, SEXP perm0
 #ifdef DEBUG
 			printIntVec(permBuf0, ns[t], "PermMatCol:"); 
 #endif			
-			ptrAns[b] += sumSubMatSorted(ptrY,  permBuf0, ns[t], N) * denoms[t];
+			ptrAns[b] += sumSubMatSorted(ptrY,  permBuf0, ns[t], N) * facts[t];
 		}
 		
 		UNPROTECT(1); // of perm
 	 }
 
-    UNPROTECT(4);
+    UNPROTECT(5);
     return(ans);
 }
 
-SEXP mrppstats(SEXP y, SEXP Perms, SEXP wtmethod)
+SEXP mrppstats(SEXP y, SEXP Perms, SEXP grpWts)
 {
 	/* y is the vector of a 'dist' object with each element being double */
-	/* permMats is a 'permutedTrt' object. See permutedTrt R function */
-	/* wtmethod is a scaler of 0 or 1 weighting method: 0=sample size-1; 1=sample size */
+	/* Perms is a 'permutedTrt' object. See permutedTrt R function */
+	/* grpWts is a scaler of 0 or 1 weighting method: 0=sample size-1; 1=sample size */
 	R_len_t N;
-	double  wt, *ptrY;
+	double  *wt, *ptrY;
 	SEXP wt_real, permString;
 	
-	if(isReal(wtmethod)) {
-		wt = *(REAL(wtmethod));
+	if(isReal(grpWts)) {
+		wt = REAL(grpWts);
 	}else{
-		PROTECT(wt_real = AS_NUMERIC(wtmethod));
-		wt = *(REAL(wt_real));
+		PROTECT(wt_real = AS_NUMERIC(grpWts));
+		wt = (REAL(wt_real));
 		UNPROTECT(1);
 	}
 

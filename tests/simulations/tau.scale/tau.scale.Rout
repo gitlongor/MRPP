@@ -1,0 +1,152 @@
+
+R version 3.2.1 (2015-06-18) -- "World-Famous Astronaut"
+Copyright (C) 2015 The R Foundation for Statistical Computing
+Platform: x86_64-w64-mingw32/x64 (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> library(MRPP)
+Loading required package: gmp
+
+Attaching package: 'gmp'
+
+The following objects are masked from 'package:base':
+
+    %*%, apply, crossprod, matrix, tcrossprod
+
+> reps=1e4L
+> R=2L; n=5L; ntrt=2L; N=ntrt*n 
+> mu1=rep(-1:0, c(n, N-n))
+> trt=gl(ntrt, n)
+> pmat=permuteTrt(trt,B=Inf)
+> (B = nperms.permutedTrt(pmat))
+[1] 126
+> mh.trt=gl(ntrt, reps)
+> mh.blk=factor(rep(seq(reps), ntrt))
+> 
+> simTau=function(sds=c(1,1), standardize=FALSE){
++ 	y=cbind(rnorm(N, mu1, sds[1L]), replicate(R-1L, rnorm(N,,sds[-1L])))
++ 	dists = lapply(seq(NCOL(y)), function(x) dist(y[,x])^2/(dist(y)+dist(y[,-x])) )
++ 	sapply(dists, function(dd)scale(mrpp.test(dd, permutedTrt=pmat)$all.statistics, scale=standardize)[1L])
++ }
+> 
+> RNGkind("Mersenne-Twister", "Inversion")
+> set.seed(2016565L)
+> 
+> seed.bak=.Random.seed
+> taus.1.1=t(replicate(reps, simTau(c(1,1))))
+> .Random.seed=seed.bak
+> taus.1.1std=t(replicate(reps, simTau(c(1,1), standardize=TRUE)))
+> mantelhaen.test(factor(c(taus.1.1[,1]<taus.1.1[,2], taus.1.1std[,1]<taus.1.1std[,2])), mh.trt, mh.blk)
+
+	Mantel-Haenszel chi-squared test with continuity correction
+
+data:  factor(c(taus.1.1[, 1] < taus.1.1[, 2], taus.1.1std[, 1] < taus.1.1std[,  and mh.trt and mh.blk    2])) and mh.trt and mh.blk
+Mantel-Haenszel X-squared = 5.5693, df = 1, p-value = 0.01828
+alternative hypothesis: true common odds ratio is not equal to 1
+95 percent confidence interval:
+ 0.6165121 0.9516290
+sample estimates:
+common odds ratio 
+        0.7659574 
+
+> 
+> seed.bak=.Random.seed
+> taus.1.10=t(replicate(reps, simTau(c(1,10))))
+> .Random.seed=seed.bak
+> taus.1.10std=t(replicate(reps, simTau(c(1,10), standardize=TRUE)))
+> mantelhaen.test(factor(c(taus.1.10[,1]<taus.1.10[,2], taus.1.10std[,1]<taus.1.10std[,2])), mh.trt, mh.blk)
+
+	Mantel-Haenszel chi-squared test with continuity correction
+
+data:  factor(c(taus.1.10[, 1] < taus.1.10[, 2], taus.1.10std[, 1] <  and mh.trt and mh.blk    taus.1.10std[, 2])) and mh.trt and mh.blk
+Mantel-Haenszel X-squared = 59.708, df = 1, p-value = 1.1e-14
+alternative hypothesis: true common odds ratio is not equal to 1
+95 percent confidence interval:
+ 1.345411 1.647511
+sample estimates:
+common odds ratio 
+         1.488818 
+
+> 
+> seed.bak=.Random.seed
+> taus.1.100=t(replicate(reps, simTau(c(1,100))))
+> .Random.seed=seed.bak
+> taus.1.100std=t(replicate(reps, simTau(c(1,100), standardize=TRUE)))
+> mantelhaen.test(factor(c(taus.1.100[,1]<taus.1.100[,2], taus.1.100std[,1]<taus.1.100std[,2])), mh.trt, mh.blk)
+
+	Mantel-Haenszel chi-squared test with continuity correction
+
+data:  factor(c(taus.1.100[, 1] < taus.1.100[, 2], taus.1.100std[, 1] <  and mh.trt and mh.blk    taus.1.100std[, 2])) and mh.trt and mh.blk
+Mantel-Haenszel X-squared = 4.5581, df = 1, p-value = 0.03276
+alternative hypothesis: true common odds ratio is not equal to 1
+95 percent confidence interval:
+ 1.008586 1.196659
+sample estimates:
+common odds ratio 
+         1.098606 
+
+> 
+> seed.bak=.Random.seed
+> taus.1.01=t(replicate(reps, simTau(c(1,.1))))
+> .Random.seed=seed.bak
+> taus.1.01std=t(replicate(reps, simTau(c(1,.1), standardize=TRUE)))
+> mantelhaen.test(factor(c(taus.1.01[,1]<taus.1.01[,2], taus.1.01std[,1]<taus.1.01std[,2])), mh.trt, mh.blk)
+
+	Mantel-Haenszel chi-squared test with continuity correction
+
+data:  factor(c(taus.1.01[, 1] < taus.1.01[, 2], taus.1.01std[, 1] <  and mh.trt and mh.blk    taus.1.01std[, 2])) and mh.trt and mh.blk
+Mantel-Haenszel X-squared = 15.142, df = 1, p-value = 9.973e-05
+alternative hypothesis: true common odds ratio is not equal to 1
+95 percent confidence interval:
+ 0.7184019 0.8959065
+sample estimates:
+common odds ratio 
+        0.8022599 
+
+> 
+> par(mfcol=c(2,4))
+> bx=function(z){boxplot(z, main=sprintf('%%good=%.3f', mean(z[,1]<z[,2])));invisible(NULL)}
+> sapply(list(taus.1.01, taus.1.01std, taus.1.1, taus.1.1std, taus.1.10, taus.1.10std, taus.1.100, taus.1.100std), bx)
+[[1]]
+NULL
+
+[[2]]
+NULL
+
+[[3]]
+NULL
+
+[[4]]
+NULL
+
+[[5]]
+NULL
+
+[[6]]
+NULL
+
+[[7]]
+NULL
+
+[[8]]
+NULL
+
+> 
+> save.image('tau.scale.RData')
+> q('no')
+> proc.time()
+   user  system elapsed 
+  97.00    0.15   97.20 

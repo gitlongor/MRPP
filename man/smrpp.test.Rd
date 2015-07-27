@@ -12,7 +12,7 @@ K-sample sparse MRPP test with penalization. Variable selection is through penal
 }
 \usage{
 smrpp.test(y, \dots)
-\method{smrpp.test}{default}(y, trt, B=nparts(table(trt)), permutedTrt, wtmethod=0, 
+\method{smrpp.test}{default}(y, trt, B=nparts(table(trt)), permutedTrt, weight.trt="df", 
 	outerStat=c("WDISCO 1/F","WMRPP P"), eps=1e-8, spar, verbose=TRUE, \dots)
 \method{smrpp.test}{formula}(y, data, \dots)
 }
@@ -26,7 +26,7 @@ smrpp.test(y, \dots)
 }
   \item{permutedTrt}{An optional permutation index matrix. If missing, this will be computed as \code{permuteTrt(trt,B)}. See \code{\link{permuteTrt}}. 
 }
-  \item{wtmethod}{0 or 1, where 0 stands for weighting each treatment group by sample size - 1, and 1 stands for weighting by sample size. 
+  \item{weight.trt}{As in \code{\link{mrpp.test.dist}}. 
 }
   \item{outerStat}{A character value specifying which test statistic to use for the outer permutation. "WDISCO 1/F" uses the weighted DISCO inverse F-statistic. "WMRPP P" uses weighted MRPP raw p-value. 
 }
@@ -79,8 +79,8 @@ dat=data.frame(x, trt)
 fmla=as.formula(sprintf("cbind(\%s)~trt",paste("X",1:5,sep="",collapse=",")))
 
 \dontrun{
-smrpp.test(x, trt, permutedTrt=pmat, wtmethod=0 ) 
-smrpp.test(fmla, dat, permutedTrt=pmat, wtmethod=0 )
+smrpp.test(x, trt, permutedTrt=pmat, weight.trt="df" ) 
+smrpp.test(fmla, dat, permutedTrt=pmat, weight.trt="df" )
 }
 
 }
