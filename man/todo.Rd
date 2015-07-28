@@ -11,7 +11,7 @@ To-do's and to-try's
 
 \enumerate{
 	\item \code{\link[Rmpfr:Rmpfr]{Rmpfr}}-based weighting? 
-	\item formula interface for permuteTrt
+	\item MRBP
 	\item allowing some NA's in the distance matrix
 	\item double checking one-way design for all variable selection functions
 	\item check number of RHS terms in formula interface

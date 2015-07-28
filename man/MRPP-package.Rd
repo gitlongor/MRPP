@@ -29,7 +29,7 @@ LazyLoad: \tab yes\cr
 \item{\code{\link{permuteTrt}}} {Generate random treatment assignments.}
 \item{\code{\link{FR2permvec}}} {Conversions among decimal factoradic number, radix factoradic number, and permutation vector.}
 \item{\code{\link{HSEL.bigz}}} {Generate a random sample of size m from a \emph{large} population of size n.}
-\item{\code{\link{bw.mse.pdf.asym}}} {Choose a bandwidth for kernel density estimation by minimizing asymptotic mean squared error of density estimate at the first data point.}
+\item{\code{\link{bw.smoothp}}} {Choose a bandwidth for  smoothing discrete p-values.}
 }
 }
 \author{

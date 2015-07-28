@@ -17,8 +17,8 @@ function(y, permutedTrt, bw, r=seq_len(NCOL(y)), test=FALSE,
 
 	if(missing(bw)) bw='dropkeep1'
 	if(is.character(bw))
-		bw=bw.grad.smoothp(y,permutedTrt=permutedTrt,r=r, kernel=kernel, weight.trt=weight.trt, method=bw)
-	
+		bw=bw.smoothp(y,permutedTrt=permutedTrt,r=r, kernel=kernel, weight.trt=weight.trt, method=bw)
+	pars=list(kernel=kernel, weight.trt=weight.trt, adjust=adjust)
 #    weight=matrix(NA_real_, B, length(b))   ## this may require large memory when test=TRUE
 #    for(b.i in 1:length(b))
 #      weight[,b.i]=pmax(min.wts,dnorm((mrpp.stats[b[b.i]]-mrpp.stats),0,bw))
@@ -49,11 +49,22 @@ function(y, permutedTrt, bw, r=seq_len(NCOL(y)), test=FALSE,
 #        }
 		eval(expr)    ## this lines replace the above 3 lines
 	}
-    structure(drop(ans), call=match.call())
+    structure(drop(ans), parameters=pars, midp=midp(mrpp.stats), class='grad.smoothp')
+}
+
+p.value.grad.smoothp = function(x, type=c('keep1','drop1'),...)
+{
+	if(attr(x, 'parameters')$adjust!='none') return(rep(NA_real_, length(x)))
+	type=match.arg(type)
+	x0=x; attributes(x0)=NULL
+	switch(type, 
+		drop1 = attr(x, 'midp') - x0, 
+		keep1 = attr(x, 'midp') - sum(x0) + x0
+	)
 }
 
 grad.smoothp.bw <-
-expression( ## simplified from grad.smoothp; allowing a vector of bw's; only used in bw.grad.smoothp
+expression( ## simplified from grad.smoothp; allowing a vector of bw's; only used in bw.smoothp
 {
     B=length(mrpp.stats)
     b=1L

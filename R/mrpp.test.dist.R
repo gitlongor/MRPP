@@ -43,17 +43,24 @@ function(y, trt, B=as.integer(min(nparts(table(trt)), 1e4L)), permutedTrt, weigh
 
     ans=list(statistic=c("MRPP statistic"=stats[1L]), 
 			 all.statistics=stats, 
-             p.value=mean(stats[1L]-stats>=-eps), 
-			 midp = midp(stats, eps),
+             p.value=structure(mean(stats[1L]-stats>=-eps), midp = midp(stats, eps)),
 			 parameter=structure(c("number of permutations"=B, 'weight method'=wtmethod), 'weight methods'=levels(wtmethod), weight.trt=weight.trt),
              data.name=dname, 
 			 #  .Random.seed=attr(permutedTrt,'.Random.seed'),  ## this is commented out since the random number seed in gmp:::urand.bigz will be used. 
              method=sprintf('%d-sample MRPP test',ntrt)
              )
-    class(ans)='htest'
+    class(ans)=c('mrpp.test','htest')
     ans
 }
 
+p.value.mrpp.test=function(x, type=c('raw','midp'),...)
+{
+	type=match.arg(type)
+	switch(type, 
+		raw = x$p.value[[1L]], 
+		midp = attr(x$p.value, 'midp')
+	)
+}
 
 mrpp.test.default <-
 function(y, ...) {

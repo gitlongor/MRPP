@@ -1,11 +1,12 @@
-bw.mse.pdf.asym=function(x,iter.max=1L,eps=1e-6,start.bw=bw.nrd, verbose=FALSE)
+bw.mse.pdf.asym=function(x,iter.max=1L,eps=1e-6,start.bw=bw.nrd, kernel='gaussian', verbose=FALSE)
 {#require(ks)
     if(is.function(start.bw)) bw0=start.bw(x)
     if(is.numeric(start.bw)) bw0=start.bw
     if(is.character(start.bw)) bw0=call(start.bw, x)
 
-    Rkern=density(x,bw0,from=x[1L],to=x[1L],n=1L,give.Rkern=TRUE)
+    Rkern=density(x,bw0,from=x[1L],to=x[1L],n=1L,kernel=kernel, give.Rkern=TRUE)
 
+	dkern=dkernel(kernel)
     n.iter=1L
     xdiff=x[1L]-x
     repeat{
@@ -14,8 +15,8 @@ bw.mse.pdf.asym=function(x,iter.max=1L,eps=1e-6,start.bw=bw.nrd, verbose=FALSE)
 #        ddf=drvkde(x,2,bw0,se=FALSE)
 #        ddf.1=approx(ddf$x.grid[[1]],ddf$est,xout=x[1])$y
             tmp=xdiff/bw0
-            f.1=mean(dnorm(tmp))/bw0
-            ddf.1=mean(dnorm(tmp)*(tmp*tmp-1))/bw0/bw0/bw0
+            f.1=mean(dkern(tmp))/bw0
+            ddf.1=mean(dkern(tmp)*(tmp*tmp-1))/bw0/bw0/bw0
         bw=(f.1/ddf.1/ddf.1*Rkern/length(x))^.2
         if(abs(bw-bw0)<eps || n.iter>=iter.max) return(bw)
         if(verbose && isTRUE(n.iter%%verbose==0))cat(bw,fill=TRUE)
@@ -33,10 +34,10 @@ bw.range=function(x, length=200, lower=.05, upper=.95, safety=100)
 	10^seq(log10(lo)-lf, log10(hi)+lf, length=length)
 }
 
-bw.grad.smoothp <-
+bw.smoothp <-
 function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL, 
-	distFunc=dist,  kernel='gaussian', weight.trt="df", 
-	method=c('drop1','keep1','dropkeep1','ss.gradp'), verbose=FALSE, ...)
+	distFunc=dist,  kernel='gaussian', 
+	method=c('drop1','keep1','dropkeep1','ss.gradp','kde.mse1'), verbose=FALSE, ...)
 ## y=N-by-p data matrix; b=permutation index for the 1st trt; r=dimension index; 
 {
 	method=match.arg(method)
@@ -44,9 +45,24 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 	R=NCOL(y)
 	if(R==1L ) method='ss.gradp'
 
-	mrpp = mrpp.test(y[,r,drop=FALSE], permutedTrt=permutedTrt, weight.trt=weight.trt, ...)
-	weight.trt = attr(mrpp$parameter, 'weight.trt')
 	distObj = distFunc(y[,r,drop=FALSE])
+	lst=list(...)
+	lst$y = distObj
+	lst$permutedTrt=permutedTrt
+	nms = setdiff(names(formals(mrpp.test.dist)), '...')
+	idx=names(lst)%in%nms
+	mrpp = do.call('mrpp.test.dist', lst[idx])
+	if(method=='kde.mse1'){
+		lst=list(...)
+		lst$x=mrpp$all.statistics
+		lst$kernel=kernel
+		lst$verbose=verbose
+		nms=names(lst)
+		idx= nms=='' || nms%in%names(formals(bw.mse.pdf.asym))
+		return(do.call('bw.mse.pdf.asym', lst[idx]))
+	}
+
+	weight.trt = attr(mrpp$parameter, 'weight.trt')
 	
 	if(missing(bw) || is.null(bw)) bw = bw.range(mrpp$all.statistics)	
 	
@@ -64,10 +80,16 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 	
 		for(d.i in seq_along(drop)) {
 			if(drop[d.i]){
-				permp = function(rr)mrpp.test.dist(distFunc(y[,-rr,drop=FALSE]), permutedTrt=permutedTrt, weight.trt=weight.trt, ...)$midp
+				permp = function(rr){
+					lst$y=distFunc(y[,-rr,drop=FALSE])
+					p.value(do.call('mrpp.test.dist', lst),type="midp")
+				}
 				approxp = t(smps - gradEnv$ans)
 			}else{
-				permp = function(rr)mrpp.test.dist(distFunc(y[,rr,drop=FALSE]), permutedTrt=permutedTrt, weight.trt=weight.trt, ...)$midp
+				permp = function(rr){
+					lst$y=distFunc(y[,rr,drop=FALSE])
+					p.value(do.call('mrpp.test.dist', lst),type="midp")
+				}
 				approxp = t(smps - gradEnv$ans%*%(1-diag(1, length(r), length(r))))
 			}
 			unips=sapply(r, permp)

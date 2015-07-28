@@ -1,8 +1,8 @@
 mrppBVS.test<-
 function(y,permutedTrt, Bperm=nperms.permutedTrt(permutedTrt), 
-         importance=c('dp.dw','p.dd.dw'),
-         alpha.in, alpha.del=0, 
-	 size.in=1L, stepwise=FALSE, verbose=TRUE, niter=Inf, ...)
+         importance=c('approx.keep1', 'grad.smoothp','p.grad.dist'),
+         alpha.inc=NULL, alpha.exc=0, size.inc=1L, stepwise=FALSE, 
+		 niter=Inf, verbose=FALSE, ...)
 {
     dname=paste("Response data", deparse(substitute(y)), 'and permuted treatment', deparse(substitute(permutedTrt)))
     if(!is.matrix(y)) y=as.matrix(y)
@@ -13,10 +13,10 @@ function(y,permutedTrt, Bperm=nperms.permutedTrt(permutedTrt),
     importance=match.arg(importance)
 
 #    if(missing(cperm.mat)) cperm.mat=apply(permutedTrt,2,function(kk)(1:N)[-kk])
-    if(missing(alpha.in)) alpha.in=if(importance=='dp.dw') 0 else 0.1
+    if(missing(alpha.inc)) alpha.inc=if(importance=='dp.dw') 0 else 0.1
     selected.pvals=numeric(Bperm)
     fit0=mrppBVS(y=y,permutedTrt=permutedTrt, verbose=FALSE, niter=niter, importance=importance, 
-            alpha.in=alpha.in, alpha.del=alpha.del, stepwise=stepwise, size.in=size.in, 
+            alpha.inc=alpha.inc, alpha.exc=alpha.exc, stepwise=stepwise, size.inc=size.inc, 
             ...)
     bsfit=tail(fit0,1L)[[1L]]
     selected.pvals[1]=if(length(bsfit$p.value)>0) bsfit$p.value else 1
@@ -46,8 +46,8 @@ function(y,permutedTrt, Bperm=nperms.permutedTrt(permutedTrt),
         }
 
         selected.pvals[b.i+1L]={tmp=tail(mrppBVS(y=y,permutedTrt=permutedTrt, verbose=FALSE, niter=niter, 
-                        importance=importance, alpha.in=alpha.in, alpha.del=alpha.del, 
-                        stepwise=stepwise, size.in=size.in, ...),1L)[[1L]]$p.value;
+                        importance=importance, alpha.inc=alpha.inc, alpha.exc=alpha.exc, 
+                        stepwise=stepwise, size.inc=size.inc, ...),1L)[[1L]]$p.value;
                            if(length(tmp)>0) tmp else 1}
     }
     bsfit$statistic=c('MRPP backward selected raw p-value'=selected.pvals[1])
