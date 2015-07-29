@@ -15,12 +15,22 @@ midp = function(x, eps=1e-8)
 }
 
 
-factorial.rising=function(start, nterms)
+.factorial.rising=	function(start, nterms)
 {
-	stopifnot(nterms>0)
+	stopifnot(nterms>=0 && start >=0)
+	if(nterms==0)return(1)
 	if(start!=as.integer(start)).NotYetImplemented()
 	ans = prod.bigz(as.bigz(seq(from=start, length=nterms)))
 	tryCatch(as.integer(ans), warning=function(w)ans)
+}
+.factorial.rising=Vectorize(.factorial.rising,SIMPLIFY=FALSE)
+factorial.rising=function(start, nterms)
+{
+	rslt = .factorial.rising(start, nterms)
+	if('bigz'%in%sapply(rslt, class)){
+		rslt=lapply(rslt, 'as.bigz')
+	}
+	do.call('c', rslt)
 }
 
 `[[.dist`=function(x, i,j)
