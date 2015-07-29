@@ -1,3 +1,44 @@
+
+.importance <-
+function(y, permutedTrt, bw, r=seq_len(NCOL(y)), test=FALSE, distFunc=dist, 
+	distExpr.1d = expression(distFunc(y[,index,drop=FALSE])), mrpp.stats=NULL, 
+    kernel='biweight', weight.trt="df", measure=c('grad','weighted.mean','scale','p'))
+{
+	distObj = distFunc(y)
+	if(is.null(mrpp.stats)) mrpp.stats=mrpp.test.dist(distObj,permutedTrt=permutedTrt,weight.trt=weight.trt)$all.statistics
+	weight.trt = mrpp.weight.trt(weight.trt, trt.permutedTrt(permutedTrt))$weight.trt[names(permutedTrt)]
+    B=length(mrpp.stats)
+    b=if(isTRUE(test)) 1:B else 1L
+    if(!is.matrix(y) && !is.data.frame(y)) y = as.matrix(y)
+    ans=matrix(NA_real_, length(b), length(r))
+    N=as.integer(nrow(y))
+	measure=match.arg(measure)
+
+	pars=list(kernel=kernel, weight.trt=weight.trt, measure=measure)
+	if(is.finite(bw)){
+		weight = dkernel(kernel)( (mrpp.stats-rep(mrpp.stats[b],each=B) )/ bw)
+		dim(weight)=c(B, length(b))
+		if(measure=='grad'){
+		  weight=weight/bw/B
+		}else weight=weight/rep(.colSums(weight, B, length(b)), each=B)
+	}
+	
+	distFunc.1d=function(index)eval(distExpr.1d)
+    all.ddelta.dw=sapply(r, distFunc.1d)   
+        all.ddelta.dw[is.nan(all.ddelta.dw)]=0
+	
+	if(measure=='scale'){
+			w2s=sqrt(.colSums(weight^2, B, length(b)))
+			expr = expression(ans[, r.i] <- .colSums(weight * (rep(dz.dw[b], each=B)-dz.dw), B, length(b))/sd(dz.dw)/w2s)
+	}else	expr = expression(ans[, r.i] <- .colSums(weight * (rep(dz.dw[b], each=B)-dz.dw), B, length(b)))
+	
+	for(r.i in seq(along=r)){
+		dz.dw=.Call(mrppstats, all.ddelta.dw[,r.i], permutedTrt, weight.trt, PACKAGE='MRPP')
+		eval(expr)    ## this lines replace the above 3 lines
+	}
+    structure(drop(ans), parameters=pars, midp=midp(mrpp.stats), class='.importance')
+}
+
 grad.smoothp <-
 function(y, permutedTrt, bw, r=seq_len(NCOL(y)), test=FALSE, 
         distObj=dist(y), mrpp.stats=NULL, 
