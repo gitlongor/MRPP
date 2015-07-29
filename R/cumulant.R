@@ -1,6 +1,6 @@
-mean.mrpp=function(x...)
+mean.mrpp=function(x, ...)
 {
-	cumulant.mrpp(x, order=1L)
+	cumulant(x, order=1L)
 }
 
 var=function(x,...)UseMethod('var')
@@ -11,7 +11,7 @@ var.default=local({
 })
 var.mrpp=function(x,...)
 {
-	cumulant.mrpp(x, order=2L)
+	cumulant(x, order=2L)
 }
 
 sd=function(x,...)UseMethod('sd')
@@ -20,7 +20,7 @@ sd.default=local({
 	formals(ans)=c(formals(stats::sd), alist(...=))
 	ans
 })
-sd.mrpp=function(x)
+sd.mrpp=function(x,...)
 {
 	call=match.call()
 	call[[1L]]=as.name('var.mrpp')
@@ -36,7 +36,7 @@ skewness.default=local({
 })
 skewness.mrpp=function(x,...)
 {
-	cum=cumulant.mrpp(x, order=2:3)
+	cum=cumulant(x, order=2:3)
 	cum[2L]/cum[1L]^1.5
 }
 
@@ -63,18 +63,14 @@ moment.default=function(x, order=1:3, central=FALSE, ...)
 		ans[order==1L]=if(central) 0 else mean(x)
 		return(ans)
 	}
-	this.call=match.call()
-	this.call[[1L]]=as.symbol('all.moments')
-	this.call[['order']]=NULL
-	this.call[['order.max']]=mOrd
-	structure(eval(this.call)[order+1L], names=as.character(order))
+	structure(moments::all.moments(x, order.max=mOrd, central=central,...)[order+1L], names=as.character(order))
 }
 moment.mrpp=function(x, order=1:3, central=FALSE,...)
 {
 	order=as.integer(order)
 	mOrd=max(order)
 	if(mOrd>=4) .NotYetImplemented()
-	cum=cumulant.mrpp(x, seq(mOrd))
+	cum=cumulant(x, seq(mOrd))
 	
 	ans=numeric(length(order)); names(ans)=as.character(order)
 
@@ -87,16 +83,12 @@ moment.mrpp=function(x, order=1:3, central=FALSE,...)
 }
 
 cumulant = function(x, order, ...)UseMethod('cumulant')
-cumulant.default=function(x, order, ...)
+cumulant.default=function(x, order=1:3, ...)
 {
 	order=as.integer(order)
 	stopifnot(all(order>=0))
 	mOrd=max(order)
-	this.call=match.call()
-	this.call[[1L]]=as.symbol('all.moments')
-	this.call[['order']]=NULL
-	this.call[['order.max']]=mOrd
-	mu.raw = eval(this.call)
+	mu.raw = moments::all.moments(x, order.max=mOrd, central=FALSE, ...)
 	structure(moments::all.cumulants(mu.raw)[order+1L], names=as.character(order))
 }
 cumulant.mrpp=function(x, order=1:3,...)

@@ -31,7 +31,7 @@ export(
 	
 	p.value, 
 	
-	var, sd, skewness, kurtosis, moment, cumulant, 
+	var, sd, skewness, kurtosis, moment, cumulant
 )
 
 

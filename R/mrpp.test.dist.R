@@ -18,18 +18,19 @@ mrpp.weight.trt=function(weight.trt, trt)
 	list(wtmethod=wtmethod, weight.trt=weight.trt)
 }
 
-mrpp <- function(y, trt, B=as.integer(min(nparts(table(trt)), 1e4L)), permutedTrt, weight.trt='df', eps=1e-8, distFunc=dist) 
+mrpp <- function(y, trt, B=as.integer(min(nparts(table(trt)), 1e4L)), permutedTrt, weight.trt='df', eps=1e-8, distFunc=dist, idxOnly=FALSE) 
 {
     if(missing(trt)) {  ## recovering trt from the first permutation
       trt=trt.permutedTrt(permutedTrt)
     }
     if(missing(permutedTrt)) {
-        permutedTrt=permuteTrt(trt,B, ...)
+        permutedTrt=permuteTrt(trt,B, idxOnly)
         dname=paste('"dist" object',deparse(substitute(y)), 
                              'and treatment group', deparse(substitute(trt)))
     }else dname=paste('"dist" object',deparse(substitute(y)), 
                              'and permuted treatment', deparse(substitute(permutedTrt)))
     B=nperms.permutedTrt(permutedTrt)
+	idxOnly=!is.na(attr(permutedTrt, 'idx')[1L])
 
     tabtrt=table(trt)[names(permutedTrt)]
     ntrt=length(tabtrt)
@@ -46,7 +47,10 @@ mrpp <- function(y, trt, B=as.integer(min(nparts(table(trt)), 1e4L)), permutedTr
 					nobs = N, 
 					R=R, 
 					B=B, 
+					
+					trt=trt,
 					permutedTrt=permutedTrt, 
+					idxOnly = idxOnly,
 					weight.trt=structure(weight.trt, 'method'=wtmethod), 
 					eps = eps, 
 					distFunc = distFunc
