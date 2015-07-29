@@ -5,8 +5,8 @@ import(gmp)
 importFrom(QuasiSeq, nlsolve)
 importFrom(ks, vech)
 importFrom(varComp, p.value)
-importFrom(moments, skewness, kurtosis, all.moments, all.cumulants)
-
+importFrom(moments, skewness, kurtosis, all.moments)
+importFrom(PDQutils, moment2cumulant)
 
 export(
 	mrpp,

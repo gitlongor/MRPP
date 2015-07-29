@@ -92,7 +92,6 @@ S3 methods \code{mean.mrpp}, \code{var.mrpp}, \code{sd.mrpp}, \code{skewness.mrp
 \note{
 \code{kurtosis.mrpp}, as well as \code{moment.mrpp} and \code{cumulant.mrpp} with \code{max(order)>=4L}, has not been implemented yet. 
 
-\code{cumulant.default} that relies on \code{\link[moments:all.cumulants]{moments::all.cumulants}} is suspicious.
 }
 \references{
 Paul W. Mielke, Kenneth J. Berry. (2007) Permutation Methods: A Distance Function Approach. 2nd ed. Springer.
@@ -105,7 +104,9 @@ Long Qu
 \seealso{
 \code{\link[stats:var]{var}}, \code{\link[stats:sd]{sd}} in \code{stats} package. 
 
-\code{\link[moments:skewness]{skewness}}, \code{\link[moments:kurtosis]{kurtosis}}, \code{\link[moments:all.moments]{all.moments}}, and \code{\link[moments:all.cumulants]{all.cumulants}} in the \code{moments} package. 
+\code{\link[moments:skewness]{skewness}}, \code{\link[moments:kurtosis]{kurtosis}}, and \code{\link[moments:all.moments]{all.moments}} in the \code{moments} package.
+
+\code{\link[PDQutils:moment2cumulant]{moment2cumulant}} in the \code{PDQutils} package. 
 
 \code{\link{mrpp}} object. 
 }

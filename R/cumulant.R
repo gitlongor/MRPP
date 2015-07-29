@@ -89,7 +89,8 @@ cumulant.default=function(x, order=1:3, ...)
 	stopifnot(all(order>=0))
 	mOrd=max(order)
 	mu.raw = moments::all.moments(x, order.max=mOrd, central=FALSE, ...)
-	structure(moments::all.cumulants(mu.raw)[order+1L], names=as.character(order))
+	ans = c(0, moment2cumulant(mu.raw[-1L]))
+	structure(ans[order+1L], names=as.character(order))
 }
 cumulant.mrpp=function(x, order=1:3,...)
 {
