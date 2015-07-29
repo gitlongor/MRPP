@@ -43,7 +43,8 @@ skewness.mrpp=function(x,...)
 kurtosis=function(x,excess=TRUE,...)UseMethod('kurtosis')
 kurtosis.default=local({
 	ans=moments::kurtosis
-	formals(ans)=c(formals(moments::kurtosis), alist(excess=TRUE, ...=))
+	fm =formals(moments::kurtosis)
+	formals(ans)=c(fm, alist(excess=TRUE, ...=))[c('x','excess',setdiff(names(fm),c('x','...','excess')), '...')]
 	ans
 })
 kurtosis.mrpp=function(x, excess=TRUE, ...)

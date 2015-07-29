@@ -23,6 +23,9 @@
 \title{
 Moments and Cumulants of MRPP Statistics
 }
+\description{
+Generic functions and methods for computing moments and cumulants for class \code{mrpp} objects, as well as default methods for numeric vectors.
+}
 \usage{
 \method{mean}{mrpp}(x, \dots)
 
@@ -39,8 +42,8 @@ skewness(x, \dots)
 \method{skewness}{mrpp}(x, \dots)
 
 kurtosis(x, excess=TRUE, \dots )
-\method{kurtosis}{default}(x, na.rm = FALSE, excess = TRUE, \dots )
-\method{kurtosis}{mrpp}(x, \dots)
+\method{kurtosis}{default}(x, excess = TRUE, na.rm = FALSE, \dots )
+\method{kurtosis}{mrpp}(x, excess=TRUE, \dots)
 
 
 moment(x, order, central, \dots )

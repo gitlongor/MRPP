@@ -7,7 +7,7 @@ Extracting Distances from a dist Object
 For an object \code{x} of class \code{"dist"}, \code{x[[i,j]]} is equivalent to \code{as.matrix(x)[[i,j]]}, but without the intermediate \code{as.matrix} stage. 
 }
 \usage{
-\method{`[[`}{dist}(x, i, j)
+\method{[[}{dist}(x, i, j)
 }
 \arguments{
 	\item{x}{An object of class \code{"dist"} (see \code{\link{dist}}). 
