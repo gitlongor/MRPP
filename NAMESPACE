@@ -5,46 +5,40 @@ import(gmp)
 importFrom(QuasiSeq, nlsolve)
 importFrom(ks, vech)
 importFrom(varComp, p.value)
+importFrom(moments, skewness, kurtosis, all.moments, all.cumulants)
 
 
 export(
-	mrppBVS,
-	mrppBVS.test,
-	bw.smoothp,
-	bw.range,
-	grad.smoothp,
-	get.p.dd.dw,
-	permuteTrt,
-	nperms.permutedTrt,
-	ntrt.permutedTrt,
-	trt.permutedTrt,
-	mrpp.test, 
-	FR2dec, 
-	dec2FR,
-	dec2permvec,
-	FR2permvec,
-	permvec2dec,
-	permvec2FR, 
-	HSEL.bigz, 
-	rejsample, 
-	sample1, 
-	sample.bigz,
-	nparts, 
-	smrpp.test, 
-	smrpp.penWt, 
-	smrppInitSpar, 
-	transform.matrix, 
-	transform.numeric, 
-	pkernel, 
-	dkernel, 
-	pkde, 
-	p.value
+	mrpp,
+	mrpp.test, mrppBVS, mrppBVS.test, 
+	
+	bw.smoothp,	bw.range, 
+	
+	grad.smoothp, get.p.dd.dw, 
+	
+	permuteTrt, nperms.permutedTrt, ntrt.permutedTrt, trt.permutedTrt,
+	nparts, factorial.rising,
+	
+	FR2dec, dec2FR, dec2permvec, FR2permvec, permvec2dec, permvec2FR,
+	
+	HSEL.bigz, rejsample, sample1, sample.bigz,
+	
+	smrpp.test, smrpp.penWt, smrppInitSpar, 
+	
+	transform.matrix, transform.numeric, 
+	
+	pkernel, dkernel, pkde, 
+	
+	p.value, 
+	
+	var, sd, skewness, kurtosis, moment, cumulant, 
 )
 
 
 S3method(mrpp.test, formula)
 S3method(mrpp.test, dist)
 S3method(mrpp.test, default)
+S3method(mrpp.test, mrpp)
 
 S3method(smrpp.test, default)
 S3method(smrpp.test, formula)
@@ -56,6 +50,21 @@ S3method(print, mrppBVS)
 S3method(p.value, mrpp.test)
 S3method(p.value, grad.smoothp)
 
+S3method(`[[`, dist)
+
+S3method(mean, mrpp)
+S3method(var, mrpp)
+S3method(var, default)
+S3method(sd, mrpp)
+S3method(sd, default)
+S3method(skewness, mrpp)
+S3method(skewness, default)
+S3method(kurtosis, mrpp)
+S3method(kurtosis, default)
+S3method(moment, mrpp)
+S3method(moment, default)
+S3method(cumulant, mrpp)
+S3method(cumulant, default)
 
 useDynLib(MRPP, .registration=TRUE)
 # mrppstats, radixSort_prealloc, C_FR2permvec are registered

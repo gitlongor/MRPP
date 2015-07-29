@@ -13,3 +13,19 @@ midp = function(x, eps=1e-8)
 {
 	mean(x<x[1L]-eps) + .5* mean(x>=x[1L]-eps & x<=x[1L]+eps)
 }
+
+
+factorial.rising=function(start, nterms)
+{
+	stopifnot(nterms>0)
+	if(start!=as.integer(start)).NotYetImplemented()
+	ans = prod.bigz(as.bigz(seq(from=start, length=nterms)))
+	tryCatch(as.integer(ans), warning=function(w)ans)
+}
+
+`[[.dist`=function(x, i,j)
+{
+	if(i==j) return(0)
+	if(i>j){tmp=i; i=j; j=tmp}
+	unclass(x)[attr(x,'Size')*(i-1L) - i*(i-1L)/2L + j-i]
+}

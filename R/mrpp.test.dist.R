@@ -17,6 +17,54 @@ mrpp.weight.trt=function(weight.trt, trt)
 	names(weight.trt)=names(tabtrt)
 	list(wtmethod=wtmethod, weight.trt=weight.trt)
 }
+
+mrpp <- function(y, trt, B=as.integer(min(nparts(table(trt)), 1e4L)), permutedTrt, weight.trt='df', eps=1e-8, distFunc=dist) 
+{
+    if(missing(trt)) {  ## recovering trt from the first permutation
+      trt=trt.permutedTrt(permutedTrt)
+    }
+    if(missing(permutedTrt)) {
+        permutedTrt=permuteTrt(trt,B, ...)
+        dname=paste('"dist" object',deparse(substitute(y)), 
+                             'and treatment group', deparse(substitute(trt)))
+    }else dname=paste('"dist" object',deparse(substitute(y)), 
+                             'and permuted treatment', deparse(substitute(permutedTrt)))
+    B=nperms.permutedTrt(permutedTrt)
+
+    tabtrt=table(trt)[names(permutedTrt)]
+    ntrt=length(tabtrt)
+	
+	tmp=mrpp.weight.trt(weight.trt, as.factor(trt))
+	wtmethod=tmp$wtmethod; weight.trt=tmp$weight.trt[names(permutedTrt)]
+
+	N = NROW(y)
+	R = NCOL(y)
+	structure(list(distObj=distFunc(y), 
+					n=tabtrt, 
+					ntrt=ntrt,
+					nparts=nparts(tabtrt),
+					nobs = N, 
+					R=R, 
+					B=B, 
+					permutedTrt=permutedTrt, 
+					weight.trt=structure(weight.trt, 'method'=wtmethod), 
+					eps = eps, 
+					distFunc = distFunc
+			  ),
+			  class='mrpp'
+	)
+}
+
+mrpp.test.mrpp = function(y, ...)
+{
+	nms=names(y)
+	nms[nms=='distObj']='y'
+	names(y)=nms
+	ans = do.call("mrpp.test", y)
+	ans$data.name = paste('"mrpp" object',dQuote(as.character(match.call()[['y']])))
+	ans
+}
+
 mrpp.test.dist <-
 function(y, trt, B=as.integer(min(nparts(table(trt)), 1e4L)), permutedTrt, weight.trt='df', eps=1e-8, ...) ## this uses C code
 ## y is a dist object; weight.trt: 0=sample size-1; 1=sample size
