@@ -94,219 +94,223 @@ cumulant.default=function(x, order=1:4, ...)
 	ans = c(0, moment2cumulant(mu.raw[-1L]))
 	structure(ans[order+1L], names=as.character(order))
 }
-cumulant.mrpp=function(x, order=1:4,...)
-{
-	order=as.integer(order)
-	if(any(order)>=5) .NotYetImplemented()
+cumulant.mrpp=local({
+	## constants used by 4th order cumulants
+	.order4.S2P.mat=matrix(c(
+	1,		-1, -1, 0,		02, 01, 01, 01, 00, 02, 02,		-2, -6, -2, -4, 00, -4,		016, 012, 008, 010,		-48,
+	0,		01, 00, 0,		-2, -2, -1, 00, 00, -4, 00,		04, 08, 02, 08, 00, 04,		-32, -28, -16, -16,		112,
+	0,		00, 01, 0,		-1, 00, -1, -2, 00, 00, -4,		01, 03, 03, 02, 00, 06,		-16, -06, -08, -13,		048,
+	0,		00, 00, 1,		00, -1, -1, 00, -2, 00, 00,		04, 00, 03, 02, 06, 02,		-08, -12, -14, -12,		064,
+	0,		00, 00, 0,		01, 00, 00, 00, 00, 00, 00,		-1, -6, -1, -2, 00, -2,		016, 012, 008, 010,		-72,
+	0,		00, 00, 0,		00, 01, 00, 00, 00, 00, 00,		-2, 00, 00, -2, 00, 00,		008, 012, 006, 004,		-48,
+	0,		00, 00, 0,		00, 00, 01, 00, 00, 00, 00,		-1, 00, -2, -2, 00, -4,		016, 006, 008, 012,		-56,
+	0,		00, 00, 0,		00, 00, 00, 01, 00, 00, 00,		00, 00, -1, 00, 00, 00,		000, 000, 002, 002,		-08,
+	0,		00, 00, 0,		00, 00, 00, 00, 01, 00, 00,		-2, 00, -2, 00, -6, 00,		000, 006, 012, 008,		-56,
+	0,		00, 00, 0,		00, 00, 00, 00, 00, 00, 00,		00, 00, 01, 00, 00, 00,		000, 000, -04, -04,		024,
+	0,		00, 00, 0,		00, 00, 00, 00, 00, 00, 00,		00, 01, 00, 00, 00, 00,		000, -02, 000, -01,		008,
+	0,		00, 00, 0,		00, 00, 00, 00, 00, 00, 00,		01, 00, 00, 00, 00, 00,		000, -06, -04, -04,		040,
+	0,		00, 00, 0,		00, 00, 00, 00, 00, 00, 01,		00, 00, 00, 00, 00, -1,		002, 000, 000, 001,		-02,
+	0,		00, 00, 0,		00, 00, 00, 00, 00, 00, 00,		00, 00, 00, 00, 00, 00,		000, 000, 000, 001,		-04,
+	0,		00, 00, 0,		00, 00, 00, 00, 00, 00, 00,		00, 00, 00, 00, 00, 01,		-04, 000, 000, -02,		006,
+	0,		00, 00, 0,		00, 00, 00, 00, 00, 00, 00,		00, 00, 00, 00, 00, 00,		001, 000, 000, 000,		-01,
+	0,		00, 00, 0,		00, 00, 00, 00, 00, 00, 00,		00, 00, 00, 00, 00, 00,		000, 000, 000, 000,		001,
+	0,		00, 00, 0,		00, 00, 00, 00, 00, 01, 00,		00, 00, 00, -1, 00, 00,		004, 002, 001, 000,		-08,
+	0,		00, 00, 0,		00, 00, 00, 00, 00, 00, 00,		00, 00, 00, 01, 00, 00,		-08, -03, -02, 000,		020,
+	0,		00, 00, 0,		00, 00, 00, 00, 00, 00, 00,		00, 00, 00, 00, 00, 00,		000, 000, 001, 000,		-08,
+	0,		00, 00, 0,		00, 00, 00, 00, 00, 00, 00,		00, 00, 00, 00, 01, 00,		000, 000, -01, 000,		004,
+	0,		00, 00, 0,		00, 00, 00, 00, 00, 00, 00,		00, 00, 00, 00, 00, 00,		000, 001, 000, 000,		-04
+	), nrow=22L, ncol=22L
+	)
+	.order4.f.alpha=c(8,64,48,96,96,96,192,48,192,16,12,192,16,192,96,32,48,12,32,96,48,24)
+	.order4.P2D.ord=order(c(13:16,19:23,17:18,28,26:27,25,29,24,30:31,33,32,34:35))
 
-	ans=seq_along(order)
-	names(ans)=as.character(order)
-	ans[order==0L]=0
-	mOrd = max(order)
-	
-	distObj = x$distObj
-	permutedTrt = x$permutedTrt
-	weight.trt  = x$weight.trt
-	n			= x$n
-	N			= x$nobs
-	ntrt		= length(n)
-	
-	Nc=function(C)factorial.rising(max(0,N-C+1L), C)
-	nc=function(n, C)factorial.rising(max(0,n-C+1L), C)
-	Ncs=integer(8L)
-	
-	dmat = as.matrix(distObj)
-	
-	if(mOrd>=1L) {
-		Ncs[2L]=Nc(2L)
-		d1=2*sum(distObj)
-		D1 =d1/Ncs[2L]
-		ans[order==1L]=mu = as.numeric(D1)
-	}
-	
-	if(mOrd>=2L){
-		Ncs[3L]=Nc(3L)
-		Ncs[4L]=Nc(4L)
-		d2 = 2*sum(distObj^2)
-		D2 = d2/Ncs[2L]
-		
-		d1I=rowSums(dmat)
-		sum.d1I2=sum(d1I^2)
-		D2p=(sum.d1I2-d2)/Ncs[3L]
-		D2pp=(d1^2-4*Ncs[3L]*D2p-2*d2)/Ncs[4L]
-		
-		w2=weight.trt^2
-		n2=sapply(n, nc, C=2)
-		ans[order==2L] = sig2 = 2 * ( sum( w2/n2 ) - as.numeric(1L/Ncs[2L])) *
-		as.numeric(D2 - 2 * D2p + D2pp) +
-		4 * ( sum(w2 / n) - 1/N) * 	as.numeric(D2p - D2pp)
-	}
-	
-	if(mOrd>=3L){
-		d3=2*sum(distObj^3)
-		D3=d3/Ncs[2L]
-		Ncs[5L]=Nc(5L)
-		Ncs[6L]=Nc(6L)
-		
-		dmat2=dmat^2
-		ddmat=dmat%*%dmat
-		d2I=rowSums(dmat2)
-		sum.d1I.d2I=sum(d1I*d2I)
-		D3p=(sum.d1I.d2I-d3)/Ncs[3L]
-		D3pp=(d1*d2-4*Ncs[3L]*D3p-2*d3)/Ncs[4L]
-		#D3s=6*sum(combn(N,3L,function(idx)distObj[[ idx[1L], idx[2L] ]] * distObj[[ idx[1L], idx[3L] ]] * distObj[[ idx[2L], idx[3L] ]])) / Ncs[3L]
-		D3s = sum(dmat*ddmat)/Ncs[3L] # numerator = term S_{4}^{(3)} in Siemiatycki 1978
-		D3ss=(sum(dmat*(d1I%o%d1I))-Ncs[3L]*(2*D3p+D3s)-d3)/Ncs[4L]
-		D3s3=(sum(d1I^3)-3*Ncs[3L]*D3p-d3)/Ncs[4L]
-		D3p3=(Ncs[3L]*(d1*D2p-4*D3p-2*D3s)-2*Ncs[4L]*(2*D3ss+D3s3))/Ncs[5L]
-		D3p4=(Ncs[4L]*(d1*D2pp-4*D3pp-8*D3ss)-8*Ncs[5L]*D3p3)/Ncs[6L]
-		
-		n2.2=n2*n2
-		n2.3=n2.2*n2
-		n3=sapply(n, nc, C=3)
-		n4=sapply(n, nc, C=4)
-		n5=sapply(n, nc, C=5)
-		n6=sapply(n, nc, C=6)
-		w3=w2*weight.trt
-		mean.delta3 = 
-			4*D3*sum(w3/n2.2)+
-			8*(3*D3p+D3s)*sum(w3*n3/n2.3)+
-			8*(3*D3ss+D3s3)*sum(w3*n4/n2.3)+
-			6*D3pp*sum(w2*(1-weight.trt+weight.trt*n4/n2.2)/n2)+
-			12*D3p3*sum(w2*((1-weight.trt)*n3+weight.trt*n5/n2)/n2.2)+
-			D3p4*sum(weight.trt*((1-weight.trt)*(1-2*weight.trt)+3*weight.trt*(1-weight.trt)*n4/n2.2+w2*n6/n2.3))
-		ans[order==3L] = mean.delta3 - 3*mu*sig2-mu^3
-	}
+	function(x, order=1:4,...)
+	{
+		order=as.integer(order)
+		if(any(order)>=5) .NotYetImplemented()
 
-	if(mOrd>=4L){
-		Ncs[7L]=Nc(7L); 
-		Ncs[8L]=Nc(8L)
-	
-		ddmat=crossprod(dmat)
-		d1It=tcrossprod(d1I, d1I)
-		Sa4=c(
-			sum(distObj^4)*2, 
-			sum(rowSums(dmat2*dmat)*d1I), 
-			sum(d2I^2),
-			sum(dmat2 * ddmat),
-			sum(d2I*d1I^2), 
-			sum(dmat2*d1It),
-			sum(dmat *tcrossprod(d2I, d1I)), 
-			sum(ddmat^2),
-			sum(d1I * colSums(dmat*ddmat)),
-			sum((dmat%*%d1I)^2), 
-			sum(d1I^4),
-			sum(dmat*tcrossprod(d1I^2, d1I)), 
-			d2^2,
-			sum.d1I2^2,
-			d2*sum.d1I2, 
-			d2*d1*d1, 
-			sum.d1I2*d1*d1, 
-			d1*d3,
-			d1*sum.d1I.d2I,
-			d1* sum(dmat * d1It), 
-			d1*sum(dmat * ddmat), 
-			d1*sum(d1I^3)
-		)
-		Pa4 = drop(.order4.S2P.mat %*% Sa4)
-		Pa4 = c(Pa4,  d1^4 - .order4.f.alpha %*% Pa4 )
-		Ds=c(rep(0, 12L), Pa4[.order4.P2D.ord]/Ncs[rep(2:8,c(1L,3L,7L,6L,4L,1L,1L))])
+		ans=seq_along(order)
+		names(ans)=as.character(order)
+		ans[order==0L]=0
+		mOrd = max(order)
 		
-		n2.o.n2=tcrossprod(n2, n2)
-		n3.o.n2=tcrossprod(n3, n2)
-		n4.o.n2=tcrossprod(n4, n2)
-		n5.o.n2=tcrossprod(n5, n2)
-		n6.o.n2=tcrossprod(n6, n2)
+		distObj = x$distObj
+		permutedTrt = x$permutedTrt
+		weight.trt  = x$weight.trt
+		n			= x$n
+		N			= x$nobs
+		ntrt		= length(n)
 		
-		Ez3100=tcrossprod(w3/n2.3, weight.trt/n2) * (
-			4*n2.o.n2*Ds[17L] +
-			8*n3.o.n2*(3*Ds[25L] + Ds[29L]) +
-			2*n4.o.n2*(3*Ds[30L] + 4*Ds[31L] + 12*Ds[33L]) +
-		   12*n5.o.n2*Ds[34L]+
-			  n6.o.n2*Ds[35L]
-		)
-		Ez3100 = sum(Ez3100) - sum(diag(Ez3100))
-		w4=w2*w2
-		n2.4=n2.2*n2.2
-		n7=sapply(n, nc, C=7)
-		n8=sapply(n, nc, C=8)
-		Ez4000 = sum(
-			w4/n2.4*(
-				 8*n2*Ds[13L] +
-				16*n3*(4*Ds[14L] + 3*Ds[15L] + 6*Ds[16L]) +
-				 4*n4*(4*Ds[17L] + 3*Ds[18L]) +
-				48*n4*(2*Ds[19L] + 2*Ds[20L] + 4*Ds[21L] + Ds[22L] + 4*Ds[23L]) +
-				16*n5*(3*Ds[24L] + 6*Ds[25L] + Ds[26L]) +
-				32*n5*(6*Ds[27L] + 6*Ds[28L] + Ds[29L]) +
-				 4*n6*(3*Ds[30L] + 8*Ds[31L]) +
-				48*n6*(Ds[32L] + 2*Ds[33L]) + 
-				24*n7*Ds[34L] +
-				   n8*Ds[35L]
-			)
-		)
-		n3.o.n3=tcrossprod(n3)
-		n4.o.n3=tcrossprod(n4, n3)
-		n4.o.n4=tcrossprod(n4, n4)
-		Ez2200=tcrossprod(w2/n2.2, w2/n2.2) * (
-				4*n2.o.n2* Ds[18L] +
-				8*(n3.o.n2+t(n3.o.n2))*Ds[24L] +
-				2*(n4.o.n2+t(n4.o.n2))*Ds[30L] +
-				16*n3.o.n3*Ds[32L] +
-				4*(n4.o.n3+t(n4.o.n3))*Ds[34L] +
-				   n4.o.n4*Ds[35L]
-		)
-		Ez2200=sum(Ez2200)-sum(diag(Ez2200))
+		Nc=function(C)factorial.rising(max(0,N-C+1L), C)
+		nc=function(n, C)factorial.rising(max(0,n-C+1L), C)
+		Ncs=integer(8L)
 		
-		Ez2110= 0 
-		wow=tcrossprod(weight.trt)
-		if(ntrt>=3L) for(ii in seq_len(ntrt)) {
-			tmp = w2[ii]/n2.2[ii] * wow * (
-				2*n2[ii] * Ds[30L] +
-				4*n3[ii] * Ds[34L] +
-				  n4[ii] * Ds[35L] 
-			)
-			tmp[ii,]=tmp[,ii]=0
-			Ez2110=Ez2110+sum(tmp)-sum(diag(tmp))
+		dmat = as.matrix(distObj)
+		
+		if(mOrd>=1L) {
+			Ncs[2L]=Nc(2L)
+			d1=2*sum(distObj)
+			D1 =d1/Ncs[2L]
+			ans[order==1L]=mu = as.numeric(D1)
 		}
 		
-		Ez1111=if(ntrt<4L) 0 else 
-			sum(combn(ntrt, 4L, function(ii)prod(weight.trt[ii])))*24*Ds[35L]
+		if(mOrd>=2L){
+			Ncs[3L]=Nc(3L)
+			Ncs[4L]=Nc(4L)
+			d2 = 2*sum(distObj^2)
+			D2 = d2/Ncs[2L]
+			
+			d1I=rowSums(dmat)
+			sum.d1I2=sum(d1I^2)
+			D2p=(sum.d1I2-d2)/Ncs[3L]
+			D2pp=(d1^2-4*Ncs[3L]*D2p-2*d2)/Ncs[4L]
+			
+			w2=weight.trt^2
+			n2=sapply(n, nc, C=2)
+			ans[order==2L] = sig2 = 2 * ( sum( w2/n2 ) - as.numeric(1L/Ncs[2L])) *
+			as.numeric(D2 - 2 * D2p + D2pp) +
+			4 * ( sum(w2 / n) - 1/N) * 	as.numeric(D2p - D2pp)
+		}
 		
-		mean.delta4=Ez4000+4*Ez3100+3*Ez2200+6*Ez2110+Ez1111
-		mu2=mu*mu
-		mean.delta2=sig2+mu2
-		ans[order==4L] = mean.delta4 - 4*mean.delta3*mu-3*mean.delta2^2 + 12*mean.delta2*mu2-6*mu2*mu2
+		if(mOrd>=3L){
+			d3=2*sum(distObj^3)
+			D3=d3/Ncs[2L]
+			Ncs[5L]=Nc(5L)
+			Ncs[6L]=Nc(6L)
+			
+			dmat2=dmat^2
+			ddmat=dmat%*%dmat
+			d2I=rowSums(dmat2)
+			sum.d1I.d2I=sum(d1I*d2I)
+			D3p=(sum.d1I.d2I-d3)/Ncs[3L]
+			D3pp=(d1*d2-4*Ncs[3L]*D3p-2*d3)/Ncs[4L]
+			#D3s=6*sum(combn(N,3L,function(idx)distObj[[ idx[1L], idx[2L] ]] * distObj[[ idx[1L], idx[3L] ]] * distObj[[ idx[2L], idx[3L] ]])) / Ncs[3L]
+			D3s = sum(dmat*ddmat)/Ncs[3L] # numerator = term S_{4}^{(3)} in Siemiatycki 1978
+			D3ss=(sum(dmat*(d1I%o%d1I))-Ncs[3L]*(2*D3p+D3s)-d3)/Ncs[4L]
+			D3s3=(sum(d1I^3)-3*Ncs[3L]*D3p-d3)/Ncs[4L]
+			D3p3=(Ncs[3L]*(d1*D2p-4*D3p-2*D3s)-2*Ncs[4L]*(2*D3ss+D3s3))/Ncs[5L]
+			D3p4=(Ncs[4L]*(d1*D2pp-4*D3pp-8*D3ss)-8*Ncs[5L]*D3p3)/Ncs[6L]
+			
+			n2.2=n2*n2
+			n2.3=n2.2*n2
+			n3=sapply(n, nc, C=3)
+			n4=sapply(n, nc, C=4)
+			n5=sapply(n, nc, C=5)
+			n6=sapply(n, nc, C=6)
+			w3=w2*weight.trt
+			mean.delta3 = 
+				4*D3*sum(w3/n2.2)+
+				8*(3*D3p+D3s)*sum(w3*n3/n2.3)+
+				8*(3*D3ss+D3s3)*sum(w3*n4/n2.3)+
+				6*D3pp*sum(w2*(1-weight.trt+weight.trt*n4/n2.2)/n2)+
+				12*D3p3*sum(w2*((1-weight.trt)*n3+weight.trt*n5/n2)/n2.2)+
+				D3p4*sum(weight.trt*((1-weight.trt)*(1-2*weight.trt)+3*weight.trt*(1-weight.trt)*n4/n2.2+w2*n6/n2.3))
+			ans[order==3L] = mean.delta3 - 3*mu*sig2-mu^3
+		}
+
+		if(mOrd>=4L){
+			Ncs[7L]=Nc(7L); 
+			Ncs[8L]=Nc(8L)
+		
+			ddmat=crossprod(dmat)
+			d1It=tcrossprod(d1I, d1I)
+			Sa4=c(
+				sum(distObj^4)*2, 
+				sum(rowSums(dmat2*dmat)*d1I), 
+				sum(d2I^2),
+				sum(dmat2 * ddmat),
+				sum(d2I*d1I^2), 
+				sum(dmat2*d1It),
+				sum(dmat *tcrossprod(d2I, d1I)), 
+				sum(ddmat^2),
+				sum(d1I * colSums(dmat*ddmat)),
+				sum((dmat%*%d1I)^2), 
+				sum(d1I^4),
+				sum(dmat*tcrossprod(d1I^2, d1I)), 
+				d2^2,
+				sum.d1I2^2,
+				d2*sum.d1I2, 
+				d2*d1*d1, 
+				sum.d1I2*d1*d1, 
+				d1*d3,
+				d1*sum.d1I.d2I,
+				d1* sum(dmat * d1It), 
+				d1*sum(dmat * ddmat), 
+				d1*sum(d1I^3)
+			)
+			Pa4 = drop(.order4.S2P.mat %*% Sa4)
+			Pa4 = c(Pa4,  d1^4 - .order4.f.alpha %*% Pa4 )
+			Ds=c(rep(0, 12L), Pa4[.order4.P2D.ord]/Ncs[rep(2:8,c(1L,3L,7L,6L,4L,1L,1L))])
+			
+			n2.o.n2=tcrossprod(n2, n2)
+			n3.o.n2=tcrossprod(n3, n2)
+			n4.o.n2=tcrossprod(n4, n2)
+			n5.o.n2=tcrossprod(n5, n2)
+			n6.o.n2=tcrossprod(n6, n2)
+			
+			Ez3100=tcrossprod(w3/n2.3, weight.trt/n2) * (
+				4*n2.o.n2*Ds[17L] +
+				8*n3.o.n2*(3*Ds[25L] + Ds[29L]) +
+				2*n4.o.n2*(3*Ds[30L] + 4*Ds[31L] + 12*Ds[33L]) +
+			   12*n5.o.n2*Ds[34L]+
+				  n6.o.n2*Ds[35L]
+			)
+			Ez3100 = sum(Ez3100) - sum(diag(Ez3100))
+			w4=w2*w2
+			n2.4=n2.2*n2.2
+			n7=sapply(n, nc, C=7)
+			n8=sapply(n, nc, C=8)
+			Ez4000 = sum(
+				w4/n2.4*(
+					 8*n2*Ds[13L] +
+					16*n3*(4*Ds[14L] + 3*Ds[15L] + 6*Ds[16L]) +
+					 4*n4*(4*Ds[17L] + 3*Ds[18L]) +
+					48*n4*(2*Ds[19L] + 2*Ds[20L] + 4*Ds[21L] + Ds[22L] + 4*Ds[23L]) +
+					16*n5*(3*Ds[24L] + 6*Ds[25L] + Ds[26L]) +
+					32*n5*(6*Ds[27L] + 6*Ds[28L] + Ds[29L]) +
+					 4*n6*(3*Ds[30L] + 8*Ds[31L]) +
+					48*n6*(Ds[32L] + 2*Ds[33L]) + 
+					24*n7*Ds[34L] +
+					   n8*Ds[35L]
+				)
+			)
+			n3.o.n3=tcrossprod(n3)
+			n4.o.n3=tcrossprod(n4, n3)
+			n4.o.n4=tcrossprod(n4, n4)
+			Ez2200=tcrossprod(w2/n2.2, w2/n2.2) * (
+					4*n2.o.n2* Ds[18L] +
+					8*(n3.o.n2+t(n3.o.n2))*Ds[24L] +
+					2*(n4.o.n2+t(n4.o.n2))*Ds[30L] +
+					16*n3.o.n3*Ds[32L] +
+					4*(n4.o.n3+t(n4.o.n3))*Ds[34L] +
+					   n4.o.n4*Ds[35L]
+			)
+			Ez2200=sum(Ez2200)-sum(diag(Ez2200))
+			
+			Ez2110= 0 
+			wow=tcrossprod(weight.trt)
+			if(ntrt>=3L) for(ii in seq_len(ntrt)) {
+				tmp = w2[ii]/n2.2[ii] * wow * (
+					2*n2[ii] * Ds[30L] +
+					4*n3[ii] * Ds[34L] +
+					  n4[ii] * Ds[35L] 
+				)
+				tmp[ii,]=tmp[,ii]=0
+				Ez2110=Ez2110+sum(tmp)-sum(diag(tmp))
+			}
+			
+			Ez1111=if(ntrt<4L) 0 else 
+				sum(combn(ntrt, 4L, function(ii)prod(weight.trt[ii])))*24*Ds[35L]
+			
+			mean.delta4=Ez4000+4*Ez3100+3*Ez2200+6*Ez2110+Ez1111
+			mu2=mu*mu
+			mean.delta2=sig2+mu2
+			ans[order==4L] = mean.delta4 - 4*mean.delta3*mu-3*mean.delta2^2 + 12*mean.delta2*mu2-6*mu2*mu2
+		}
+		ans
 	}
-	ans
-}
-## constants used by 4th order cumulants
-.order4.S2P.mat=matrix(c(
-1,		-1, -1, 0,		02, 01, 01, 01, 00, 02, 02,		-2, -6, -2, -4, 00, -4,		016, 012, 008, 010,		-48,
-0,		01, 00, 0,		-2, -2, -1, 00, 00, -4, 00,		04, 08, 02, 08, 00, 04,		-32, -28, -16, -16,		112,
-0,		00, 01, 0,		-1, 00, -1, -2, 00, 00, -4,		01, 03, 03, 02, 00, 06,		-16, -06, -08, -13,		048,
-0,		00, 00, 1,		00, -1, -1, 00, -2, 00, 00,		04, 00, 03, 02, 06, 02,		-08, -12, -14, -12,		064,
-0,		00, 00, 0,		01, 00, 00, 00, 00, 00, 00,		-1, -6, -1, -2, 00, -2,		016, 012, 008, 010,		-72,
-0,		00, 00, 0,		00, 01, 00, 00, 00, 00, 00,		-2, 00, 00, -2, 00, 00,		008, 012, 006, 004,		-48,
-0,		00, 00, 0,		00, 00, 01, 00, 00, 00, 00,		-1, 00, -2, -2, 00, -4,		016, 006, 008, 012,		-56,
-0,		00, 00, 0,		00, 00, 00, 01, 00, 00, 00,		00, 00, -1, 00, 00, 00,		000, 000, 002, 002,		-08,
-0,		00, 00, 0,		00, 00, 00, 00, 01, 00, 00,		-2, 00, -2, 00, -6, 00,		000, 006, 012, 008,		-56,
-0,		00, 00, 0,		00, 00, 00, 00, 00, 00, 00,		00, 00, 01, 00, 00, 00,		000, 000, -04, -04,		024,
-0,		00, 00, 0,		00, 00, 00, 00, 00, 00, 00,		00, 01, 00, 00, 00, 00,		000, -02, 000, -01,		008,
-0,		00, 00, 0,		00, 00, 00, 00, 00, 00, 00,		01, 00, 00, 00, 00, 00,		000, -06, -04, -04,		040,
-0,		00, 00, 0,		00, 00, 00, 00, 00, 00, 01,		00, 00, 00, 00, 00, -1,		002, 000, 000, 001,		-02,
-0,		00, 00, 0,		00, 00, 00, 00, 00, 00, 00,		00, 00, 00, 00, 00, 00,		000, 000, 000, 001,		-04,
-0,		00, 00, 0,		00, 00, 00, 00, 00, 00, 00,		00, 00, 00, 00, 00, 01,		-04, 000, 000, -02,		006,
-0,		00, 00, 0,		00, 00, 00, 00, 00, 00, 00,		00, 00, 00, 00, 00, 00,		001, 000, 000, 000,		-01,
-0,		00, 00, 0,		00, 00, 00, 00, 00, 00, 00,		00, 00, 00, 00, 00, 00,		000, 000, 000, 000,		001,
-0,		00, 00, 0,		00, 00, 00, 00, 00, 01, 00,		00, 00, 00, -1, 00, 00,		004, 002, 001, 000,		-08,
-0,		00, 00, 0,		00, 00, 00, 00, 00, 00, 00,		00, 00, 00, 01, 00, 00,		-08, -03, -02, 000,		020,
-0,		00, 00, 0,		00, 00, 00, 00, 00, 00, 00,		00, 00, 00, 00, 00, 00,		000, 000, 001, 000,		-08,
-0,		00, 00, 0,		00, 00, 00, 00, 00, 00, 00,		00, 00, 00, 00, 01, 00,		000, 000, -01, 000,		004,
-0,		00, 00, 0,		00, 00, 00, 00, 00, 00, 00,		00, 00, 00, 00, 00, 00,		000, 001, 000, 000,		-04
-), nrow=22L, ncol=22L
-)
-.order4.f.alpha=c(8,64,48,96,96,96,192,48,192,16,12,192,16,192,96,32,48,12,32,96,48,24)
-.order4.P2D.ord=order(c(13:16,19:23,17:18,28,26:27,25,29,24,30:31,33,32,34:35))
+})
+environment(cumulant.mrpp)=constEnv
 
 if(FALSE){
 naiveEnumSum=function(ord,n, idx.List, delta, verbose=FALSE) ## enumeration of the summation in D functions

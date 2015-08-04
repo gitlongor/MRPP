@@ -24,7 +24,7 @@ function(y, permutedTrt, r=seq_len(ncol(y)), #test=F,
         all.ddelta.dw[is.nan(all.ddelta.dw)]=0
 
 	weight.trt = mrpp.weight.trt(weight.trt, trt.permutedTrt(permutedTrt))$weight.trt[names(permutedTrt)]
-    for(r.i in seq(along=r)){
+    for(r.i in seq_along(r)){
         dz.dw=.Call(mrppstats,all.ddelta.dw[,r.i],permutedTrt, weight.trt, PACKAGE='MRPP')
         ans[r.i]=mean(dz.dw[1]-dz.dw>= -eps)
     }

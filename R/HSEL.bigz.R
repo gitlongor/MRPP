@@ -183,7 +183,7 @@ sample.bigz=function(N, M)
 	rem = N %%  imaxz
 	probs = c(rep(as.numeric(imaxz/N), quo), as.numeric(rem/N))
 	block.ssize = drop(rmultinom(1L, M, probs)); rm(probs)
-	ssize.rle = rle(block.ssize[safeseq(1L, quo, 1L)]); last.ssize=tail(block.ssize, 1L); rm(block.ssize)
+	ssize.rle = rle(block.ssize[seq_len(quo)]); last.ssize=tail(block.ssize, 1L); rm(block.ssize)
 	ans = rep('0', M)
 	i=1L
 	prior=bz0

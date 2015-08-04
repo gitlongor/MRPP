@@ -23,7 +23,7 @@ function(y, permutedTrt, r=seq_len(ncol(y)), #test=F,
     all.ddelta.dw=apply(y[,r,drop=FALSE],2L,dist,method='manhattan')/dist(y)*0.5   ## these 2 lines replace the above 5 lines
         all.ddelta.dw[is.nan(all.ddelta.dw)]=0
 
-    for(r.i in seq(along=r)){
+    for(r.i in seq_along(r)){
         dz.dw=.Call(mrppstats,all.ddelta.dw[,r.i],permutedTrt, as.numeric(weight.trt), PACKAGE='MRPP')
         ans[r.i]=mean(dz.dw[1]-dz.dw>=eps)
     }

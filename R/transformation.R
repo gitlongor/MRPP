@@ -32,18 +32,6 @@ transform.numeric <- function(`_data`, ...)
 	drop(NextMethod(.Generic))
 }
 
-constEnv=new.env()
-constEnv$oneThird = 1/3
-constEnv$oneSixth = 1/6
-constEnv$twoThirds = 2/3
-constEnv$oneNinth = 1/9
-constEnv$beta13.13=beta(1/3,1/3)
-constEnv$beta23.23=beta(2/3,2/3)
-constEnv$twoThree.192=23/192
-constEnv$twoThree.96 =23/96
-constEnv$sqrt2.3 = sqrt(2)/3
-constEnv$fourThirds =4/3
-
 nbinom.vst = local({
 	twoThree.192=23/192
 	twoThree.96 =23/96

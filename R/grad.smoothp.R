@@ -32,7 +32,7 @@ function(y, permutedTrt, bw, r=seq_len(NCOL(y)), test=FALSE, distFunc=dist,
 			expr = expression(ans[, r.i] <- .colSums(weight * (rep(dz.dw[b], each=B)-dz.dw), B, length(b))/sd(dz.dw)/w2s)
 	}else	expr = expression(ans[, r.i] <- .colSums(weight * (rep(dz.dw[b], each=B)-dz.dw), B, length(b)))
 	
-	for(r.i in seq(along=r)){
+	for(r.i in seq_along(r)){
 		dz.dw=.Call(mrppstats, all.ddelta.dw[,r.i], permutedTrt, weight.trt, PACKAGE='MRPP')
 		eval(expr)    ## this lines replace the above 3 lines
 	}
@@ -81,7 +81,7 @@ function(y, permutedTrt, bw, r=seq_len(NCOL(y)), test=FALSE,
 			w2s=sqrt(.colSums(weight^2, B, length(b)))
 			expr = expression(ans[, r.i] <- .colSums(weight * (rep(dz.dw[b], each=B)-dz.dw), B, length(b))/sd(dz.dw)/w2s)
 	}else	expr = expression(ans[, r.i] <- .colSums(weight * (rep(dz.dw[b], each=B)-dz.dw), B, length(b)))
-	for(r.i in seq(along=r)){
+	for(r.i in seq_along(r)){
 		#dz.dw=.C('mrppstats',all.ddelta.dw[,r.i],permutedTrt,cperm.mat,nrow(permutedTrt),B,N,as.integer(weight.trt),ans=double(B),PACKAGE='MRPP',DUP=FALSE)$ans
 		dz.dw=.Call(mrppstats, all.ddelta.dw[,r.i], permutedTrt, weight.trt, PACKAGE='MRPP')
 #        for(b.i in 1:length(b)){
@@ -119,7 +119,7 @@ expression( ## simplified from grad.smoothp; allowing a vector of bw's; only use
 	bw0=rep(bw, each=B)
 	weights=dkernel(kernel)((mrpp.stats-mrpp.stats[b])/bw0)/bw0
 	dim(weights) = c(B, n.bw)
-	for(r.i in seq(along=r)){
+	for(r.i in seq_along(r)){
 		dz.dw=.Call(mrppstats, all.ddelta.dw[,r.i], permutedTrt, as.numeric(weight.trt), PACKAGE='MRPP')  ## character weight.trt not allowed
 		ans[, r.i] = scale/B* .colSums(weights* (dz.dw[b]-dz.dw), B, n.bw)
 	}
@@ -155,11 +155,11 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), test=FALSE,
 	
     if(is.finite(bw)){
 		out1s = list()
-        for(r.i in seq(along=r)){
+        for(r.i in seq_along(r)){
             dz.dw=.Call(mrppstats, all.ddelta.dw[,r.i], permutedTrt, as.numeric(weight.trt), PACKAGE='MRPP')
 			out1s[[r.i]] = outer(-dz.dw, dz.dw[b], '+')
 		}
-		for(r.i in seq(along=r)){
+		for(r.i in seq_along(r)){
 			for(s.i in safeseq(r.i, length(r))) {
 				dz2=.Call(mrppstats, all.d2delta.dw2[,s.i,r.i], permutedTrt, as.numeric(weight.trt), PACKAGE='MRPP')
 				ans[, r.i, s.i] = ans[, s.i, r.i] = 
@@ -171,12 +171,12 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), test=FALSE,
     }else{  ## infinite bw (the same as finite bw, except no weights(i.e. weight=1)
 		.NotYetImplemented()
         if(isTRUE(standardized)){
-            for(r.i in seq(along=r)){
+            for(r.i in seq_along(r)){
                 dz.dw=.Call(mrppstats, all.ddelta.dw[,r.i], permutedTrt, as.numeric(weight.trt), PACKAGE='MRPP')
                 ans[, r.i] = scale/B* (B*dz.dw[b]-sum(dz.dw))/sd(dz.dw) 
             }
         }else{
-            for(r.i in seq(along=r)){
+            for(r.i in seq_along(r)){
                 dz.dw=.Call(mrppstats, all.ddelta.dw[,r.i], permutedTrt, as.numeric(weight.trt), PACKAGE='MRPP')
                 ans[, r.i] = scale/B* (B*dz.dw[b]-sum(dz.dw)) 
             }
