@@ -47,12 +47,12 @@ kurtosis(x, excess=TRUE, \dots )
 
 
 moment(x, order, central, \dots )
-\method{moment}{default}(x, order=1:3, central=FALSE,  \dots )
-\method{moment}{mrpp}(x, order=1:3, central=FALSE, \dots)
+\method{moment}{default}(x, order=1:4, central=FALSE,  \dots )
+\method{moment}{mrpp}(x, order=1:4, central=FALSE, \dots)
 
 cumulant(x, order,  \dots )
-\method{cumulant}{default}(x, order=1:3,   \dots )
-\method{cumulant}{mrpp}(x, order=1:3,  \dots)
+\method{cumulant}{default}(x, order=1:4,   \dots )
+\method{cumulant}{mrpp}(x, order=1:4,  \dots)
 }
 
 \arguments{
@@ -93,12 +93,15 @@ S3 methods \code{mean.mrpp}, \code{var.mrpp}, \code{sd.mrpp}, \code{skewness.mrp
 }
 
 \note{
-\code{kurtosis.mrpp}, as well as \code{moment.mrpp} and \code{cumulant.mrpp} with \code{max(order)>=4L}, has not been implemented yet. 
+\code{moment.mrpp} and \code{cumulant.mrpp} with \code{max(order)>=5L} have not been implemented yet. 
 
 }
 \references{
 Paul W. Mielke, Kenneth J. Berry. (2007) Permutation Methods: A Distance Function Approach. 2nd ed. Springer.
 
+Jack Siemiatycki. (1978) Mantel's Space-Time Clustering Statistic: Computing Higher Moments and a Comparison of Various Data Transforms. \emph{J Statist Comput Simul}. \bold{7}, 13--31.
+
+D. S. Tracy and I. H. Tajuddin. (1985) Extended Moment Results for Improving Inferences Based on MRPP. \emph{Commun Statist - Theor Meth}. \bold{14}(6), 1485--1496.
 }
 \author{
 Long Qu
@@ -131,9 +134,14 @@ mrpp.tst = mrpp.test(mrpp.obj)
 mean(mrpp.obj) - mean(mrpp.tst$all.statistics)
 var(mrpp.obj) - mean((mrpp.tst$all.statistics-mean(mrpp.tst$all.statistics))^2)
 cumulant(mrpp.obj, order=3) - mean((mrpp.tst$all.statistics-mean(mrpp.tst$all.statistics))^3)
+moment(mrpp.obj, order=4, central=TRUE) - moment(mrpp.tst$all.statistics, order=4, central=TRUE)
 
-moment(mrpp.obj, order=3, central=TRUE)
-moment(mrpp.obj, order=3, central=FALSE)
+moment(mrpp.obj, order=1:4, central=FALSE)
+moment(mrpp.obj, order=1:4, central=TRUE)
+cumulant(mrpp.obj, order=1:4)
+
+skewness(mrpp.obj)
+kurtosis(mrpp.obj)
 
 }
 \keyword{ univar }

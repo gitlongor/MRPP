@@ -12,6 +12,7 @@ To-do's and to-try's
 \enumerate{
 	\item re-implement interfaces using mrpp class
 	\item add common importance measure core and interface
+	\item bandwidth selection by minimizing distance to parametric distribution with moment constraints
 	\item \code{\link[Rmpfr:Rmpfr]{Rmpfr}}-based weighting? 
 	\item MRBP
 	\item allowing some NA's in the distance matrix
