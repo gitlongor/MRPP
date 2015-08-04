@@ -3,15 +3,15 @@ mrpp.weight.trt=function(weight.trt, trt)
     tabtrt=table(trt)
     ntrt=length(tabtrt)
 	if(is.character(weight.trt)){
-		wtmethod=match.arg(weight.trt, c('df','n','equal','terms'))
+		wtmethod=match.arg(weight.trt, c('df','n','equal','pairs'))
 		weight.trt=switch(wtmethod, 
 			'df'=(tabtrt-1)/(sum(tabtrt)-ntrt), 
 			'n' =tabtrt/sum(tabtrt), 
 			'equal' = 1/ntrt, 
-			'terms' = local({ num = tabtrt*(tabtrt-1); ans = num/sum(num); ans[num==0]=0; ans})
+			'pairs' = local({ num = tabtrt*(tabtrt-1); ans = num/sum(num); ans[num==0]=0; ans})
 		)
 	}else wtmethod='custom'
-	wtmethod=factor(wtmethod, levels=c('df','n','equal','terms','custom'))
+	wtmethod=factor(wtmethod, levels=c('df','n','equal','pairs','custom'))
 	if(!is.double(weight.trt)) weight.trt = as.double(weight.trt)
 	if(length(weight.trt)!=ntrt) weight.trt = rep(weight.trt, length=ntrt)
 	names(weight.trt)=names(tabtrt)

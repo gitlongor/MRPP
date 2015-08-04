@@ -13,7 +13,7 @@ mrpp.stats.R=function(y, trt, wt='df', round=8)
 		df = (tabtrt-1), 
 		n =  (tabtrt-0), 
 		equal= rep(1,ntrt), 
-		terms=choose(tabtrt, 2)
+		pairs=choose(tabtrt, 2)
 	)
 	wt = wt/sum(wt)
 	distMat=as.matrix(dist(y))
@@ -32,7 +32,7 @@ library(MRPP)
 
 
 
-do.test=function(n=c(3,5), wts=c('df','n','equal','terms'), R=5)
+do.test=function(n=c(3,5), wts=c('df','n','equal','pairs'), R=5)
 {
 	trt=ordered(sample(rep(seq_along(n), n)), levels=as.character(seq_along(n)))
 	y=matrix(rnorm(length(trt)*R), nc=R)

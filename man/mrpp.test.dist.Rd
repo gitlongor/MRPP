@@ -32,7 +32,7 @@ mrpp.test(y, \dots)
 }
   \item{permutedTrt}{An optional permutation index matrix. If missing, this will be computed as \code{permuteTrt(trt,B)}. See \code{\link{permuteTrt}}. 
 }
-  \item{weight.trt}{Either a character scalar being one of \code{c("df", "n", "equal", "terms")} or a positive numeric vector of length \code{nlevels(trt)} subject to sum-to-1 constraint. See details. 
+  \item{weight.trt}{Either a character scalar being one of \code{c("df", "n", "equal", "pairs")} or a positive numeric vector of length \code{nlevels(trt)} subject to sum-to-1 constraint. See details. 
 }
   \item{eps}{A small non-negative number, differences below which among permuted test statistics are treated as equal.
 }
@@ -50,7 +50,7 @@ For the \code{weight.trt} argument, suppose that \code{n} denote the vector samp
 \item{\code{weight.trt="df"} uses group (treatment) weights proportional to \code{n-1};}
 \item{ \code{weight.trt="df"} uses group (treatment) weights proportional to \code{n};}
 \item{\code{weight.trt="equal"} uses equal group (treatment) weights; and }
-\item{\code{weight.trt="terms"} uses group (treatment) weights proportional to \code{choose(n,2)}.}
+\item{\code{weight.trt="pairs"} uses group (treatment) weights proportional to \code{choose(n,2)}.}
 } 
 
 }
