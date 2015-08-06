@@ -56,9 +56,9 @@ function(trt, B=100L, idxOnly = FALSE) ## matrices of permutation vectors for on
 		}else   decfr=HSEL.bigz(facN, B)	# 	faster for larger facN
 		idx1=which(decfr==0L)
 		
+		decfrCC = as.character(decfr)
 		if(isTRUE(idxOnly)) {	## save memory
 			ans = lapply(part0, as.matrix)
-			decfrCC = as.character(decfr)
 				if(length(idx1)>0L) decfrCC[idx1]=decfrCC[1L]
 				decfrCC[1L]='0'
 			attr(ans, 'idx') = decfrCC
@@ -66,7 +66,7 @@ function(trt, B=100L, idxOnly = FALSE) ## matrices of permutation vectors for on
 			return(ans)
 		}
 		
-		perms = sapply(decfr, dec2permvec, N=N)
+		perms = sapply(decfrCC, dec2permvec, N=N)
 			if(length(idx1)>0L) perms[,idx1]=perms[,1L]
 			perms[,1L] = seq(N)
 		ans = split.data.frame(perms, trt)
