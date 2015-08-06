@@ -18,27 +18,39 @@ mrpp.weight.trt=function(weight.trt, trt)
 	list(wtmethod=wtmethod, weight.trt=weight.trt)
 }
 
-mrpp <- function(y, trt, B=as.integer(min(nparts(table(trt)), 1e4L)), permutedTrt, weight.trt='df', eps=1e-8, distFunc=dist, idxOnly=FALSE) 
+mrpp <- function(y, trt, B=as.integer(min(nparts(table(trt)), 1e4L)), permutedTrt, weight.trt='df', distFunc=dist, idxOnly=FALSE)
 {
     if(missing(trt)) {  ## recovering trt from the first permutation
       trt=trt.permutedTrt(permutedTrt)
     }
+	permutedTrt.env=new.env(hash=FALSE, parent=constEnv)
     if(missing(permutedTrt)) {
-        permutedTrt=permuteTrt(trt,B, idxOnly)
+		delayedAssign('permutedTrt', permuteTrt(trt,B, idxOnly), eval.env=environment(), assign.env=permutedTrt.env)
         dname=paste('"dist" object',deparse(substitute(y)), 
                              'and treatment group', deparse(substitute(trt)))
-    }else dname=paste('"dist" object',deparse(substitute(y)), 
+    }else {
+		permutedTrt.env$permutedTrt = permutedTrt
+		dname=paste('"dist" object',deparse(substitute(y)), 
                              'and permuted treatment', deparse(substitute(permutedTrt)))
-    B=nperms.permutedTrt(permutedTrt)
-	idxOnly=!is.na(attr(permutedTrt, 'idx')[1L])
+		idxOnly = !is.na(attr(permutedTrt, 'idx')[1L])
+	}
+	delayedAssign('B', nperms.permutedTrt(permutedTrt), eval.env=permutedTrt.env, assign.env=permutedTrt.env)
 
-    tabtrt=table(trt)[names(permutedTrt)]
-    ntrt=length(tabtrt)
+	{
+		n=table(trt)
+		cn=cumsum(n)
+		ntrt=length(n)
+		N=cn[ntrt]
+		ordn=order(-n, names(n), decreasing=FALSE)
+		trt=ordered(trt, levels=names(n)[ordn])
+		trtc=levels(trt)
+		tabtrt = n[ordn]
+	}
 	
 	tmp=mrpp.weight.trt(weight.trt, as.factor(trt))
-	wtmethod=tmp$wtmethod; weight.trt=tmp$weight.trt[names(permutedTrt)]
+	wtmethod=tmp$wtmethod; weight.trt=tmp$weight.trt[trtc]
 
-	N = NROW(y)
+	if(N != NROW(y)) stop('NROW(y) != length(trt)')
 	R = NCOL(y)
 	structure(list(distObj=distFunc(y), 
 					n=tabtrt, 
@@ -46,31 +58,38 @@ mrpp <- function(y, trt, B=as.integer(min(nparts(table(trt)), 1e4L)), permutedTr
 					nparts=nparts(tabtrt),
 					nobs = N, 
 					R=R, 
-					B=B, 
-					
+					B.requested=B, 
 					trt=trt,
-					permutedTrt=permutedTrt, 
+					permutedTrt.env=permutedTrt.env, 
 					idxOnly = idxOnly,
 					weight.trt=structure(weight.trt, 'method'=wtmethod), 
-					eps = eps, 
 					distFunc = distFunc
 			  ),
 			  class='mrpp'
 	)
 }
 
-mrpp.test.mrpp = function(y, ...)
+mrpp.test.mrpp = function(y, exact=FALSE, correct=FALSE, eps=1e-8, ...)
 {
 	nms=names(y)
 	nms[nms=='distObj']='y'
+	nms[nms=='B.requested']='B'
 	names(y)=nms
+	if(exact) {
+		y$permutedTrt = y$permutedTrt.env$permutedTrt
+		y$B = y$permutedTrt.env$B
+	}
+	y$correct=correct
+	y$eps=eps
+	y[!(nms%in%names(formals(mrpp.test.dist)))]=NULL
+	
 	ans = do.call("mrpp.test", y)
 	ans$data.name = paste('"mrpp" object',dQuote(as.character(match.call()[['y']])))
 	ans
 }
 
 mrpp.test.dist <-
-function(y, trt, B=as.integer(min(nparts(table(trt)), 1e4L)), permutedTrt, weight.trt='df', eps=1e-8, ...) ## this uses C code
+function(y, trt, B=as.integer(min(nparts(table(trt)), 1e4L)), exact=FALSE, correct=FALSE, permutedTrt, weight.trt='df', eps=1e-8, ...) ## this uses C code
 ## y is a dist object; weight.trt: 0=sample size-1; 1=sample size
 {
     if(missing(y) || !inherits(y,'dist')) stop('dist object missing or incorrect')
