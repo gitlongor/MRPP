@@ -10,6 +10,7 @@ To-do's and to-try's
 \details{
 
 \enumerate{
+	\item bigq support for cumulant when individual n is large (>18)
 	\item re-implement interfaces using mrpp class
 	\item add common importance measure core and interface
 	\item bandwidth selection by minimizing distance to parametric distribution with moment constraints

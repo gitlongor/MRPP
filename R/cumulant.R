@@ -41,12 +41,8 @@ skewness.mrpp=function(x,...)
 }
 
 kurtosis=function(x,excess=TRUE,...)UseMethod('kurtosis')
-kurtosis.default=local({
-	ans=moments::kurtosis
-	fm =formals(moments::kurtosis)
-	formals(ans)=c(fm, alist(excess=TRUE, ...=))[c('x','excess',setdiff(names(fm),c('x','...','excess')), '...')]
-	ans
-})
+kurtosis.default=function(x, excess=TRUE, na.rm=FALSE, ...)
+	moments::kurtosis(x,na.rm,...) - if(excess) 3 else 0
 kurtosis.mrpp=function(x, excess=TRUE, ...)
 {
 	cum=cumulant(x, order=c(2L,4L))
@@ -90,7 +86,9 @@ cumulant.default=function(x, order=1:4, ...)
 	order=as.integer(order)
 	stopifnot(all(order>=0))
 	mOrd=max(order)
-	mu.raw = moments::all.moments(x, order.max=mOrd, central=FALSE, ...)
+	mu.raw = switch(as.character(mOrd), 
+		'0'=1, '1'=c(1, mean(x)),
+		moments::all.moments(x, order.max=mOrd, central=FALSE, ...))
 	ans = c(0, moment2cumulant(mu.raw[-1L]))
 	structure(ans[order+1L], names=as.character(order))
 }
@@ -123,7 +121,8 @@ cumulant.mrpp=local({
 	)
 	.order4.f.alpha=c(8,64,48,96,96,96,192,48,192,16,12,192,16,192,96,32,48,12,32,96,48,24)
 	.order4.P2D.ord=order(c(13:16,19:23,17:18,28,26:27,25,29,24,30:31,33,32,34:35))
-
+	rising.fact.int.bound=c(2147483647L,46341L,1291L,216L,75L,38L,24L,18L)
+	
 	function(x, order=1:4,...)
 	{
 		order=as.integer(order)
@@ -133,9 +132,10 @@ cumulant.mrpp=local({
 		names(ans)=as.character(order)
 		ans[order==0L]=0
 		mOrd = max(order)
+		if(mOrd==0L) return(ans)
 		
 		distObj = x$distObj
-		permutedTrt = x$permutedTrt
+		#permutedTrt = x$permutedTrt
 		weight.trt  = x$weight.trt
 		n			= x$n
 		N			= x$nobs
@@ -144,60 +144,67 @@ cumulant.mrpp=local({
 		Nc=function(C)factorial.rising(max(0,N-C+1L), C)
 		nc=function(n, C)factorial.rising(max(0,n-C+1L), C)
 		Ncs=integer(8L)
+		if( N > rising.fact.int.bound[switch(mOrd, 2L, 4L, 6L, 8L)] ) 
+			Ncs=as.bigq(Ncs)
+		if(max(n) > rising.fact.int.bound[switch(mOrd, 2L, 4L, 6L, 8L)] ){
+			`The "cumulant" function for large sample sizes`=function().NotYetImplemented()
+			`The "cumulant" function for large sample sizes`()
+		}
 		
 		dmat = as.matrix(distObj)
 		
 		if(mOrd>=1L) {
-			Ncs[2L]=Nc(2L)
+			Ncs[[2L]]=Nc(2L)
 			d1=2*sum(distObj)
-			D1 =d1/Ncs[2L]
+			D1 =d1/Ncs[[2L]]
 			ans[order==1L]=mu = as.numeric(D1)
 		}
 		
 		if(mOrd>=2L){
-			Ncs[3L]=Nc(3L)
-			Ncs[4L]=Nc(4L)
+			Ncs[[3L]]=Nc(3L)
+			Ncs[[4L]]=Nc(4L)
+			w2=weight.trt^2
+			n2=sapply(n, nc, C=2)
+
 			d2 = 2*sum(distObj^2)
-			D2 = d2/Ncs[2L]
+			D2 = d2/Ncs[[2L]]
 			
 			d1I=rowSums(dmat)
 			sum.d1I2=sum(d1I^2)
-			D2p=(sum.d1I2-d2)/Ncs[3L]
-			D2pp=(d1^2-4*Ncs[3L]*D2p-2*d2)/Ncs[4L]
+			D2p=(sum.d1I2-d2)/Ncs[[3L]]
+			D2pp=(d1^2-4*Ncs[[3L]]*D2p-2*d2)/Ncs[[4L]]
 			
-			w2=weight.trt^2
-			n2=sapply(n, nc, C=2)
-			ans[order==2L] = sig2 = 2 * ( sum( w2/n2 ) - as.numeric(1L/Ncs[2L])) *
-			as.numeric(D2 - 2 * D2p + D2pp) +
-			4 * ( sum(w2 / n) - 1/N) * 	as.numeric(D2p - D2pp)
+			ans[order==2L] = sig2 = as.numeric(2 * ( sum( w2/n2 ) - 1L/Ncs[[2L]]) *
+			(D2 - 2 * D2p + D2pp) +
+			4 * ( sum(w2 / n) - 1/N) * (D2p - D2pp)  )
 		}
 		
 		if(mOrd>=3L){
-			d3=2*sum(distObj^3)
-			D3=d3/Ncs[2L]
-			Ncs[5L]=Nc(5L)
-			Ncs[6L]=Nc(6L)
-			
-			dmat2=dmat^2
-			ddmat=dmat%*%dmat
-			d2I=rowSums(dmat2)
-			sum.d1I.d2I=sum(d1I*d2I)
-			D3p=(sum.d1I.d2I-d3)/Ncs[3L]
-			D3pp=(d1*d2-4*Ncs[3L]*D3p-2*d3)/Ncs[4L]
-			#D3s=6*sum(combn(N,3L,function(idx)distObj[[ idx[1L], idx[2L] ]] * distObj[[ idx[1L], idx[3L] ]] * distObj[[ idx[2L], idx[3L] ]])) / Ncs[3L]
-			D3s = sum(dmat*ddmat)/Ncs[3L] # numerator = term S_{4}^{(3)} in Siemiatycki 1978
-			D3ss=(sum(dmat*(d1I%o%d1I))-Ncs[3L]*(2*D3p+D3s)-d3)/Ncs[4L]
-			D3s3=(sum(d1I^3)-3*Ncs[3L]*D3p-d3)/Ncs[4L]
-			D3p3=(Ncs[3L]*(d1*D2p-4*D3p-2*D3s)-2*Ncs[4L]*(2*D3ss+D3s3))/Ncs[5L]
-			D3p4=(Ncs[4L]*(d1*D2pp-4*D3pp-8*D3ss)-8*Ncs[5L]*D3p3)/Ncs[6L]
-			
+			Ncs[[5L]]=Nc(5L)
+			Ncs[[6L]]=Nc(6L)
+			w3=w2*weight.trt
 			n2.2=n2*n2
 			n2.3=n2.2*n2
 			n3=sapply(n, nc, C=3)
 			n4=sapply(n, nc, C=4)
 			n5=sapply(n, nc, C=5)
 			n6=sapply(n, nc, C=6)
-			w3=w2*weight.trt
+			
+			d3=2*sum(distObj^3)
+			D3=d3/Ncs[[2L]]
+			dmat2=dmat^2
+			ddmat=dmat%*%dmat
+			d2I=rowSums(dmat2)
+			sum.d1I.d2I=sum(d1I*d2I)
+			D3p=(sum.d1I.d2I-d3)/Ncs[[3L]]
+			D3pp=(d1*d2-4*Ncs[[3L]]*D3p-2*d3)/Ncs[[4L]]
+			#D3s=6*sum(combn(N,3L,function(idx)distObj[[ idx[1L], idx[2L] ]] * distObj[[ idx[1L], idx[3L] ]] * distObj[[ idx[2L], idx[3L] ]])) / Ncs[[3L]]
+			D3s = sum(dmat*ddmat)/Ncs[[3L]] # numerator = term S_{4}^{(3)} in Siemiatycki 1978
+			D3ss=(sum(dmat*(d1I%o%d1I))-Ncs[[3L]]*(2*D3p+D3s)-d3)/Ncs[[4L]]
+			D3s3=(sum(d1I^3)-3*Ncs[[3L]]*D3p-d3)/Ncs[[4L]]
+			D3p3=(Ncs[[3L]]*(d1*D2p-4*D3p-2*D3s)-2*Ncs[[4L]]*(2*D3ss+D3s3))/Ncs[[5L]]
+			D3p4=(Ncs[[4L]]*(d1*D2pp-4*D3pp-8*D3ss)-8*Ncs[[5L]]*D3p3)/Ncs[[6L]]
+
 			mean.delta3 = 
 				4*D3*sum(w3/n2.2)+
 				8*(3*D3p+D3s)*sum(w3*n3/n2.3)+
@@ -205,15 +212,30 @@ cumulant.mrpp=local({
 				6*D3pp*sum(w2*(1-weight.trt+weight.trt*n4/n2.2)/n2)+
 				12*D3p3*sum(w2*((1-weight.trt)*n3+weight.trt*n5/n2)/n2.2)+
 				D3p4*sum(weight.trt*((1-weight.trt)*(1-2*weight.trt)+3*weight.trt*(1-weight.trt)*n4/n2.2+w2*n6/n2.3))
-			ans[order==3L] = mean.delta3 - 3*mu*sig2-mu^3
+			ans[order==3L] = as.numeric(mean.delta3 - 3*mu*sig2-mu^3)
 		}
 
 		if(mOrd>=4L){
-			Ncs[7L]=Nc(7L); 
-			Ncs[8L]=Nc(8L)
+			Ncs[[7L]]=Nc(7L); 
+			Ncs[[8L]]=Nc(8L)
+			w4=w2*w2
+			wow=tcrossprod(weight.trt)
+			n2.4=n2.2*n2.2
+			n2.o.n2=tcrossprod(n2, n2)
+			n3.o.n2=tcrossprod(n3, n2)
+			n4.o.n2=tcrossprod(n4, n2)
+			n5.o.n2=tcrossprod(n5, n2)
+			n6.o.n2=tcrossprod(n6, n2)
+			n3.o.n3=tcrossprod(n3)
+			n4.o.n3=tcrossprod(n4, n3)
+			n4.o.n4=tcrossprod(n4, n4)
+			n7=sapply(n, nc, C=7)
+			n8=sapply(n, nc, C=8)
 		
-			ddmat=crossprod(dmat)
 			d1It=tcrossprod(d1I, d1I)
+			zeros = numeric(12L) 
+			if(!is.integer(Ncs)) zeros =as.bigq(zeros)
+			
 			Sa4=c(
 				sum(distObj^4)*2, 
 				sum(rowSums(dmat2*dmat)*d1I), 
@@ -240,13 +262,7 @@ cumulant.mrpp=local({
 			)
 			Pa4 = drop(.order4.S2P.mat %*% Sa4)
 			Pa4 = c(Pa4,  d1^4 - .order4.f.alpha %*% Pa4 )
-			Ds=c(rep(0, 12L), Pa4[.order4.P2D.ord]/Ncs[rep(2:8,c(1L,3L,7L,6L,4L,1L,1L))])
-			
-			n2.o.n2=tcrossprod(n2, n2)
-			n3.o.n2=tcrossprod(n3, n2)
-			n4.o.n2=tcrossprod(n4, n2)
-			n5.o.n2=tcrossprod(n5, n2)
-			n6.o.n2=tcrossprod(n6, n2)
+			Ds=c(zeros, Pa4[.order4.P2D.ord]/Ncs[rep(2:8,c(1L,3L,7L,6L,4L,1L,1L))])
 			
 			Ez3100=tcrossprod(w3/n2.3, weight.trt/n2) * (
 				4*n2.o.n2*Ds[17L] +
@@ -255,11 +271,9 @@ cumulant.mrpp=local({
 			   12*n5.o.n2*Ds[34L]+
 				  n6.o.n2*Ds[35L]
 			)
+			Ez3100 =structure(as.double(Ez3100), dim=dim(Ez3100))
 			Ez3100 = sum(Ez3100) - sum(diag(Ez3100))
-			w4=w2*w2
-			n2.4=n2.2*n2.2
-			n7=sapply(n, nc, C=7)
-			n8=sapply(n, nc, C=8)
+
 			Ez4000 = sum(
 				w4/n2.4*(
 					 8*n2*Ds[13L] +
@@ -274,9 +288,7 @@ cumulant.mrpp=local({
 					   n8*Ds[35L]
 				)
 			)
-			n3.o.n3=tcrossprod(n3)
-			n4.o.n3=tcrossprod(n4, n3)
-			n4.o.n4=tcrossprod(n4, n4)
+
 			Ez2200=tcrossprod(w2/n2.2, w2/n2.2) * (
 					4*n2.o.n2* Ds[18L] +
 					8*(n3.o.n2+t(n3.o.n2))*Ds[24L] +
@@ -285,27 +297,29 @@ cumulant.mrpp=local({
 					4*(n4.o.n3+t(n4.o.n3))*Ds[34L] +
 					   n4.o.n4*Ds[35L]
 			)
+			Ez2200 =structure(as.double(Ez2200), dim=dim(Ez2200))
 			Ez2200=sum(Ez2200)-sum(diag(Ez2200))
 			
 			Ez2110= 0 
-			wow=tcrossprod(weight.trt)
 			if(ntrt>=3L) for(ii in seq_len(ntrt)) {
-				tmp = w2[ii]/n2.2[ii] * wow * (
+				wow0=wow; wow0[ii,]=wow0[,ii]=0
+				tmp = w2[ii]/n2.2[ii] * wow0 * (
 					2*n2[ii] * Ds[30L] +
 					4*n3[ii] * Ds[34L] +
 					  n4[ii] * Ds[35L] 
 				)
-				tmp[ii,]=tmp[,ii]=0
+				#tmp[ii,]=tmp[,ii]=0  	# tmp[,ii]=0 part does not work for bigq matrices; so set corresponding wow elements to zero as above.
+				tmp=structure(as.double(tmp), dim=dim(tmp))
 				Ez2110=Ez2110+sum(tmp)-sum(diag(tmp))
 			}
 			
 			Ez1111=if(ntrt<4L) 0 else 
-				sum(combn(ntrt, 4L, function(ii)prod(weight.trt[ii])))*24*Ds[35L]
+				sum(combn(ntrt, 4L, function(ii)prod(weight.trt[ii]))) *24*Ds[35L]
 			
 			mean.delta4=Ez4000+4*Ez3100+3*Ez2200+6*Ez2110+Ez1111
 			mu2=mu*mu
 			mean.delta2=sig2+mu2
-			ans[order==4L] = mean.delta4 - 4*mean.delta3*mu-3*mean.delta2^2 + 12*mean.delta2*mu2-6*mu2*mu2
+			ans[order==4L] = as.numeric(mean.delta4 - 4*mean.delta3*mu-3*mean.delta2^2 + 12*mean.delta2*mu2-6*mu2*mu2)
 		}
 		ans
 	}

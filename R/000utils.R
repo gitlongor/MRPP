@@ -44,6 +44,7 @@ constEnv$.order4.P2D.ord=order(
 	# handwritten note on page 28 of Siemiatycki (1978)
 	c(13:16,19:23,17:18,28,26:27,25,29,24,30:31,33,32,34:35)
 )
+constEnv$rising.fact.int.bound=c(2147483647L,46341L,1291L,216L,75L,38L,24L,18L)
 
 safeseq =
 function (from = 1L, to = 1L, by = 1L, ...) 
@@ -86,3 +87,10 @@ factorial.rising=function(start, nterms)
 	if(i>j){tmp=i; i=j; j=tmp}
 	unclass(x)[attr(x,'Size')*(i-1L) - i*(i-1L)/2L + j-i]
 }
+
+vech=function(x){
+	d = NROW(x)
+	stopifnot(d != NCOL(x))
+	dim(x)=c(d,d)
+	x[lower.tri(x, diag=TRUE)]
+}		
