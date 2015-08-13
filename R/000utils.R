@@ -65,17 +65,30 @@ midp = function(x, eps=1e-8)
 
 .factorial.rising=	function(start, nterms)
 {
-	stopifnot(nterms>=0 && start >=0)
-	if(nterms==0)return(1)
-	if(start!=as.integer(start)).NotYetImplemented()
-	ans = prod.bigz(as.bigz(seq(from=start, length=nterms)))
-	tryCatch(as.integer(ans), warning=function(w)ans)
+	stopifnot(nterms==round(nterms))
+	if(nterms==0)return(do.call(paste0(c('as',class(start)), collapse='.'),list(1L)))
+	if(nterms<0){
+		tmp=Recall(start+nterms, -nterms)
+		return(1/tmp)
+	}
+	if(is.numeric(start) && start==round(start) ){
+		ans = prod.bigz(as.bigz(seq(from=start, length=nterms)))
+		if(is.integer(start)) {
+			tryCatch(as.integer(ans), warning=function(w)ans)
+		}else as.numeric(ans)
+	}else if(inherits(start, c('bigz','bigq','numeric'))){
+		ans = prod.bigq(as.bigq(start+seq(from=0, length=nterms)))
+		do.call(paste0(c('as',class(start)), collapse='.'),list(ans))
+	}else stop('unsupported class of "start"')
 }
 .factorial.rising=Vectorize(.factorial.rising,SIMPLIFY=FALSE)
 factorial.rising=function(start, nterms)
 {
 	rslt = .factorial.rising(start, nterms)
-	if('bigz'%in%sapply(rslt, class)){
+	classes=sapply(rslt, class)
+	if('bigq'%in%classes){
+		rslt=lapply(rslt, 'as.bigq')
+	}else if('bigz'%in%classes){
 		rslt=lapply(rslt, 'as.bigz')
 	}
 	do.call('c', rslt)
