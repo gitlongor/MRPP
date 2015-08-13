@@ -20,12 +20,16 @@ sd.default=local({
 	formals(ans)=c(formals(stats::sd), alist(...=))
 	ans
 })
-sd.mrpp=function(x,...)
+if(FALSE)sd.mrpp=function(x,...)
 {
 	call=match.call()
-	call[[1L]]=as.name('var.mrpp')
+	call[[1L]]=as.name('var')
 	envir=parent.frame()
 	sqrt(eval(call, envir=envir))
+}
+sd.mrpp=function(x,...)
+{	.Generic='var'
+	sqrt(NextMethod())
 }
 
 skewness=function(x,...)UseMethod('skewness')
