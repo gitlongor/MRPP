@@ -6,7 +6,7 @@ importFrom(QuasiSeq, nlsolve)
 #importFrom(ks, vech) ## this requires rgl; reimplemented in 000utils.R
 importFrom(varComp, p.value)
 importFrom(moments, skewness, kurtosis, all.moments)
-importFrom(PDQutils, moment2cumulant)
+importFrom(PDQutils, moment2cumulant,cumulant2moment,dapx_gca,papx_gca)
 
 export(
 	mrpp,
@@ -31,7 +31,10 @@ export(
 	
 	p.value, 
 	
-	var, sd, skewness, kurtosis, moment, cumulant
+	var, sd, skewness, kurtosis, moment, cumulant, 
+	
+	dpearson3, ppearson3, qpearson3, rpearson3, 
+	dpearson3gca, ppearson3gca, dgammagca, pgammagca
 )
 
 
