@@ -88,7 +88,7 @@ ppearson3gca=function(q, mean, sd, skew, exkurt, lower.tail=TRUE, log.p=FALSE)
 	ifelse(skew>0,
 		papx_gca(std+twoskew, raw.moments=stdmoms,support=c(0,Inf),basis='gamma',basepar=list(shape= twoskew2, scale=skew2), lower.tail=lower.tail, log.p=log.p), 
 	ifelse(skew<0,
-		papx_gca(-std-twoskew, raw.moments=stdmoms, support=c(0,Inf),basis='gamma', basepar=list(shape=twoskew2, scale=-skew2), lower.tail=lower.tail, log.p=log.p), 
+		papx_gca(-std-twoskew, raw.moments=stdmoms, support=c(0,Inf),basis='gamma', basepar=list(shape=twoskew2, scale=-skew2), lower.tail=!lower.tail, log.p=log.p), 
 		papx_gca(std, raw.moments=stdmoms, support=c(-Inf,Inf),basis='normal', lower.tail=lower.tail, log.p=log.p)
 	))
 }
