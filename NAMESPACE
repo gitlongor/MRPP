@@ -27,7 +27,7 @@ export(
 	
 	transform.matrix, transform.numeric, 
 	
-	pkernel, dkernel, pkde, dkde,
+	pkernel, dkernel, pkde, dkde, fourier.kernel,
 	
 	p.value, 
 	

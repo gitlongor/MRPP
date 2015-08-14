@@ -71,6 +71,47 @@ dkernel=function(kernel= .kernels)
 }
 formals(dkernel)$kernel=.kernels
 
+fourier.kernel=function(kernel= .kernels, root.2pi=TRUE)
+{
+	kernel=match.arg(kernel)
+	root.2pi= if(root.2pi) sqrt(2*base::pi) else 1
+	switch(kernel,
+	gaussian=function(s) exp(-.5*s*s) /root.2pi,
+	biweight = function(s){
+		ss=sin(s); s2=s*s; s4=s2*s2; s5=s4*s; s6=s4*s2
+		ans=(-15*(3*s*cos(s) - 3*ss + s2*ss))/s5 /root.2pi
+		idx=which(abs(s)<5e-2) ## close to 0/0 region
+		ans[idx]=1 - s2[idx]/14 + s4[idx]/504 - s6[idx]/33264
+		ans
+	},
+	triweight = function(s){
+		cs=cos(s); ss=sin(s);
+		s2=s*s; s3=s2*s; s4=s2*s2; s6=s4*s2; s7=s6*s
+		ans=(105*(-15*s*cs + s3*cs + 15*ss - 6*s2*ss))/s7 /root.2pi
+		idx=which(abs(s)<1e-1) ## close to 0/0 region
+		ans[idx]=1 - s2[idx]/18 + s4[idx]/792 - s6[idx]/61776
+		ans
+	},
+	tricube = function(x){.NotYetImplemented()
+		ans=numeric( length(x))
+		idx = which(abs(x)<1)
+		x0=x[idx]
+		ans[idx]=70/81 * (1  - abs(x0^3))^3
+		attributes(ans)=attributes(x)
+		ans
+	},
+	logistic =function(s){
+		ps=base::pi*s
+		ans=ps/sinh(ps) /root.2pi
+		idx=which(abs(s)<1e-2) ## close to 0/0 region
+		ps2=ps*ps; ps4=ps2*ps2; ps6=ps4*ps2
+		ans[idx]=1 - ps2[idx]/6 + (7*ps4[idx])/360 - (31*ps6[idx])/15120		
+		ans
+	}
+	)
+}
+formals(fourier.kernel)$kernel=.kernels
+
 pkde=function(x, bw=bw.nrd, kernel=.kernels)
 {
     if(is.character(bw)) bw=get(bw, mode='function')
@@ -93,9 +134,9 @@ pkde=function(x, bw=bw.nrd, kernel=.kernels)
 }
 formals(pkde)$kernel=.kernels
 
-
+if(FALSE) {
 dkde=function(x, bw=bw.nrd, kernel=.kernels)
-{
+{## naive but should always work
     if(is.character(bw)) bw=get(bw, mode='function')
     if(is.function(bw))  bw=bw(x)
     stopifnot(is.numeric(bw))
@@ -114,8 +155,40 @@ dkde=function(x, bw=bw.nrd, kernel=.kernels)
 	}
 }
 dkde=function(x, bw=bw.nrd, kernel=.kernels)
-{
-	fit=density(x, bw=bw, kernel=kernel, from=min(x), to=max(x), n=nextn(length(x)*2L,2L))
+{## not sure what R does when kernel is not gaussian
+	fit=density(x, bw=bw, kernel=kernel, from=min(x)-3*bw, to=max(x)+3*bw, n=nextn(length(x)*2L,2L))
 	approxfun(fit$x, fit$y)
+}
+}
+
+dkde=function(x, bw=bw.nrd, kernel=.kernels)
+{# implementation based on FFT in Silverman 1984
+	n=length(x)
+	from0=from=min(x)-3*bw; to=max(x)+3*bw
+	x=x-from; to=to-from; from=0
+	M=nextn(n*2L, 2L)
+	delta=(to-from)/M
+	tk=seq(from=from, to=to, length=M+1L)
+	cuts=as.integer(cut(x, tk))
+	ucut=sort(unique(cuts))
+	xik=numeric(M+1L)
+	xik[ucut]= tapply((tk[cuts+1L]-x)/n/delta^2, cuts, sum)
+	xik[ucut+1L]=xik[ucut+1L] + tapply((x-tk[cuts])/n/delta^2, cuts, sum)
+	xik=xik[1:M]
+	kk=seq_len(M)-1L
+	l=-M/2L+kk
+	
+	#Yl.bak=colMeans(xik*exp(1i*2*pi*(kk %o% l)/M))
+	#Yl=fft(xik/exp(1i*pi*kk), inverse = TRUE)/M
+	Yl=fft(xik*c(1,-1), inverse = TRUE)/M
+	
+	sl=2*pi*l/(to-from)
+	zetalstar=fourier.kernel(kernel, root.2pi=FALSE)(bw*sl) * Yl
+	
+	#zetak.bak = colSums(exp((l%o%kk)/M*(1i)*-2*pi)*zetalstar)
+	#zetak=fft(zetalstar)*exp(1i*pi*kk)
+	zetak=fft(zetalstar)*c(1,-1)
+	
+	approxfun(tk[1:M]+from0, pmax(0,Re(zetak)))
 }
 formals(dkde)$kernel=.kernels
