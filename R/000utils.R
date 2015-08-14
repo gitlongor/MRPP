@@ -57,7 +57,7 @@ function (from = 1L, to = 1L, by = 1L, ...)
 }
 
 
-midp = function(x, eps=1e-8)
+midp.empirical = function(x, eps=1e-8)
 {
 	mean(x<x[1L]-eps) + .5* mean(x>=x[1L]-eps & x<=x[1L]+eps)
 }
@@ -107,3 +107,5 @@ vech=function(x){
 	dim(x)=c(d,d)
 	x[lower.tri(x, diag=TRUE)]
 }		
+
+.kernels=c("gaussian", "biweight", 'triweight', 'tricube',"logistic")

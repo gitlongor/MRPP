@@ -1,5 +1,4 @@
-
-pkernel=function(kernel= c("gaussian", "biweight", 'triweight', 'tricube',"logistic"))
+pkernel=function(kernel= .kernels)
 {## Optimized based on the fact that ^2 and * are faster than other ^ powers
 	kernel=match.arg(kernel)
 	switch(kernel,
@@ -37,8 +36,9 @@ pkernel=function(kernel= c("gaussian", "biweight", 'triweight', 'tricube',"logis
 	},
 	logistic =plogis)
 }
+formals(pkernel)$kernel=.kernels
 
-dkernel=function(kernel= c("gaussian", "biweight", 'triweight', 'tricube',"logistic"))
+dkernel=function(kernel= .kernels)
 {
 	kernel=match.arg(kernel)
 	switch(kernel,
@@ -69,8 +69,9 @@ dkernel=function(kernel= c("gaussian", "biweight", 'triweight', 'tricube',"logis
 	},
 	logistic =dlogis)
 }
+formals(dkernel)$kernel=.kernels
 
-pkde=function(x, bw=bw.nrd, kernel=c("gaussian", "biweight", 'triweight', 'tricube',"logistic"))
+pkde=function(x, bw=bw.nrd, kernel=.kernels)
 {
     if(is.character(bw)) bw=get(bw, mode='function')
     if(is.function(bw))  bw=bw(x)
@@ -90,4 +91,26 @@ pkde=function(x, bw=bw.nrd, kernel=c("gaussian", "biweight", 'triweight', 'tricu
 		ans
 	}
 }
+formals(pkde)$kernel=.kernels
 
+
+dkde=function(x, bw=bw.nrd, kernel=.kernels)
+{
+    if(is.character(bw)) bw=get(bw, mode='function')
+    if(is.function(bw))  bw=bw(x)
+    stopifnot(is.numeric(bw))
+	if(is.character(kernel)) {
+		Kernel = dkernel(kernel)
+	}else if(is.function(kernel)) Kernel = kernel
+
+	knots=x; n=length(knots); rm(x)
+	function(x)
+	{	nx=length(x)
+		xdiff=x-rep(knots, each=nx)
+		dim(xdiff) = c(nx, n)
+		ans=.rowMeans(Kernel(xdiff/bw)/bw, nx, n)
+		attributes(ans)=attributes(x)
+		ans
+	}
+}
+formals(dkde)$kernel=.kernels
