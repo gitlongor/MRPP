@@ -113,4 +113,9 @@ dkde=function(x, bw=bw.nrd, kernel=.kernels)
 		ans
 	}
 }
+dkde=function(x, bw=bw.nrd, kernel=.kernels)
+{
+	fit=density(x, bw=bw, kernel=kernel, from=min(x), to=max(x), n=nextn(length(x)*2L,2L))
+	approxfun(fit$x, fit$y)
+}
 formals(dkde)$kernel=.kernels
