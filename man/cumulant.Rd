@@ -112,14 +112,15 @@ Long Qu
 
 \code{\link[moments:skewness]{skewness}}, \code{\link[moments:kurtosis]{kurtosis}}, and \code{\link[moments:all.moments]{all.moments}} in the \code{moments} package.
 
-\code{\link[PDQutils:moment2cumulant]{moment2cumulant}} in the \code{PDQutils} package. 
+\code{\link[PDQutils:moment2cumulant]{moment2cumulant}} and \code{\link[PDQutils:cumulant2moment]{cumulant2moment}} in the \code{PDQutils} package. 
 
 \code{\link{mrpp}} object. 
 }
 
 \examples{
 set.seed(2340)
-x=matrix(rnorm(10*5),10)
+n=10
+x=matrix(rnorm(n*5*2),ncol=5)
 apply(x, 2, moment)
 apply(x, 2, cumulant)
 apply(x, 2, mean)
@@ -127,7 +128,7 @@ apply(x, 2, sd)
 apply(x, 2, skewness)
 apply(x, 2, kurtosis)
 
-trt=gl(2,5)
+trt=gl(2,n)
 mrpp.obj = mrpp(x, trt, B=Inf)
 mrpp.tst = mrpp.test(mrpp.obj)
 
