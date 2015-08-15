@@ -80,8 +80,8 @@ fourier.kernel=function(kernel= .kernels, root.2pi=TRUE)
 	biweight = function(s){
 		ss=sin(s); s2=s*s; s4=s2*s2; s5=s4*s; s6=s4*s2
 		ans=(-15*(3*s*cos(s) - 3*ss + s2*ss))/s5 /root.2pi
-		idx=which(abs(s)<5e-2) ## close to 0/0 region
-		ans[idx]=1 - s2[idx]/14 + s4[idx]/504 - s6[idx]/33264
+		idx=which(abs(s)<5e-2) ## close to 0/0 region: taylor series
+		ans[idx]=(1 - s2[idx]/14 + s4[idx]/504 - s6[idx]/33264) / root.2pi
 		ans
 	},
 	triweight = function(s){
@@ -89,23 +89,24 @@ fourier.kernel=function(kernel= .kernels, root.2pi=TRUE)
 		s2=s*s; s3=s2*s; s4=s2*s2; s6=s4*s2; s7=s6*s
 		ans=(105*(-15*s*cs + s3*cs + 15*ss - 6*s2*ss))/s7 /root.2pi
 		idx=which(abs(s)<1e-1) ## close to 0/0 region
-		ans[idx]=1 - s2[idx]/18 + s4[idx]/792 - s6[idx]/61776
+		ans[idx]=(1 - s2[idx]/18 + s4[idx]/792 - s6[idx]/61776) / root.2pi
 		ans
 	},
-	tricube = function(x){.NotYetImplemented()
-		ans=numeric( length(x))
-		idx = which(abs(x)<1)
-		x0=x[idx]
-		ans[idx]=70/81 * (1  - abs(x0^3))^3
-		attributes(ans)=attributes(x)
+	tricube = function(s){
+		cs=cos(s); ss=sin(s);
+		s2=s*s; s3=s2*s; s4=s2*s2; s6=s4*s2; s7=s6*s; s10=s4*s6
+		ans=(280*(20160 - s6 + 9*(-2240 + 1120*s2 - 80*s4 + s6)*cs - 
+			36*s*(560 - 90*s2 + 3*s4)*ss))/(9*s10) / root.2pi
+		idx=which(abs(s)<3.5e-1) ## close to 0/0 region
+		ans[idx]=(1 - (35*s2[idx])/486 + s4[idx]/528 - s6[idx]/37440 + s4[idx]^2/4199040) / root.2pi
 		ans
-	},
+   },
 	logistic =function(s){
 		ps=base::pi*s
 		ans=ps/sinh(ps) /root.2pi
 		idx=which(abs(s)<1e-2) ## close to 0/0 region
 		ps2=ps*ps; ps4=ps2*ps2; ps6=ps4*ps2
-		ans[idx]=1 - ps2[idx]/6 + (7*ps4[idx])/360 - (31*ps6[idx])/15120		
+		ans[idx]=(1 - ps2[idx]/6 + (7*ps4[idx])/360 - (31*ps6[idx])/15120) / root.2pi
 		ans
 	}
 	)
@@ -163,6 +164,8 @@ dkde=function(x, bw=bw.nrd, kernel=.kernels)
 
 dkde=function(x, bw=bw.nrd, kernel=.kernels)
 {# implementation based on FFT in Silverman 1984
+    if(is.character(bw)) bw=get(bw, mode='function')
+    if(is.function(bw))  bw=bw(x)
 	n=length(x)
 	from0=from=min(x)-3*bw; to=max(x)+3*bw
 	x=x-from; to=to-from; from=0
