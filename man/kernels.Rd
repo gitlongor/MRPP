@@ -21,7 +21,8 @@ fourier.kernel(kernel= c("gaussian", "biweight", 'triweight', 'tricube',"logisti
 	root.2pi=TRUE)
 
 pkde(x, bw=bw.nrd, kernel=c("gaussian", "biweight", 'triweight', 'tricube',"logistic"))
-dkde(x, bw=bw.nrd, kernel=c("gaussian", "biweight", 'triweight', 'tricube',"logistic"))
+dkde(x, bw=bw.nrd, kernel=c("gaussian", "biweight", 'triweight', 'tricube',"logistic"),
+	from=min(x)-3*median(bw), to=max(x)+3*median(bw))
 }
 %- maybe also "usage" for other objects documented here.
 \arguments{
@@ -31,7 +32,7 @@ dkde(x, bw=bw.nrd, kernel=c("gaussian", "biweight", 'triweight', 'tricube',"logi
 }
   \item{x}{A numeric vector of data values.
 }
-  \item{bw}{A positive integer indicating the bandwidth to be used in kernel density estimation. Alternatively, this can be a function that computes the bandwidth, or the character name of such a function. 
+  \item{bw}{A positive vector indicating the bandwidth to be used in kernel density estimation. Alternatively, this can be a function that computes the bandwidth, or the character name of such a function. 
 }
 }
 \note{
@@ -42,7 +43,9 @@ High-order kernels that are not bona fide distributions or non-smooth kernels ar
 The \code{pkde} implementation does \emph{not} make use of the fast Fourier transform (FFT); but the \code{dkde} uses FFT. 
 }
 \value{
-A function (closure) that accepts a numeric vector as the argument. 
+Except for \code{dkde}, the result is a function (closure) that accepts a numeric vector as the argument. 
+
+For \code{dkde}, if \code{length(bw)==1}, then the result is a function; otherwise, the result is a list of functions, corresponding to each bandwidth. 
 }
 \references{
 \url{https://en.wikipedia.org/wiki/Kernel_(statistics)}

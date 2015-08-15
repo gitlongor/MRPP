@@ -78,25 +78,25 @@ fourier.kernel=function(kernel= .kernels, root.2pi=TRUE)
 	switch(kernel,
 	gaussian=function(s) exp(-.5*s*s) /root.2pi,
 	biweight = function(s){
-		ss=sin(s); s2=s*s; s4=s2*s2; s5=s4*s; s6=s4*s2
-		ans=(-15*(3*s*cos(s) - 3*ss + s2*ss))/s5 /root.2pi
+		ss=sin(s); s2=s*s; s4=s2*s2
+		ans=(-15*(3*s*cos(s) - 3*ss + s2*ss))/(s4*s) /root.2pi
 		idx=which(abs(s)<5e-2) ## close to 0/0 region: taylor series
-		ans[idx]=(1 - s2[idx]/14 + s4[idx]/504 - s6[idx]/33264) / root.2pi
+		ans[idx]=(1 - s2[idx]/14 + s4[idx]/504 - s4[idx]*s2[idx]/33264) / root.2pi
 		ans
 	},
 	triweight = function(s){
 		cs=cos(s); ss=sin(s);
-		s2=s*s; s3=s2*s; s4=s2*s2; s6=s4*s2; s7=s6*s
-		ans=(105*(-15*s*cs + s3*cs + 15*ss - 6*s2*ss))/s7 /root.2pi
+		s2=s*s; s4=s2*s2; s6=s4*s2; 
+		ans=(105*(-15*s*cs + s2*s*cs + 15*ss - 6*s2*ss))/(s6*s) /root.2pi
 		idx=which(abs(s)<1e-1) ## close to 0/0 region
 		ans[idx]=(1 - s2[idx]/18 + s4[idx]/792 - s6[idx]/61776) / root.2pi
 		ans
 	},
 	tricube = function(s){
 		cs=cos(s); ss=sin(s);
-		s2=s*s; s3=s2*s; s4=s2*s2; s6=s4*s2; s7=s6*s; s10=s4*s6
+		s2=s*s; s4=s2*s2; s6=s4*s2
 		ans=(280*(20160 - s6 + 9*(-2240 + 1120*s2 - 80*s4 + s6)*cs - 
-			36*s*(560 - 90*s2 + 3*s4)*ss))/(9*s10) / root.2pi
+			36*s*(560 - 90*s2 + 3*s4)*ss))/(9*s4*s6) / root.2pi
 		idx=which(abs(s)<3.5e-1) ## close to 0/0 region
 		ans[idx]=(1 - (35*s2[idx])/486 + s4[idx]/528 - s6[idx]/37440 + s4[idx]^2/4199040) / root.2pi
 		ans
@@ -105,8 +105,8 @@ fourier.kernel=function(kernel= .kernels, root.2pi=TRUE)
 		ps=base::pi*s
 		ans=ps/sinh(ps) /root.2pi
 		idx=which(abs(s)<1e-2) ## close to 0/0 region
-		ps2=ps*ps; ps4=ps2*ps2; ps6=ps4*ps2
-		ans[idx]=(1 - ps2[idx]/6 + (7*ps4[idx])/360 - (31*ps6[idx])/15120) / root.2pi
+		ps2=ps*ps; ps4=ps2*ps2
+		ans[idx]=(1 - ps2[idx]/6 + (7*ps4[idx])/360 - (31*ps4[idx]*ps2[idx])/15120) / root.2pi
 		ans
 	}
 	)
@@ -162,21 +162,26 @@ dkde=function(x, bw=bw.nrd, kernel=.kernels)
 }
 }
 
-dkde=function(x, bw=bw.nrd, kernel=.kernels)
+dkde=function(x, bw=bw.nrd, kernel=.kernels, from=min(x)-3*median(bw), to=max(x)+3*median(bw))
 {# implementation based on FFT in Silverman 1984
     if(is.character(bw)) bw=get(bw, mode='function')
     if(is.function(bw))  bw=bw(x)
 	n=length(x)
-	from0=from=min(x)-3*bw; to=max(x)+3*bw
+	from0=from; force(to)
 	x=x-from; to=to-from; from=0
 	M=nextn(n*2L, 2L)
 	delta=(to-from)/M
 	tk=seq(from=from, to=to, length=M+1L)
-	cuts=as.integer(cut(x, tk))
-	ucut=sort(unique(cuts))
+	#cuts=as.integer(cut(x, tk))
+	cuts=findInterval(x, tk)
+		buf=integer(M)
+	ucut=.Call(radixSort_preallocMax, unique(cuts), buf, M)
 	xik=numeric(M+1L)
-	xik[ucut]= tapply((tk[cuts+1L]-x)/n/delta^2, cuts, sum)
-	xik[ucut+1L]=xik[ucut+1L] + tapply((x-tk[cuts])/n/delta^2, cuts, sum)
+		fcuts=factor(cuts,levels=ucut)
+		#attr(fcuts, 'class')='ordered'
+		#attr(fcuts,'levels')=ucut
+		xik[ucut]= sapply(split((tk[cuts+1L]-x)/n/delta^2, fcuts), sum)
+		xik[ucut+1L]=xik[ucut+1L] + sapply(split((x-tk[cuts])/n/delta^2, fcuts), sum)
 	xik=xik[1:M]
 	kk=seq_len(M)-1L
 	l=-M/2L+kk
@@ -186,12 +191,17 @@ dkde=function(x, bw=bw.nrd, kernel=.kernels)
 	Yl=fft(xik*c(1,-1), inverse = TRUE)/M
 	
 	sl=2*pi*l/(to-from)
-	zetalstar=fourier.kernel(kernel, root.2pi=FALSE)(bw*sl) * Yl
+	ftkern=fourier.kernel(kernel, root.2pi=FALSE)
 	
-	#zetak.bak = colSums(exp((l%o%kk)/M*(1i)*-2*pi)*zetalstar)
-	#zetak=fft(zetalstar)*exp(1i*pi*kk)
-	zetak=fft(zetalstar)*c(1,-1)
-	
-	approxfun(tk[1:M]+from0, pmax(0,Re(zetak)))
+	tk0=tk[1:M]+from0; 
+	ans=vector('list', length(bw))
+	for(i in seq_along(bw)){
+		zetalstar=ftkern(bw[i]*sl) * Yl
+		#zetak.bak = colSums(exp((l%o%kk)/M*(1i)*-2*pi)*zetalstar) ## correct but slow
+		#zetak=fft(zetalstar)*exp(1i*pi*kk)
+		zetak=fft(zetalstar)*c(1,-1)
+		ans[[i]] = approxfun(tk0, pmax.int(0,Re(zetak)), ties='ordered')
+	}
+	if(length(ans)==1L) ans[[1L]] else ans
 }
 formals(dkde)$kernel=.kernels
