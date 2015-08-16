@@ -13,13 +13,14 @@ Implements multiresponse permutation procedure (MRPP), variable importance measu
 \tabular{ll}{
 Package: \tab MRPP\cr
 Type: \tab Package\cr
-Version: \tab 1.0-321\cr
-Date: \tab 2013-11-17\cr
+%Version: \tab 1.0-321\cr
+%Date: \tab 2013-11-17\cr
 License: \tab GPL version 2 or newer\cr
 LazyLoad: \tab yes\cr
 }
 \itemize{
-\item{\code{\link{mrpp.test}}} {The MRPP, a permutation test applicable to high dimensional data.}
+\item{\code{\link{mrpp}}} {The \code{"mrpp"} object, allowing the MRPP, a permutation test applicable to high dimensional data.}
+\item{\code{\link{mrpp.test}}} {Performing the MRPP test.}
 \item{\code{\link{grad.smoothp}}} {Variable importance measure: approximate derivative of p-values to weights.}
 \item{\code{\link{get.p.dd.dw}}} {Variable importance measure: permutation p-value using the derivative of Euclidean distance with respect to weights as the distance measure.}
 \item{\code{\link{mrppBVS}}} {Backward variable selection for the MRPP.}
