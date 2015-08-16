@@ -34,6 +34,8 @@ dkde(x, bw=bw.nrd, kernel=c("gaussian", "biweight", 'triweight', 'tricube',"logi
 }
   \item{bw}{A positive vector indicating the bandwidth to be used in kernel density estimation. Alternatively, this can be a function that computes the bandwidth, or the character name of such a function. 
 }
+  \item{from,to}{Numeric scalars, the left and right boundaries within which the estimated density is to be evaluated, as in \code{\link{density}}.
+}
 }
 \note{
 Currently, kernels whose derivative of the density function is continuous are implemented. 
@@ -45,7 +47,7 @@ The \code{pkde} implementation does \emph{not} make use of the fast Fourier tran
 \value{
 Except for \code{dkde}, the result is a function (closure) that accepts a numeric vector as the argument. 
 
-For \code{dkde}, if \code{length(bw)==1}, then the result is a function; otherwise, the result is a list of functions, corresponding to each bandwidth. 
+For \code{dkde}, if \code{length(bw)==1}, then the result is a function; otherwise, the result is a list of functions, corresponding to each bandwidth. In either case, the \code{attr(*, "environment")} attribute is set to the evaluation frame of \code{dkde}, allowing the access of some intermediate objects. 
 }
 \references{
 \url{https://en.wikipedia.org/wiki/Kernel_(statistics)}
