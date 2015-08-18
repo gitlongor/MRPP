@@ -36,7 +36,7 @@ function(y, permutedTrt, bw, r=seq_len(NCOL(y)), test=FALSE, distFunc=dist,
 		dz.dw=.Call(mrppstats, all.ddelta.dw[,r.i], permutedTrt, weight.trt, PACKAGE='MRPP')
 		eval(expr)    ## this lines replace the above 3 lines
 	}
-    structure(drop(ans), parameters=pars, midp=midp(mrpp.stats), class='.importance')
+    structure(drop(ans), parameters=pars, midp=midp.empirical(mrpp.stats), class='.importance')
 }
 
 grad.smoothp <-
@@ -90,7 +90,7 @@ function(y, permutedTrt, bw, r=seq_len(NCOL(y)), test=FALSE,
 #        }
 		eval(expr)    ## this lines replace the above 3 lines
 	}
-    structure(drop(ans), parameters=pars, midp=midp(mrpp.stats), class='grad.smoothp')
+    structure(drop(ans), parameters=pars, midp=midp.empirical(mrpp.stats), class='grad.smoothp')
 }
 
 p.value.grad.smoothp = function(x, type=c('keep1','drop1'),...)

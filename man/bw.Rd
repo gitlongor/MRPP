@@ -122,7 +122,7 @@ bw.smoothp(x, pmat, method='dropkeep1', verbose=interactive())
 bw.smoothp(x, pmat, method='ss.gradp', verbose=interactive())
 bw.smoothp(x, pmat, method='kde.mse1', verbose=interactive())
 
-mrpp=mrpp.test(x~trt, permutedTrt=pmat)
+mrpp=mrpp.test(x~trt, permutedTrt=pmat, method='permutation')
 summary( bw.range(mrpp$all.statistics) )
 
 

@@ -49,9 +49,9 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 	lst=list(...)
 	lst$y = distObj
 	lst$permutedTrt=permutedTrt
-	nms = setdiff(names(formals(mrpp.test.dist)), '...')
+	nms = setdiff(c(names(formals(mrpp.test.dist)), names(formals(mrpp))), '...')
 	idx=names(lst)%in%nms
-	mrpp = do.call('mrpp.test.dist', lst[idx])
+	mrpp = do.call('mrpp.test.dist', c(lst[idx],list(method='permutation')))
 	if(method=='kde.mse1'){
 		lst=list(...)
 		lst$x=mrpp$all.statistics
@@ -122,12 +122,12 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 		idx = which.max(ss)
 		ans=bw[idx]
 		if(verbose){
-			plot(log10(bw), ss, xlab='bandwidth', ylab='SS of p-value gradients', type='l', axes=FALSE )
+			plot(log10(bw), (ss), xlab='bandwidth', ylab='SS of p-value gradients', type='l', axes=FALSE )
 			axis(2)
 			axis(1, at = log10(ans), labels=sprintf('%.1g',ans), col='blue',col.ticks='blue', col.axis='blue')
 			ats=axTicks(1)
 			axis(1, at=ats, labels=parse(text=paste0('10^',ats))  )
-			abline(v=log10(ans), h=ss[idx], col='blue', lty=3)
+			abline(v=log10(ans), h=(ss[idx]), col='blue', lty=3)
 			box()
 		}
 		if(idx==1L || idx==length(bw))warning('optimal bandwidth occurs at the boundary')
@@ -136,6 +136,55 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 	ans
 }
 
+bw.matchpdf=function(x, kernel=.kernels, pdf, bw = NULL, verbose=FALSE)
+{
+	if(missing(bw) || is.null(bw)) bw = bw.range(x)
+	if(is.function(pdf)) pdf=pdf(x)
+	
+	#sse=function(bw) sum((dkde(x, bw, kernel)(x)-pdf)^2)
+	#ss = sapply(bw, sse)
+	if(FALSE){ ## grid search
+		pdfs=dkde(x, bw, kernel)
+		dens=sapply(pdfs, do.call, list(v=x))
+		ss=.colSums((dens-pdf)^2, length(x), length(bw))
+		idx=which.min(ss)
+		ans=bw[idx]
+		min.ss=ss[idx]
+	}else{# golden sectioning
+		pdf0=dkde(x, median(bw), kernel)
+		env=attr(pdf0, 'environment')
+		this.env=environment()
+		niter=0L
+		locs=numeric(0L)
+		ss=numeric(0L)
+		func=function(logbw){
+			niter <<- niter+1L
+			this.env$locs[[niter]] = thisbw = exp(logbw)
+			zetalstar = env$ftkern(thisbw*env$sl) * env$Yl
+			zetak=fft(zetalstar)*c(1,-1)
+			kde.est=approx(env$tk0, pmax.int(0,Re(zetak)), x, ties='ordered')$y
+			this.env$ss[[niter]] = sum((kde.est-pdf)^2)
+		}
+		opt.rslt=optimize(func, log(range(bw)))
+		ans=exp(opt.rslt$minimum)
+		min.ss=opt.rslt$objective
+		ord=order(locs)
+		bw=locs[ord]
+		ss=ss[ord]
+	}
+	if(verbose){
+		plot(log10(bw), log10(ss), xlab='bandwidth', ylab='log10(SSE of p-value density)', type='l', axes=FALSE )
+		axis(2)
+		axis(1, at = log10(ans), labels=sprintf('%.1g',ans), col='blue',col.ticks='blue', col.axis='blue')
+		ats=axTicks(1)
+		axis(1, at=ats, labels=parse(text=paste0('10^',ats))  )
+		abline(v=log10(ans), h=log10(min.ss), col='blue', lty=3)
+		box()
+	}
+	if(any( ans==range(bw) ) )warning('optimal bandwidth occurs at the boundary')
+	ans
+}
+formals(bw.matchpdf)$kernel=.kernels
 
 if(FALSE){
 
@@ -149,7 +198,7 @@ smoothp=function(x, bw=bw.mse.pdf.asym, kernel = c("gaussian", "biweight", 'triw
 	}else if(is.function(kernel)) Kernel = kernel
 	stopifnot(Kernel(-Inf)==0 && Kernel(Inf)==1)
 
-	midp = midp(x, eps)
+	midp = midp.empirical(x, eps)
 	knots=x; n=length(knots); rm(x, eps)
 	f0=function(x)
 	{	nx=length(x)

@@ -119,7 +119,7 @@ Long Qu
 
 \examples{
 set.seed(2340)
-n=10
+n=5
 x=matrix(rnorm(n*5*2),ncol=5)
 apply(x, 2, moment)
 apply(x, 2, cumulant)
@@ -130,7 +130,7 @@ apply(x, 2, kurtosis)
 
 trt=gl(2,n)
 mrpp.obj = mrpp(x, trt, B=Inf)
-mrpp.tst = mrpp.test(mrpp.obj)
+mrpp.tst = mrpp.test(mrpp.obj, method="permutation")
 
 mean(mrpp.obj) - mean(mrpp.tst$all.statistics)
 var(mrpp.obj) - mean((mrpp.tst$all.statistics-mean(mrpp.tst$all.statistics))^2)

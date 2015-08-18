@@ -44,7 +44,8 @@ function(y,permutedTrt,
             return(returnBVS(ans))
         }
         dist0=dist(y[,idx,drop=FALSE])
-        mrpp.rslt=mrpp.test.dist(dist0,permutedTrt=permutedTrt,...)
+		ddd=list(...); ddd$y=dist0; ddd$permutedTrt=permutedTrt
+        mrpp.rslt=do.call("mrpp.test.dist", ddd)
         mrpp.stats0=mrpp.rslt$all.statistics
         imptnc=switch(importance,
 			grad.smoothp=grad.smoothp(y[,idx,drop=FALSE],permutedTrt,distObj=dist0,mrpp.stats=mrpp.stats0, ...),

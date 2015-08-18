@@ -89,6 +89,8 @@ Long Qu
 \examples{
 set.seed(2340)
 n=10
+trt=gl(2,n)
+x=matrix(rnorm(n*5*2), ncol=5)
 mrpp.obj = mrpp(x, trt, B=Inf)
 cumulant(mrpp.obj)
 mrpp.test(mrpp.obj)
