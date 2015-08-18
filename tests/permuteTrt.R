@@ -1,4 +1,4 @@
-R_CHECK_TIMINGS_ = Sys.getenv('_R_CHECK_TIMINGS_') != ''
+(R_CHECK_TIMINGS_ = Sys.getenv('_R_CHECK_TIMINGS_') != '')
 
 library(MRPP)
 set.seed(2340)

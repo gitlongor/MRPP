@@ -1,4 +1,4 @@
-R_CHECK_TIMINGS_ = Sys.getenv('_R_CHECK_TIMINGS_') != ''
+(R_CHECK_TIMINGS_ = Sys.getenv('_R_CHECK_TIMINGS_') != '')
 
 library(combinat)
 mrpp.stats.R=function(y, trt, wt='df', round=8)
@@ -39,7 +39,7 @@ do.test=function(n=c(3,5), wts=c('df','n','equal','pairs'), R=5)
 	pmat=permuteTrt(trt, Inf)		## use 1000 random permutations
 	
 	for(wt in wts){
-		mrpp.rslt=mrpp.test(y, trt, permutedTrt=pmat, weight.trt=wt)
+		mrpp.rslt=mrpp.test(y, trt, permutedTrt=pmat, weight.trt=wt, method='permutation')
 		mrpp.stat.rslt = mrpp.stats.R(y, trt, round=8L, wt=wt)
 		stopifnot(identical(
 			sort(unique(round(mrpp.rslt$all.statistics, 8L))), 

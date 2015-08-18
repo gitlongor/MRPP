@@ -1,4 +1,4 @@
-R_CHECK_TIMINGS_ = Sys.getenv('_R_CHECK_TIMINGS_') != ''
+(R_CHECK_TIMINGS_ = Sys.getenv('_R_CHECK_TIMINGS_') != '')
 
 
 library(MRPP)
@@ -14,7 +14,7 @@ apply(x, 2, kurtosis)
 
 
 for(i in 1:5){
-	if(R_CHECK_TIMINGS_ && i>3L) next 
+	if(R_CHECK_TIMINGS_ && i>1L) next 
 	
 	if(i==1){
 		trt=gl(2,8)
@@ -30,7 +30,7 @@ for(i in 1:5){
     x=matrix(rnorm(length(trt)*5), length(trt))
 	
 	mrpp.obj = mrpp(x, trt, B=if(i>3) 1e5L else Inf)
-	mrpp.tst = mrpp.test(mrpp.obj)
+	mrpp.tst = mrpp.test(mrpp.obj, method="perm")
 	
 	eps= if(i>3) 2*sd(mrpp.tst$all.statistics)/sqrt(1e5L) else 1e-10
 	
