@@ -74,42 +74,50 @@ formals(dkernel)$kernel=.kernels
 fourier.kernel=function(kernel= .kernels, root.2pi=TRUE)
 {
 	kernel=match.arg(kernel)
-	root.2pi= if(root.2pi) sqrt(2*base::pi) else 1
-	switch(kernel,
-	gaussian=function(s) exp(-.5*s*s) /root.2pi,
+	enclEnv=new.env(hash=TRUE, size=37L)
+	enclEnv$iroot.2pi= if(root.2pi) 1/sqrt(2*base::pi) else 1
+	enclEnv$one14=1/14; enclEnv$one504=1/504; enclEnv$one33264=1/33264
+	enclEnv$one18=1/18; enclEnv$one792=1/792; enclEnv$one61776=1/61776
+	enclEnv$three5d486=35/486; enclEnv$one528=1/528; enclEnv$one37440=1/37440; enclEnv$one4199040=1/4199040
+	enclEnv$one6=1/6; enclEnv$seven360=7/360; enclEnv$three1d15120=31/15120
+	enclEnv$two80d9=280/9
+	ans=switch(kernel,
+	gaussian=function(s) exp(-.5*s*s) *iroot.2pi,
 	biweight = function(s){
 		ss=sin(s); s2=s*s; s4=s2*s2
-		ans=(-15*(3*s*cos(s) - 3*ss + s2*ss))/(s4*s) /root.2pi
+		ans=((45*(ss - s*cos(s)) - 15*s2*ss))/(s4*s) * iroot.2pi
 		idx=which(abs(s)<5e-2) ## close to 0/0 region: taylor series
-		ans[idx]=(1 - s2[idx]/14 + s4[idx]/504 - s4[idx]*s2[idx]/33264) / root.2pi
+		ans[idx]=(1 - s2[idx]*one14 + s4[idx]*one504 - s4[idx]*s2[idx]*one33264) * iroot.2pi
 		ans
 	},
 	triweight = function(s){
 		cs=cos(s); ss=sin(s);
 		s2=s*s; s4=s2*s2; s6=s4*s2; 
-		ans=(105*(-15*s*cs + s2*s*cs + 15*ss - 6*s2*ss))/(s6*s) /root.2pi
+		ans=(105*(s2*s*cs + 15*(ss -s*cs) - 6*s2*ss))/(s6*s) *iroot.2pi
 		idx=which(abs(s)<1e-1) ## close to 0/0 region
-		ans[idx]=(1 - s2[idx]/18 + s4[idx]/792 - s6[idx]/61776) / root.2pi
+		ans[idx]=(1 - s2[idx]*one18 + s4[idx]*one792 - s6[idx]*one61776) * iroot.2pi
 		ans
 	},
 	tricube = function(s){
 		cs=cos(s); ss=sin(s);
 		s2=s*s; s4=s2*s2; s6=s4*s2
-		ans=(280*(20160 - s6 + 9*(-2240 + 1120*s2 - 80*s4 + s6)*cs - 
-			36*s*(560 - 90*s2 + 3*s4)*ss))/(9*s4*s6) / root.2pi
+		ans=(two80d9*(20160 - s6 - 9*(2240 - 1120*s2 + 80*s4 - s6)*cs - 
+			s*(20160 - 3240*s2 + 108*s4)*ss))/(s4*s6) *iroot.2pi
 		idx=which(abs(s)<3.5e-1) ## close to 0/0 region
-		ans[idx]=(1 - (35*s2[idx])/486 + s4[idx]/528 - s6[idx]/37440 + s4[idx]^2/4199040) / root.2pi
+		ans[idx]=(1 - s2[idx]*three5d486 + s4[idx]*one528 - s6[idx]*one37440 + s4[idx]^2*one4199040) *iroot.2pi
 		ans
    },
 	logistic =function(s){
 		ps=base::pi*s
-		ans=ps/sinh(ps) /root.2pi
+		ans=ps/sinh(ps) *iroot.2pi
 		idx=which(abs(s)<1e-2) ## close to 0/0 region
 		ps2=ps*ps; ps4=ps2*ps2
-		ans[idx]=(1 - ps2[idx]/6 + (7*ps4[idx])/360 - (31*ps4[idx]*ps2[idx])/15120) / root.2pi
+		ans[idx]=(1 - ps2[idx]*one6 + ps4[idx]*seven360 - ps4[idx]*ps2[idx]*three1d15120) *iroot.2pi
 		ans
 	}
 	)
+	environment(ans)=enclEnv
+	ans
 }
 formals(fourier.kernel)$kernel=.kernels
 
