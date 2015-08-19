@@ -91,9 +91,9 @@ bw.range=function(x, length=200, lower=.05, upper=.95, safety=100)
 }
 }
 }
-\note{
-	When \code{method="kde.mse1"}, only \code{"gaussian"} and \code{"biweight"} are allowed for the \code{kernel} argument.
-}
+%\note{
+%	When \code{method="kde.mse1"}, only \code{"gaussian"} and \code{"biweight"} are allowed for the \code{kernel} argument.
+%}
 
 \value{
 A numeric positive scalar, giving the final bandwidth. 

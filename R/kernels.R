@@ -3,6 +3,41 @@ pkernel=function(kernel= .kernels)
 	kernel=match.arg(kernel)
 	switch(kernel,
 	gaussian=pnorm,
+	cosine = function(x){
+		ans=numeric( length(x))
+		idx = which(abs(x)<1)
+		ans[idx]=0.5 * ( 1 + sin(1.5707963267948966 *x[idx]))
+		ans[x>=1]=1
+		attributes(ans)=attributes(x)
+		ans
+	},
+	uniform = , rectangular = function(x){
+		ans=numeric( length(x))
+		idx = which(abs(x)<1)
+		ans[idx]=0.5 * ( 1 + x[idx])
+		ans[x>=1]=1
+		attributes(ans)=attributes(x)
+		ans
+	},
+	triangular = function(x){
+		ans=numeric( length(x))
+		idx = which(abs(x)<1)
+		x0=x[idx]; ans[idx] = tmp=.5*(1-abs(x0))^2
+		idx0=which(x0>0)
+		ans[idx[idx0]]=1-tmp[idx0]
+		ans[x>=1]=1
+		attributes(ans)=attributes(x)
+		ans
+	},
+	epanechnikov = function(x){
+		ans=numeric( length(x))
+		idx = which(abs(x)<1)
+		x0=x[idx]
+		ans[idx]=0.25 * ( 2 + 3*x0 - x0*x0*x0)
+		ans[x>=1]=1
+		attributes(ans)=attributes(x)
+		ans
+	},
 	biweight = function(x){
 		ans=numeric( length(x))
 		idx = which(abs(x)<1)
@@ -36,13 +71,42 @@ pkernel=function(kernel= .kernels)
 	},
 	logistic =plogis)
 }
-formals(pkernel)$kernel=.kernels
+#formals(pkernel)$kernel=.kernels
 
 dkernel=function(kernel= .kernels)
 {
 	kernel=match.arg(kernel)
 	switch(kernel,
 	gaussian=dnorm,
+	cosine = function(x){
+		ans=numeric( length(x))
+		idx = which(abs(x)<1)
+		x0=x[idx]
+		ans[idx]=0.78539816339744828*cos(1.5707963267948966*x0)
+		attributes(ans)=attributes(x)
+		ans
+	},
+	uniform = , rectangular = function(x){
+		ans=ifelse(abs(x)<1, .5, 0)
+		attributes(ans)=attributes(x)
+		ans
+	},
+	triangular = function(x){
+		ans=numeric( length(x))
+		idx = which(abs(x)<1)
+		x0=x[idx]
+		ans[idx]=1 - abs(x0)
+		attributes(ans)=attributes(x)
+		ans
+	},
+	epanechnikov = function(x){
+		ans=numeric( length(x))
+		idx = which(abs(x)<1)
+		x0=x[idx]
+		ans[idx]=3/4 * (1 - x0 *x0)^2
+		attributes(ans)=attributes(x)
+		ans		
+	},
 	biweight = function(x){
 		ans=numeric( length(x))
 		idx = which(abs(x)<1)
@@ -69,13 +133,21 @@ dkernel=function(kernel= .kernels)
 	},
 	logistic =dlogis)
 }
-formals(dkernel)$kernel=.kernels
+#formals(dkernel)$kernel=.kernels
 
-fourier.kernel=function(kernel= .kernels, root.2pi=TRUE)
+fourier.kernel=local({
+	iroot.2pi=one12=one14=one18=one280=one33264=
+	one360=one37440=one4199040=one504=one528=one6=
+	one61776=one792=pipi=seven360=three1d15120=
+	three5d486=two80d9=NULL
+function(kernel= .kernels, root.2pi=TRUE)
 {
 	kernel=match.arg(kernel)
 	enclEnv=new.env(hash=TRUE, size=37L)
 	enclEnv$iroot.2pi= if(root.2pi) 1/sqrt(2*base::pi) else 1
+	enclEnv$pipi=base::pi^2
+	enclEnv$one12=1/12; enclEnv$one360=1/360
+	enclEnv$one280=1/280
 	enclEnv$one14=1/14; enclEnv$one504=1/504; enclEnv$one33264=1/33264
 	enclEnv$one18=1/18; enclEnv$one792=1/792; enclEnv$one61776=1/61776
 	enclEnv$three5d486=35/486; enclEnv$one528=1/528; enclEnv$one37440=1/37440; enclEnv$one4199040=1/4199040
@@ -83,6 +155,24 @@ fourier.kernel=function(kernel= .kernels, root.2pi=TRUE)
 	enclEnv$two80d9=280/9
 	ans=switch(kernel,
 	gaussian=function(s) exp(-.5*s*s) *iroot.2pi,
+	cosine=function(s)	pipi*cos(s)/(pipi-4*s*s) * iroot.2pi, 
+	uniform = , rectangular = function(s){
+		sinc(s) * iroot.2pi
+	},
+	triangular = function(s){
+		s2=s*s; 
+		ans=2*(1-cos(s))/s2 * iroot.2pi
+		idx=which(abs(s)<1e-2) ## close to 0/0 region: taylor series
+		ans[idx]=(1 - s2[idx]*one12 + s2[idx]*s2[idx]*one360) * iroot.2pi
+		ans	
+	},
+	epanechnikov = function(s){
+		s2=s*s; 
+		ans=3*(sin(s)-s*cos(s))/(s2*s) * iroot.2pi
+		idx=which(abs(s)<1e-2) ## close to 0/0 region: taylor series
+		ans[idx]=(1 - s2[idx]*0.1 + s2[idx]*s2[idx]*one280) * iroot.2pi
+		ans
+	},
 	biweight = function(s){
 		ss=sin(s); s2=s*s; s4=s2*s2
 		ans=((45*(ss - s*cos(s)) - 15*s2*ss))/(s4*s) * iroot.2pi
@@ -119,7 +209,8 @@ fourier.kernel=function(kernel= .kernels, root.2pi=TRUE)
 	environment(ans)=enclEnv
 	ans
 }
-formals(fourier.kernel)$kernel=.kernels
+#formals(fourier.kernel)$kernel=.kernels
+})
 
 pkde=function(x, bw=bw.nrd, kernel=.kernels)
 {
@@ -141,7 +232,7 @@ pkde=function(x, bw=bw.nrd, kernel=.kernels)
 		ans
 	}
 }
-formals(pkde)$kernel=.kernels
+#formals(pkde)$kernel=.kernels
 
 if(FALSE) {
 dkde=function(x, bw=bw.nrd, kernel=.kernels)
@@ -214,4 +305,4 @@ dkde=function(x, bw=bw.nrd, kernel=.kernels, from=min(x)-3*median(bw), to=max(x)
 		environment=environment()
 	)
 }
-formals(dkde)$kernel=.kernels
+#formals(dkde)$kernel=.kernels

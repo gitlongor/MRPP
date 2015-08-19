@@ -9,6 +9,7 @@ constEnv$twoThree.192=23/192
 constEnv$twoThree.96 =23/96
 constEnv$sqrt2.3 = sqrt(2)/3
 constEnv$fourThirds =4/3
+constEnv$one120 = 1/120
 ## constants used by 4th order cumulants
 constEnv$.order4.S2P.mat=matrix(c(
 	# (transposed) matrix on page 28 of Siemiatycki (1978)
@@ -108,4 +109,13 @@ vech=function(x){
 	x[lower.tri(x, diag=TRUE)]
 }		
 
-.kernels=c("gaussian", "biweight", 'triweight', 'tricube',"logistic")
+.kernels=c("gaussian", "uniform", "rectangular", "epanechnikov", "triangular", "biweight", 'triweight', 'tricube',"logistic","cosine")
+
+sinc =function(x){
+	s2=x*x; 
+	ans=sin(x)/x 
+	idx=which(abs(x)<1e-2) ## close to 0/0 region: taylor series
+	ans[idx]=(1 - s2[idx]*oneSixth + s2[idx]*s2[idx]*one120)
+	ans		
+}
+environment(sinc)=constEnv

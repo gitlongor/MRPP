@@ -5,6 +5,7 @@
 \alias{fourier.kernel}
 \alias{pkde}
 \alias{dkde}
+\alias{.kernels}
 %- Also NEED an "\alias" for EACH other topic documented here.
 \title{
 CDF, PDF and Fourier Transform of Univariate Kernel Densities
@@ -13,16 +14,17 @@ CDF, PDF and Fourier Transform of Univariate Kernel Densities
 \code{pkernel}, \code{dkernel} and \code{fourier.kernel} return the cumulative distribution function, probability density function and Fourier transform of the density, respectively, for common univariate kernels specified by names. 
 
 \code{pkde} and \code{dkde} return the \emph{fitted} cumulative distribution function and probability density function. 
+
+\code{.kernels} is a vector containing the names of the kernel functions currently supported. 
 }
 \usage{
-pkernel(kernel= c("gaussian", "biweight", 'triweight', 'tricube',"logistic"))
-dkernel(kernel= c("gaussian", "biweight", 'triweight', 'tricube',"logistic"))
-fourier.kernel(kernel= c("gaussian", "biweight", 'triweight', 'tricube',"logistic"), 
-	root.2pi=TRUE)
+.kernels
+pkernel(kernel= .kernels)
+dkernel(kernel= .kernels)
+fourier.kernel(kernel= .kernels, root.2pi=TRUE)
 
-pkde(x, bw=bw.nrd, kernel=c("gaussian", "biweight", 'triweight', 'tricube',"logistic"))
-dkde(x, bw=bw.nrd, kernel=c("gaussian", "biweight", 'triweight', 'tricube',"logistic"),
-	from=min(x)-3*median(bw), to=max(x)+3*median(bw))
+pkde(x, bw=bw.nrd, kernel=.kernels)
+dkde(x, bw=bw.nrd, kernel=.kernels,	from=min(x)-3*median(bw), to=max(x)+3*median(bw))
 }
 %- maybe also "usage" for other objects documented here.
 \arguments{
@@ -38,7 +40,11 @@ dkde(x, bw=bw.nrd, kernel=c("gaussian", "biweight", 'triweight', 'tricube',"logi
 }
 }
 \note{
-Currently, kernels whose derivative of the density function is continuous are implemented. 
+Currently, \code{.kernels} contains 
+
+\code{c("gaussian", "uniform", "rectangular", "epanechnikov", "triangular", "biweight", "triweight", "tricube", "logistic", "cosine")}, 
+
+where \code{"uniform"} and \code{"rectangular"} are synonymous. Whenever the kernel has compact support, the support will be \code{[-1,1]}; thus, the variance of each kernel is not necessarily one, which behaves differently than \code{\link{density}}.
 
 High-order kernels that are not bona fide distributions or non-smooth kernels are not allowed. 
 
@@ -60,6 +66,7 @@ Section 3.5 of Bernard W. Silverman (198) Density Estimation for Statistics and 
 \code{\link{density}}
 }
 \examples{
+print(.kernels)
 f=dkernel('biweight')
 F=pkernel('biweight')
 f(0) ## 15/16 = 0.9375
