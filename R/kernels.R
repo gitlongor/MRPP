@@ -1,7 +1,7 @@
 pkernel=function(kernel= .kernels)
 {## Optimized based on the fact that ^2 and * are faster than other ^ powers
 	kernel=match.arg(kernel)
-	switch(kernel,
+	ans=switch(kernel,
 	gaussian=pnorm,
 	cosine = function(x){
 		ans=numeric( length(x))
@@ -33,7 +33,7 @@ pkernel=function(kernel= .kernels)
 		ans=numeric( length(x))
 		idx = which(abs(x)<1)
 		x0=x[idx]
-		ans[idx]=0.25 * ( 2 + 3*x0 - x0*x0*x0)
+		ans[idx]=0.5 + x0* ( 0.75 - 0.25 *x0*x0)
 		ans[x>=1]=1
 		attributes(ans)=attributes(x)
 		ans
@@ -43,7 +43,7 @@ pkernel=function(kernel= .kernels)
 		idx = which(abs(x)<1)
 		x0=x[idx]
 		x02=x0^2
-		ans[idx]=0.5 + x0 * ( 0.9375  - 0.625 * x02 + 0.1875 * x02 ^2)
+		ans[idx]=0.5 + x0*(0.9375 + x02*(0.1875*x02-0.625))
 		ans[x>=1]=1
 		attributes(ans)=attributes(x)
 		ans
@@ -52,8 +52,8 @@ pkernel=function(kernel= .kernels)
 		ans=numeric( length(x))
 		idx = which(abs(x)<1)
 		x0=x[idx]
-		x02 = x0 ^2; x03 = x02 * x0
-		ans[idx]=0.5  -0.03125 * x0 * (35 * x02 - 21 * x02^2 + 5 * x03^2 -35) 
+		x02 = x0 ^2; #x03 = x02 * x0
+		ans[idx]=0.5 + x0*(thr5d32 + x02*(x02*(two1d32 - five32*x02) -thr5d32))
 		ans[x>=1]=1
 		attributes(ans)=attributes(x)
 		ans
@@ -63,13 +63,15 @@ pkernel=function(kernel= .kernels)
 		idx = which(abs(x)<1)
 		x0=x[idx]
 		sig = sign(x0)
-		x02 = x0^2; x03=x02*x0; x04=x02^2
-		ans[idx]=0.00617284 * (81 + 140 * x0 - sig * 105 * x04 + 60 * x03*x04 - sig * 14 * x04 * x03^2)
+		x03=x0*x0*x0; 
+		ans[idx]=0.5+x0*(sev0d81 + x03 * (x03*(one0d27-sev81*sig*x03) -sig*thr5d54))
 		ans[x>=1]=1
 		attributes(ans)=attributes(x)
 		ans
 	},
 	logistic =plogis)
+	if(any(kernel==c('triweight','tricube'))) environment(ans)=constEnv
+	ans
 }
 #formals(pkernel)$kernel=.kernels
 
@@ -103,7 +105,7 @@ dkernel=function(kernel= .kernels)
 		ans=numeric( length(x))
 		idx = which(abs(x)<1)
 		x0=x[idx]
-		ans[idx]=3/4 * (1 - x0 *x0)^2
+		ans[idx]=0.75 * (1 - x0*x0)
 		attributes(ans)=attributes(x)
 		ans		
 	},
@@ -111,23 +113,23 @@ dkernel=function(kernel= .kernels)
 		ans=numeric( length(x))
 		idx = which(abs(x)<1)
 		x0=x[idx]
-		ans[idx]=15/16 * (1 - x0 *x0)^2
+		ans[idx]=0.9375 * (1 - x0 *x0)^2
 		attributes(ans)=attributes(x)
 		ans
 	},
 	triweight = function(x){
 		ans=numeric( length(x))
 		idx = which(abs(x)<1)
-		x0=x[idx]
-		ans[idx]=35/32 * (1  - x0 *x0)^3
+		x02=x[idx]^2
+		ans[idx]=1.09375 + x02*(x02*(3.28125 - 1.09375*x02)-3.28125)
 		attributes(ans)=attributes(x)
 		ans
 	},
 	tricube = function(x){
 		ans=numeric( length(x))
 		idx = which(abs(x)<1)
-		x0=x[idx]
-		ans[idx]=70/81 * (1  - abs(x0^3))^3
+		ax0=abs(x[idx]); tmp=1-ax0*ax0*ax0
+		ans[idx]=0.86419753086419748*tmp*tmp*tmp
 		attributes(ans)=attributes(x)
 		ans
 	},
@@ -163,21 +165,21 @@ function(kernel= .kernels, root.2pi=TRUE)
 		s2=s*s; 
 		ans=2*(1-cos(s))/s2 * iroot.2pi
 		idx=which(abs(s)<1e-2) ## close to 0/0 region: taylor series
-		ans[idx]=(1 - s2[idx]*one12 + s2[idx]*s2[idx]*one360) * iroot.2pi
+		ans[idx]=(1 + s2[idx]*(s2[idx]*one360 - one12)) * iroot.2pi
 		ans	
 	},
 	epanechnikov = function(s){
 		s2=s*s; 
 		ans=3*(sin(s)-s*cos(s))/(s2*s) * iroot.2pi
 		idx=which(abs(s)<1e-2) ## close to 0/0 region: taylor series
-		ans[idx]=(1 - s2[idx]*0.1 + s2[idx]*s2[idx]*one280) * iroot.2pi
+		ans[idx]=(1 + s2[idx]*(s2[idx]*one280-0.1)) * iroot.2pi
 		ans
 	},
 	biweight = function(s){
 		ss=sin(s); s2=s*s; s4=s2*s2
 		ans=((45*(ss - s*cos(s)) - 15*s2*ss))/(s4*s) * iroot.2pi
 		idx=which(abs(s)<5e-2) ## close to 0/0 region: taylor series
-		ans[idx]=(1 - s2[idx]*one14 + s4[idx]*one504 - s4[idx]*s2[idx]*one33264) * iroot.2pi
+		ans[idx]=(1 + s2[idx]*(s2[idx]*(one504 - s2[idx]*one33264)--one14)) * iroot.2pi
 		ans
 	},
 	triweight = function(s){
@@ -185,7 +187,7 @@ function(kernel= .kernels, root.2pi=TRUE)
 		s2=s*s; s4=s2*s2; s6=s4*s2; 
 		ans=(105*(s2*s*cs + 15*(ss -s*cs) - 6*s2*ss))/(s6*s) *iroot.2pi
 		idx=which(abs(s)<1e-1) ## close to 0/0 region
-		ans[idx]=(1 - s2[idx]*one18 + s4[idx]*one792 - s6[idx]*one61776) * iroot.2pi
+		ans[idx]=(1 + s2[idx]*( s2[idx]*(one792 - s2[idx]*one61776) -one18))* iroot.2pi
 		ans
 	},
 	tricube = function(s){
@@ -194,7 +196,7 @@ function(kernel= .kernels, root.2pi=TRUE)
 		ans=(two80d9*(20160 - s6 - 9*(2240 - 1120*s2 + 80*s4 - s6)*cs - 
 			s*(20160 - 3240*s2 + 108*s4)*ss))/(s4*s6) *iroot.2pi
 		idx=which(abs(s)<3.5e-1) ## close to 0/0 region
-		ans[idx]=(1 - s2[idx]*three5d486 + s4[idx]*one528 - s6[idx]*one37440 + s4[idx]^2*one4199040) *iroot.2pi
+		ans[idx]=(1 + s2[idx]*(s2[idx]*(one528 - s2[idx]*(s2[idx]*one4199040-one37440)) -three5d486)) *iroot.2pi
 		ans
    },
 	logistic =function(s){
@@ -202,7 +204,7 @@ function(kernel= .kernels, root.2pi=TRUE)
 		ans=ps/sinh(ps) *iroot.2pi
 		idx=which(abs(s)<1e-2) ## close to 0/0 region
 		ps2=ps*ps; ps4=ps2*ps2
-		ans[idx]=(1 - ps2[idx]*one6 + ps4[idx]*seven360 - ps4[idx]*ps2[idx]*three1d15120) *iroot.2pi
+		ans[idx]=(1 + ps2[idx]*(ps2[idx]*(seven360 - ps2[idx]*three1d15120) -one6)) *iroot.2pi
 		ans
 	}
 	)

@@ -10,6 +10,14 @@ constEnv$twoThree.96 =23/96
 constEnv$sqrt2.3 = sqrt(2)/3
 constEnv$fourThirds =4/3
 constEnv$one120 = 1/120
+constEnv$thr5d32 = 35/32
+constEnv$two1d32 = 21/32
+constEnv$five32 = 5/32
+constEnv$sev0d81 = 70/81
+constEnv$one0d27 = 10/27
+constEnv$sev81 = 7/81
+constEnv$thr5d54 = 35/54
+
 ## constants used by 4th order cumulants
 constEnv$.order4.S2P.mat=matrix(c(
 	# (transposed) matrix on page 28 of Siemiatycki (1978)
