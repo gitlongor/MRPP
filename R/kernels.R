@@ -1,5 +1,6 @@
 pkernel=function(kernel= .kernels)
 {## Optimized based on the fact that ^2 and * are faster than other ^ powers
+	thr5d32=two1d32=five32=sev0d81=one0d27=sev81=thr5d54=NULL
 	kernel=match.arg(kernel)
 	ans=switch(kernel,
 	gaussian=pnorm,
