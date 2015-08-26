@@ -35,20 +35,43 @@ transform.numeric <- function(`_data`, ...)
 nbinom.vst = function(y, size = 1/invsize, invsize=1/size, adjust=c('none','anscombe1','anscombe2','anscombe3'))
 {
 	stopifnot(all(size==1/invsize || invsize==1/size))
-	d=dim(y); 
-	if(length(d)==2L && length(invsize)==d[2L]) invsize=rep(invsize,each=d[1L])
-	adjust = match.arg(adjust)
-	if(adjust == 'anscombe2' && size < 2) adjust='anscombe3'
-	if(adjust == 'anscombe3' && size < 1) adjust='none'
-	if(adjust == 'anscombe1' && size < 1) adjust='none'
+	adjust0 = match.arg(adjust)
+	d=c(NROW(y), NCOL(y))
+	size0=size
+	size=rep(size, length=length(y))
+	invsize=1/size
+	dim(size)=dim(invsize)=d
 	
-	ans = switch(adjust, 
-		none      = 2/sqrt(invsize)*asinh(sqrt(invsize*y)), 
-		anscombe1 = 2/trigamma(size) *asinh(sqrt((y+0.375)/(size-0.75))), 
-		anscombe2 = asinh(sqrt((y+0.375+twoThree.192*invsize)/(size-0.75-twoThree.96*invsize))) / trigamma(size), 
-		anscombe3 = log(y+0.5*size) / trigamma(size)
-	)
-	structure(ans, dim=d)
+	if(length(size0)>1L ) {
+		ans=matrix(NA_real_, d[1L],d[2L])
+		for(i in seq_len(NROW(y))) {
+			for(j in seq_len(NCOL(y))) {
+				adjust=adjust0
+				if(adjust == 'anscombe2' && size[i,j] < 2) adjust='anscombe3'
+				if(adjust == 'anscombe3' && size[i,j] < 1) adjust='none'
+				if(adjust == 'anscombe1' && size[i,j] < 1) adjust='none'
+				
+				ans[i,j] = switch(adjust, 
+					none      = 2/sqrt(invsize[i,j])*asinh(sqrt(invsize[i,j]*y[i,j])), 
+					anscombe1 = 2/trigamma(size[i,j]) *asinh(sqrt((y[i,j]+0.375)/(size[i,j]-0.75))), 
+					anscombe2 = asinh(sqrt((y[i,j]+0.375+twoThree.192*invsize[i,j])/(size[i,j]-0.75-twoThree.96*invsize[i,j]))) / trigamma(size[i,j]), 
+					anscombe3 = log(y[i,j]+0.5*size[i,j]) / trigamma(size[i,j])
+				)
+			}
+		}
+	}else{
+		if(adjust == 'anscombe2' && size < 2) adjust='anscombe3'
+		if(adjust == 'anscombe3' && size < 1) adjust='none'
+		if(adjust == 'anscombe1' && size < 1) adjust='none'
+		
+		ans = switch(adjust, 
+			none      = 2/sqrt(invsize)*asinh(sqrt(invsize*y)), 
+			anscombe1 = 2/trigamma(size) *asinh(sqrt((y+0.375)/(size-0.75))), 
+			anscombe2 = asinh(sqrt((y+0.375+twoThree.192*invsize)/(size-0.75-twoThree.96*invsize))) / trigamma(size), 
+			anscombe3 = log(y+0.5*size) / trigamma(size)
+		)
+	}
+	structure( ans, dim=dim(y))
 }
 environment(nbinom.vst) = constEnv
 
