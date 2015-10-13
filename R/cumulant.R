@@ -150,7 +150,7 @@ cumulant.mrpp=local({
 		Ncs=integer(8L)
 		if( N > rising.fact.int.bound[switch(mOrd, 2L, 4L, 6L, 8L)] ) 
 			Ncs=as.bigq(Ncs)
-		if(max(n) > rising.fact.int.bound[switch(mOrd, 2L, 4L, 6L, 8L)] ){
+		if(FALSE && max(n) > rising.fact.int.bound[switch(mOrd, 2L, 4L, 6L, 8L)] ){
 			`The "cumulant" function for large sample sizes`=function().NotYetImplemented()
 			`The "cumulant" function for large sample sizes`()
 		}
