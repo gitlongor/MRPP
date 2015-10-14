@@ -145,6 +145,10 @@ cumulant.mrpp=local({
 		N			= x$nobs
 		ntrt		= length(n)
 		
+		if(max(n)<=1L){
+			return(rep(0,length(order)))
+		}
+		
 		Nc=function(C)factorial.rising(max(0,N-C+1L), C)
 		nc=function(n, C)factorial.rising(max(0,n-C+1L), C)
 		`%//%`=function(numer, denom)ifelse(denom==0L, 0, numer/denom)

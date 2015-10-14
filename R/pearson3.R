@@ -99,12 +99,14 @@ environment(ppearson3gca)=pearson3.env
 dgammagca=function(x, mean, sd, skew, exkurt, log=FALSE)
 {
 	moms=cumulant2moment(c(mean, sd*sd, skew*sd*sd*sd, exkurt*sd^4))
+	if(moms[2L]==0)moms[]=0
 	dapx_gca(x, moms, support=c(0,Inf), basis='gamma', log=log)
 }
 pgammagca=function(q, mean, sd, skew, exkurt, lower.tail = TRUE, 
     log.p = FALSE)
 {
 	moms=cumulant2moment(c(mean, sd*sd, skew*sd*sd*sd, exkurt*sd^4))
+	if(moms[2L]==0)moms[]=0
 	papx_gca(q, moms, support=c(0,Inf), basis='gamma',lower.tail = TRUE, 
     log.p = FALSE)
 }
