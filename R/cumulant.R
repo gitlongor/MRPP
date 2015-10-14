@@ -147,6 +147,7 @@ cumulant.mrpp=local({
 		
 		Nc=function(C)factorial.rising(max(0,N-C+1L), C)
 		nc=function(n, C)factorial.rising(max(0,n-C+1L), C)
+		`%//%`=function(numer, denom)ifelse(denom==0L, 0, numer/denom)
 		Ncs=integer(8L)
 		if( N > rising.fact.int.bound[switch(mOrd, 2L, 4L, 6L, 8L)] ) 
 			Ncs=as.bigq(Ncs)
@@ -171,16 +172,16 @@ cumulant.mrpp=local({
 			n2=sapply(n, nc, C=2)
 
 			d2 = 2*sum(distObj^2)
-			D2 = d2/Ncs[[2L]]
+			D2 = d2%//%Ncs[[2L]]
 			
 			d1I=rowSums(dmat)
 			sum.d1I2=sum(d1I^2)
-			D2p=(sum.d1I2-d2)/Ncs[[3L]]
-			D2pp=(d1^2-4*Ncs[[3L]]*D2p-2*d2)/Ncs[[4L]]
+			D2p=(sum.d1I2-d2)%//%Ncs[[3L]]
+			D2pp=(d1^2-4*Ncs[[3L]]*D2p-2*d2)%//%Ncs[[4L]]
 			
-			ans[order==2L] = sig2 = as.numeric(2 * ( sum( w2/n2 ) - 1L/Ncs[[2L]]) *
+			ans[order==2L] = sig2 = as.numeric(2 * ( sum(w2%//%n2)  - 1L/Ncs[[2L]]) *
 			(D2 - 2 * D2p + D2pp) +
-			4 * ( sum(w2 / n) - 1/N) * (D2p - D2pp)  )
+			4 * ( sum(w2 %//% n) - 1/N) * (D2p - D2pp)  )
 		}
 		
 		if(mOrd>=3L){
@@ -195,27 +196,27 @@ cumulant.mrpp=local({
 			n6=sapply(n, nc, C=6)
 			
 			d3=2*sum(distObj^3)
-			D3=d3/Ncs[[2L]]
+			D3=d3%//%Ncs[[2L]]
 			dmat2=dmat^2
 			ddmat=dmat%*%dmat
 			d2I=rowSums(dmat2)
 			sum.d1I.d2I=sum(d1I*d2I)
-			D3p=(sum.d1I.d2I-d3)/Ncs[[3L]]
-			D3pp=(d1*d2-4*Ncs[[3L]]*D3p-2*d3)/Ncs[[4L]]
-			#D3s=6*sum(combn(N,3L,function(idx)distObj[[ idx[1L], idx[2L] ]] * distObj[[ idx[1L], idx[3L] ]] * distObj[[ idx[2L], idx[3L] ]])) / Ncs[[3L]]
-			D3s = sum(dmat*ddmat)/Ncs[[3L]] # numerator = term S_{4}^{(3)} in Siemiatycki 1978
-			D3ss=(sum(dmat*(d1I%o%d1I))-Ncs[[3L]]*(2*D3p+D3s)-d3)/Ncs[[4L]]
-			D3s3=(sum(d1I^3)-3*Ncs[[3L]]*D3p-d3)/Ncs[[4L]]
-			D3p3=(Ncs[[3L]]*(d1*D2p-4*D3p-2*D3s)-2*Ncs[[4L]]*(2*D3ss+D3s3))/Ncs[[5L]]
-			D3p4=(Ncs[[4L]]*(d1*D2pp-4*D3pp-8*D3ss)-8*Ncs[[5L]]*D3p3)/Ncs[[6L]]
+			D3p=(sum.d1I.d2I-d3)%//%Ncs[[3L]]
+			D3pp=(d1*d2-4*Ncs[[3L]]*D3p-2*d3)%//%Ncs[[4L]]
+			#D3s=6*sum(combn(N,3L,function(idx)distObj[[ idx[1L], idx[2L] ]] * distObj[[ idx[1L], idx[3L] ]] * distObj[[ idx[2L], idx[3L] ]])) %//% Ncs[[3L]]
+			D3s = sum(dmat*ddmat)%//%Ncs[[3L]] # numerator = term S_{4}^{(3)} in Siemiatycki 1978
+			D3ss=(sum(dmat*(d1I%o%d1I))-Ncs[[3L]]*(2*D3p+D3s)-d3)%//%Ncs[[4L]]
+			D3s3=(sum(d1I^3)-3*Ncs[[3L]]*D3p-d3)%//%Ncs[[4L]]
+			D3p3=(Ncs[[3L]]*(d1*D2p-4*D3p-2*D3s)-2*Ncs[[4L]]*(2*D3ss+D3s3))%//%Ncs[[5L]]
+			D3p4=(Ncs[[4L]]*(d1*D2pp-4*D3pp-8*D3ss)-8*Ncs[[5L]]*D3p3)%//%Ncs[[6L]]
 
 			mean.delta3 = 
-				4*D3*sum(w3/n2.2)+
-				8*(3*D3p+D3s)*sum(w3*n3/n2.3)+
-				8*(3*D3ss+D3s3)*sum(w3*n4/n2.3)+
-				6*D3pp*sum(w2*(1-weight.trt+weight.trt*n4/n2.2)/n2)+
-				12*D3p3*sum(w2*((1-weight.trt)*n3+weight.trt*n5/n2)/n2.2)+
-				D3p4*sum(weight.trt*((1-weight.trt)*(1-2*weight.trt)+3*weight.trt*(1-weight.trt)*n4/n2.2+w2*n6/n2.3))
+				4*D3*sum(w3%//%n2.2)+
+				8*(3*D3p+D3s)*sum(w3*n3%//%n2.3)+
+				8*(3*D3ss+D3s3)*sum(w3*n4%//%n2.3)+
+				6*D3pp*sum(w2*(1-weight.trt+weight.trt*n4%//%n2.2)%//%n2)+
+				12*D3p3*sum(w2*((1-weight.trt)*n3+weight.trt*n5%//%n2)%//%n2.2)+
+				D3p4*sum(weight.trt*((1-weight.trt)*(1-2*weight.trt)+3*weight.trt*(1-weight.trt)*n4%//%n2.2+w2*n6%//%n2.3))
 			ans[order==3L] = as.numeric(mean.delta3 - 3*mu*sig2-mu^3)
 		}
 
@@ -266,9 +267,10 @@ cumulant.mrpp=local({
 			)
 			Pa4 = drop(.order4.S2P.mat %*% Sa4)
 			Pa4 = c(Pa4,  d1^4 - .order4.f.alpha %*% Pa4 )
-			Ds=c(zeros, Pa4[.order4.P2D.ord]/Ncs[rep(2:8,c(1L,3L,7L,6L,4L,1L,1L))])
+			tmp= # avoiding division by 0
+			Ds=c(zeros, Pa4[.order4.P2D.ord]%//%Ncs[rep(2:8,c(1L,3L,7L,6L,4L,1L,1L))])
 			
-			Ez3100=tcrossprod(w3/n2.3, weight.trt/n2) * (
+			Ez3100=tcrossprod(w3%//%n2.3, weight.trt%//%n2) * (
 				4*n2.o.n2*Ds[17L] +
 				8*n3.o.n2*(3*Ds[25L] + Ds[29L]) +
 				2*n4.o.n2*(3*Ds[30L] + 4*Ds[31L] + 12*Ds[33L]) +
@@ -279,7 +281,7 @@ cumulant.mrpp=local({
 			Ez3100 = sum(Ez3100) - sum(diag(Ez3100))
 
 			Ez4000 = sum(
-				w4/n2.4*(
+				w4%//%n2.4*(
 					 8*n2*Ds[13L] +
 					16*n3*(4*Ds[14L] + 3*Ds[15L] + 6*Ds[16L]) +
 					 4*n4*(4*Ds[17L] + 3*Ds[18L]) +
@@ -293,7 +295,7 @@ cumulant.mrpp=local({
 				)
 			)
 
-			Ez2200=tcrossprod(w2/n2.2, w2/n2.2) * (
+			Ez2200=tcrossprod(w2%//%n2.2, w2%//%n2.2) * (
 					4*n2.o.n2* Ds[18L] +
 					8*(n3.o.n2+t(n3.o.n2))*Ds[24L] +
 					2*(n4.o.n2+t(n4.o.n2))*Ds[30L] +
@@ -307,7 +309,7 @@ cumulant.mrpp=local({
 			Ez2110= 0 
 			if(ntrt>=3L) for(ii in seq_len(ntrt)) {
 				wow0=wow; wow0[ii,]=wow0[,ii]=0
-				tmp = w2[ii]/n2.2[ii] * wow0 * (
+				tmp = w2[ii]%//%n2.2[ii] * wow0 * (
 					2*n2[ii] * Ds[30L] +
 					4*n3[ii] * Ds[34L] +
 					  n4[ii] * Ds[35L] 
