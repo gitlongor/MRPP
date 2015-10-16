@@ -151,7 +151,7 @@ cumulant.mrpp=local({
 		
 		Nc=function(C)factorial.rising(max(0,N-C+1L), C)
 		nc=function(n, C)factorial.rising(max(0,n-C+1L), C)
-		`%//%`=function(numer, denom)ifelse(denom==0L, 0, numer/denom)
+		`%//%`=function(numer, denom)ifelse(denom==0L, 0, as.numeric(numer/denom))
 		Ncs=integer(8L)
 		if( N > rising.fact.int.bound[switch(mOrd, 2L, 4L, 6L, 8L)] ) 
 			Ncs=as.bigq(Ncs)
