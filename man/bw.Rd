@@ -54,7 +54,7 @@ bw.range(x, length=200, lower=.05, upper=.95, safety=100)
 \details{
 For \code{bw.smoothp},  if \code{method="drop1"}, the bandwidth best approximating MRPP mid-p-values from dropping one variable at a time will be selected. 
 
-If \code{method="keep1"}, the bandwidth best approximating univariate MRPP mid-p-values will be selection. 
+If \code{method="keep1"}, the bandwidth best approximating univariate MRPP mid-p-values will be selected. 
 
 If \code{method="dropkeep1"}, the geometric mean from bandwidths based on \code{method="drop1"} and \code{method="keep1"} will be selected. 
 
@@ -115,7 +115,7 @@ set.seed(2340)
 x=matrix(rnorm(20*5),20)
 trt=gl(2,10)
 urand.bigz(0,seed=1032940L) # init seed
-pmat=permuteTrt(trt, 5e3L)		## use 500 random permutations
+pmat=permuteTrt(trt, 5e3L)		## use 5000 random permutations
 bw.smoothp(x, pmat, method='drop1', verbose=interactive())
 bw.smoothp(x, pmat, method='keep1', verbose=interactive())
 bw.smoothp(x, pmat, method='dropkeep1', verbose=interactive())
