@@ -8,7 +8,7 @@
 Bandwidth Selection for Kernel Approximation to Discrete Cumulative Distribution Functions
 }
 \description{
-\code{bw.smoothp} chooses bandwidth based the derivative of smoothed permutation p-values. 
+\code{bw.smoothp} chooses bandwidth based on the derivative of smoothed permutation p-values. 
 
 \code{bw.range} returns a vector of candidate bandwidths that cover a large range of reasonable values. 
 }

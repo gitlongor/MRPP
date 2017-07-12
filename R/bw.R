@@ -37,7 +37,7 @@ bw.range=function(x, length=200, lower=.05, upper=.95, safety=100)
 bw.smoothp <-
 function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL, 
 	distFunc=dist,  kernel='gaussian', 
-	method=c('drop1','keep1','dropkeep1','ss.gradp','kde.mse1'), verbose=FALSE, ...)
+	method=c('sym1','drop1','add1','keep1','dropadd1','dropaddsym1','ss.gradp','kde.mse1'), verbose=FALSE, ...)
 ## y=N-by-p data matrix; b=permutation index for the 1st trt; r=dimension index; 
 {
 	method=match.arg(method)
@@ -72,52 +72,7 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 	gradEnv$scale=1
 	eval(grad.smoothp.bw, envir=gradEnv)
 	
-	drop=switch(method, drop1 = TRUE, keep1 = FALSE, dropkeep1 = c(FALSE, TRUE), NA)
-	if(!any(is.na(drop))) {
-		smps = sapply(bw, function(bw) pkde(mrpp$all.statistics, bw=bw, kernel=kernel)(mrpp$all.statistics[1L]) )
-		ans=numeric(length(drop))
-		sses = matrix(NA_real_, length(drop), length(bw))
-	
-		for(d.i in seq_along(drop)) {
-			if(drop[d.i]){
-				permp = function(rr){
-					lst$y=distFunc(y[,-rr,drop=FALSE])
-					p.value(do.call('mrpp.test.dist', lst),type="midp")
-				}
-				approxp = t(smps - gradEnv$ans)
-			}else{
-				permp = function(rr){
-					lst$y=distFunc(y[,rr,drop=FALSE])
-					p.value(do.call('mrpp.test.dist', lst),type="midp")
-				}
-				approxp = t(smps - gradEnv$ans%*%(1-diag(1, length(r), length(r))))
-			}
-			unips=sapply(r, permp)
-			sses[d.i,] = colSums((approxp - unips)^2)
-			idx=which.min(sses[d.i,])
-			ans[d.i]=bw[idx]
-
-			if(idx==1L || idx==length(bw))warning('optimal bandwidth occurs at the boundary')
-		}
-		if(verbose){
-			min.sse=apply(sses, 1L, min)
-			plot(log10(bw), sses[1L,], xlab='bandwidth', ylab='SS of p-value approx errors', type='l', ylim=c(min(min.sse), min(max(sses),10*max(min.sse))), main='', axes=FALSE)
-			title(main=switch(method, drop1='Drop 1 Variable', keep1='Keep 1 Variable', dropkeep1='Drop 1 and/or Keep 1 Variable'))
-			axis(3, at = log10(ans[1L]), labels=sprintf('%.1g',ans[1L]), col='red',col.ticks='red',col.axis='red')
-			for(d.i in safeseq(2L, length(drop), by=1L)){
-				lines(log10(bw), sses[d.i,])
-				axis(3, at = log10(ans[d.i]), labels=sprintf('%.1g',ans[d.i]), col='red',col.ticks='red',col.axis='red')
-			}
-			axis(2)
-			ats=axTicks(1)
-			axis(1, at=ats, labels=parse(text=paste0('10^',ats))  )
-			abline(v=log10(ans), h=min.sse, col='red', lty=3); box()
-			
-			ans=exp(mean(log(ans)))
-			axis(1, at = log10(ans), labels=sprintf('%.1g',ans), col='blue',col.ticks='blue', col.axis='blue')
-			abline(v=log10(ans), col='blue', lty=3)
-		}else ans=exp(mean(log(ans)))
-	}else if(method=='ss.gradp'){
+	if(method=='ss.gradp'){
 		ss = rowSums(gradEnv$ans^2)
 		idx = which.max(ss)
 		ans=bw[idx]
@@ -131,8 +86,58 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 			box()
 		}
 		if(idx==1L || idx==length(bw))warning('optimal bandwidth occurs at the boundary')
-		ans = exp(mean(log(ans)))
-	}else stop('unknown method argument')
+		return(  exp(mean(log(ans)))  )
+	}
+	
+	if(method%in%c('drop1','sym1','dropadd1', 'dropaddsym1')){
+		drop1p = function(r.i){
+			lst$y=distFunc(y[,r[-r.i],drop=FALSE])
+			p.value(do.call('mrpp.test.dist', lst),type="midp")
+		}
+		drop1pval= sapply(seq_along(r), drop1p)
+	}
+	if(method%in%c('add1','sym1','dropadd1','dropaddsym1'){
+		add1p = function(r.i){
+			lst$y=distFunc(y[,c(r,r[r.i]),drop=FALSE])
+			p.value(do.call('mrpp.test.dist', lst),type="midp")
+		}
+		add1pval=sapply(seq_along(r), add1p)
+	}
+	if(method%in%c('keep1')){
+		keep1 = function(r.i){
+			lst$y=distFunc(y[,r[r.i],drop=FALSE])
+			p.value(do.call('mrpp.test.dist', lst),type="midp")
+		}
+		keep1pval=sapply(seq_along(r), keep1)
+		t(smps - gradEnv$ans%*%(1-diag(1, length(r), length(r))))
+	}
+	sses = switch(method, 
+		drop1= .rowSums((gradEnv$ans - (p.value(mrpp, type='midp') - drop1pval)[col(gradEnv$ans)])^2, n.bw, length(r)) ,
+		add1 = .rowSums((gradEnv$ans - (add1pval - p.value(mrpp, type='midp'))[col(gradEnv$ans)])^2, n.bw, length(r)) , 
+		sym1 = .rowSums((gradEnv$ans - .5*(add1pval- drop1pval)[col(gradEnv$ans)])^2, n.bw, length(r)) , 
+		keep1= .rowSums((gradEnv$ans%*%(1-diag(1, length(r), length(r)))-keep1pval[col(gradEnv$ans)])^2, n.bw, length(r)) , 
+		dropadd1 = .rowSums((gradEnv$ans - (p.value(mrpp, type='midp') - drop1pval)[col(gradEnv$ans)])^2, n.bw, length(r)) 
+			+ .rowSums((gradEnv$ans - (add1pval - p.value(mrpp, type='midp'))[col(gradEnv$ans)])^2, n.bw, length(r)) ,
+		dropaddsym1 = .rowSums((gradEnv$ans - (p.value(mrpp, type='midp') - drop1pval)[col(gradEnv$ans)])^2, n.bw, length(r)) 
+			+ .rowSums((gradEnv$ans - (add1pval - p.value(mrpp, type='midp'))[col(gradEnv$ans)])^2, n.bw, length(r))
+			+ .rowSums((gradEnv$ans - .5*(add1pval- drop1pval)[col(gradEnv$ans)])^2, n.bw, length(r)) 
+	)
+	idx=which.min(sses)
+	ans=bw[idx]
+	min.sse=sses[idx]
+	
+	if(verbose){
+		plot(log10(bw), sses, xlab='bandwidth', ylab='SS of p-value approx errors', type='l', main='', axes=FALSE)
+		title(main=switch(method, drop1='Backward Difference', add1='Forward Difference', keep1='Keep 1 Variable', sym1='Central Difference', dropadd1='Total From Backward and Forward Difference'), dropaddsym1='Total From Backward, Forward and Central Difference')
+		axis(3, at = log10(ans), labels=sprintf('%.1g',ans), col='red',col.ticks='red',col.axis='red')
+		axis(2)
+		ats=axTicks(1)
+		axis(1, at=ats, labels=parse(text=paste0('10^',ats))  )
+		abline(h=min.sse, col='red', lty=3); box()
+		
+		axis(1, at = log10(ans), labels=sprintf('%.1g',ans), col='blue',col.ticks='blue', col.axis='blue')
+		abline(v=log10(ans), col='blue', lty=3)
+	}
 	ans
 }
 
