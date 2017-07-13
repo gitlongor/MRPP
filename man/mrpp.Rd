@@ -33,7 +33,7 @@ mrpp(y, trt, B=as.integer(min(nparts(table(trt)), 1e4L)),
 For the \code{weight.trt} argument, suppose that \code{n} denote the vector sample sizes for each treatment. Then, 
 \itemize{
 \item{\code{weight.trt="df"} uses group (treatment) weights proportional to \code{n-1};}
-\item{ \code{weight.trt="df"} uses group (treatment) weights proportional to \code{n};}
+\item{ \code{weight.trt="n"} uses group (treatment) weights proportional to \code{n};}
 \item{\code{weight.trt="equal"} uses equal group (treatment) weights; and }
 \item{\code{weight.trt="pairs"} uses group (treatment) weights proportional to \code{choose(n,2)}.}
 } 
