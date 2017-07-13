@@ -96,7 +96,7 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 		}
 		drop1pval= sapply(seq_along(r), drop1p)
 	}
-	if(method%in%c('add1','sym1','dropadd1','dropaddsym1'){
+	if(method%in%c('add1','sym1','dropadd1','dropaddsym1')){
 		add1p = function(r.i){
 			lst$y=distFunc(y[,c(r,r[r.i]),drop=FALSE])
 			p.value(do.call('mrpp.test.dist', lst),type="midp")
