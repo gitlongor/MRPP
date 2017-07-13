@@ -37,7 +37,7 @@ bw.range=function(x, length=200, lower=.05, upper=.95, safety=100)
 bw.smoothp <-
 function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL, 
 	distFunc=dist,  kernel='gaussian', 
-	method=c('sym1','drop1','add1','keep1','dropadd1','dropaddsym1','ss.gradp','kde.mse1'), verbose=FALSE, ...)
+	method=c('sym1','drop1','add1','keep1','dropadd1','dropaddsym1','ss.gradp','kde.mse1','match.pear3'), verbose=FALSE, ...)
 ## y=N-by-p data matrix; b=permutation index for the 1st trt; r=dimension index; 
 {
 	method=match.arg(method)
@@ -65,6 +65,13 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 	weight.trt = attr(mrpp$parameter, 'weight.trt')
 	
 	if(missing(bw) || is.null(bw)) bw = bw.range(mrpp$all.statistics)	
+	n.bw=length(bw)
+	
+	if(method=='match.pear3') {
+		cums=cumulant(mrpp, order=1:3); cums[2L]=sqrt(cums[2L]); cums[3L]=cums[3L]/cums[2L]^3
+		pear3pdf = dpearson3(mrpp$all.statistics, cums[1L], cums[2L], cums[3L])
+		return(bw.matchpdf(mrpp$all.statistics, kernel=kernel, pdf=pear3pdf, bw=bw, verbose=verbose)
+	}
 	
 	## pre-computing all.ddelta.dw in grad.smoothp
 	gradEnv=new.env()
@@ -109,7 +116,7 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 			p.value(do.call('mrpp.test.dist', lst),type="midp")
 		}
 		keep1pval=sapply(seq_along(r), keep1)
-		t(smps - gradEnv$ans%*%(1-diag(1, length(r), length(r))))
+		#t(smps - gradEnv$ans%*%(1-diag(1, length(r), length(r))))
 	}
 	sses = switch(method, 
 		drop1= .rowSums((gradEnv$ans - (p.value(mrpp, type='midp') - drop1pval)[col(gradEnv$ans)])^2, n.bw, length(r)) ,
@@ -128,7 +135,7 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 	
 	if(verbose){
 		plot(log10(bw), sses, xlab='bandwidth', ylab='SS of p-value approx errors', type='l', main='', axes=FALSE)
-		title(main=switch(method, drop1='Backward Difference', add1='Forward Difference', keep1='Keep 1 Variable', sym1='Central Difference', dropadd1='Total From Backward and Forward Difference'), dropaddsym1='Total From Backward, Forward and Central Difference')
+		title(main=switch(method, drop1='Backward Difference', add1='Forward Difference', keep1='Keep 1 Variable', sym1='Central Difference', dropadd1='Total From Backward and Forward Difference', dropaddsym1='Total From Backward, Forward and Central Difference'))
 		axis(3, at = log10(ans), labels=sprintf('%.1g',ans), col='red',col.ticks='red',col.axis='red')
 		axis(2)
 		ats=axTicks(1)
