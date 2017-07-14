@@ -32,7 +32,7 @@ If \code{simplify=TRUE}, this array is passed to \code{drop()} before being retu
 }
 
 \references{
-Long Qu, Dan Nettleton, and Jack C. M. Dekkers. Relative Variable Importance and Variable Selection for the Multiresponse Permutation Procedure, with Applications to High Dimensional Genomic Data.
+Manuscript under preparation
 }
 \author{
 Long Qu

@@ -92,7 +92,7 @@ The result from \code{p.value.grad.smoothp} is only approximate. There is no gua
 }
 
 \references{
-Long Qu, Dan Nettleton, Jack C. M. Dekkers. Relative Variable Importance and Backward Variable Selection for the Multiresponse Permutation Procedure, with Applications to High Dimensional Genomic Data. (Manuscript under review). 
+Manuscript under preparation 
 }
 \author{
 Long Qu

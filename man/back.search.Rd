@@ -82,8 +82,7 @@ In addition, the result also has the attribute \code{"parameter"}, which is a li
 	\item{method }{A string of test method.}
 }
 \references{
-Long Qu, Dan Nettleton, and Jack C. M. Dekkers. Relative Variable Importance and Backward Variable Selection for the Multiresponse
-Permutation Procedure, with Applications to High Dimensional Genomic Data. (Manuscript under review)
+Manuscript under preparation
 }
 \author{
 Long Qu

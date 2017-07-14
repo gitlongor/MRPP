@@ -39,8 +39,7 @@ Long Qu
 Maintainer: Long Qu <long.qu@wright.edu>
 }
 \references{
-Long Qu, Dan Nettleton, and Jack C. M. Dekkers. Relative Variable Importance and Backward Variable Selection for the Multiresponse
-Permutation Procedure, with Applications to High Dimensional Genomic Data. (Manuscript under review)
+Manuscript under preparation
 }
 %~~ Optionally other standard keywords, one per line, from file KEYWORDS in ~~
 %~~ the R documentation directory ~~

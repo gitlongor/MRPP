@@ -32,7 +32,7 @@ For \code{get.p.L1dEuc}, the result is an \code{length(r)}-vector of importance 
 }
 
 \references{
-Long Qu, Dan Nettleton, Jack C. M. Dekkers. Relative Variable Importance and Backward Variable Selection for the Multiresponse Permutation Procedure, with Applications to High Dimensional Genomic Data. (Manuscript under review). 
+Manuscript under preparation
 }
 \author{
 Long Qu
