@@ -56,7 +56,7 @@ function(y, permutedTrt, bw, r=seq_len(NCOL(y)), test=FALSE,
     #if(missing(cperm.mat)) cperm.mat=apply(permutedTrt,2,function(kk)(1:N)[-kk])
 	adjust=match.arg(adjust, c('none','weighted.mean','scale'))
 
-	if(missing(bw)) bw='dropkeep1'
+	if(missing(bw)) bw='sym1'
 	if(is.character(bw))
 		bw=bw.smoothp(y,permutedTrt=permutedTrt,r=r, kernel=kernel, weight.trt=weight.trt, method=bw)
 	pars=list(kernel=kernel, weight.trt=weight.trt, adjust=adjust)
