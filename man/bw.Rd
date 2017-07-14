@@ -130,8 +130,11 @@ trt=gl(2,10)
 urand.bigz(0,seed=1032940L) # init seed
 pmat=permuteTrt(trt, 5e3L)		## use 5000 random permutations
 bw.smoothp(x, pmat, method='drop1', verbose=interactive())
-bw.smoothp(x, pmat, method='keep1', verbose=interactive())
-bw.smoothp(x, pmat, method='dropkeep1', verbose=interactive())
+bw.smoothp(x, pmat, method='add1', verbose=interactive())
+bw.smoothp(x, pmat, method='dropadd1', verbose=interactive())
+bw.smoothp(x, pmat, method='sym1', verbose=interactive())
+bw.smoothp(x, pmat, method='match.pear3', verbose=interactive())
+bw.smoothp(x, pmat, method='match.pear3gca', verbose=interactive())
 bw.smoothp(x, pmat, method='ss.gradp', verbose=interactive())
 bw.smoothp(x, pmat, method='kde.mse1', verbose=interactive())
 
