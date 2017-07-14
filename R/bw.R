@@ -135,7 +135,7 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 	min.sse=sses[idx]
 	
 	if(verbose){
-		plot(log10(bw), sses, xlab='bandwidth', ylab='SS of p-value approx errors', type='o', main='', axes=FALSE)
+		plot(log10(bw), sses, xlab='bandwidth', ylab='SS of approx errors', type='o', main='', axes=FALSE)
 		title(main=switch(method, drop1='Backward Difference', add1='Forward Difference', keep1='Keep 1 Variable', sym1='Central Difference', dropadd1='Total From Backward and Forward Difference', dropaddsym1='Total From Backward, Forward and Central Difference'))
 		axis(3, at = log10(ans), labels=sprintf('%.1g',ans), col='red',col.ticks='red',col.axis='red')
 		axis(2)
@@ -186,18 +186,32 @@ bw.matchpdf=function(x, kernel=.kernels, pdf, bw = NULL, verbose=FALSE)
 		ss=ss[ord]
 	}
 	if(verbose){
+		dev.new(width=10, height=5, noRStudioGD=TRUE)
+		par(mfrow=1:2)
 		plot(log10(bw), log10(ss), xlab='bandwidth', ylab='log10(SSE of p-value density)', type='o', axes=FALSE )
-		axis(2)
-		axis(1, at = log10(ans), labels=sprintf('%.1g',ans), col='blue',col.ticks='blue', col.axis='blue')
+		axis(2L)
+		axis(1L, at = log10(ans), labels=sprintf('%.1g',ans), col='blue',col.ticks='blue', col.axis='blue', line=1)
 		ats=axTicks(1)
-		axis(1, at=ats, labels=parse(text=paste0('10^',ats))  )
-		abline(v=log10(ans), h=log10(min.ss), col='blue', lty=3)
+		axis(1L, at=ats, labels=parse(text=paste0('10^',ats))  )
+		abline(v=log10(ans), h=log10(min.ss), col='blue', lty=3L)
+		box()
+		
+		hist(x, breaks='FD', freq=FALSE, main='Density of MRPP statistics', ylab='Density', xlab='MRPP z-statistics')
+		pdf.final=dkde(x, ans, kernel)
+		marg = diff(range(x))/5
+		curve(pdf.final(x), min(x)-marg, max(x)+marg, add=TRUE)
+		rug(x)
+		abline(v=x[1L], col='blue', lty=3L)
+		axis(1L, at=x[1L], labels=expression(z[1L]), col='blue', line=1, col.ticks='blue', col.axis='blue')
+		ord.x=order(x)
+		lines(x[ord.x], pdf[ord.x], col=2L)
+		legend('topleft', lty=1L, col=1:2, text.col=1:2, legend=c('kernel density', 'initial density'))
 		box()
 	}
 	if(any( ans==range(bw) ) )warning('optimal bandwidth occurs at the boundary')
 	ans
 }
-formals(bw.matchpdf)$kernel=.kernels
+#formals(bw.matchpdf)$kernel=.kernels
 
 if(FALSE){
 
