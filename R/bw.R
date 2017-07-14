@@ -62,6 +62,7 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 		abline(v=mrpp$all.statistics[1L], col='blue', lty=3L)
 		axis(1L, at=mrpp$all.statistics[1L], labels=expression(z[1L]), col='blue', line=1, col.ticks='blue', col.axis='blue')
 		box()
+		title(sub=sprintf('bandwidth = %.3g', ans))
 	})
 	if(method=='kde.mse1'){
 		lst=list(...)
@@ -71,7 +72,10 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 		nms=names(lst)
 		idx= nms=='' || nms%in%names(formals(bw.mse.pdf.asym))
 		ans = do.call('bw.mse.pdf.asym', lst[idx])
-		if(verbose) eval(plot.expr)
+		if(verbose) {
+			eval(plot.expr)
+			title(main='\nMethod: KDE MSE formula')
+		}
 		return(ans)
 	}
 
@@ -84,7 +88,7 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 		cums=cumulant(mrpp(y[,r,drop=FALSE], permutedTrt=permutedTrt, weight.trt=weight.trt, distFunc=distFunc,idxOnly=TRUE),order=1:4); cums[2L]=sqrt(cums[2L]); cums[3L]=cums[3L]/cums[2L]^3; cums[4L]=cums[4L]/cums[2L]^4
 		pdf0x = if(method=='match.pear3') dpearson3(mrpp$all.statistics, cums[1L], cums[2L], cums[3L]) else 
 		dpearson3gca(mrpp$all.statistics, cums[1L], cums[2L], cums[3L], cums[4L]) 
-		return(bw.matchpdf(mrpp$all.statistics, kernel=kernel, pdf=pdf0x, bw=bw, verbose=verbose))
+		return(bw.matchpdf(mrpp$all.statistics, kernel=kernel, pdf=pdf0x, bw=bw, verbose=verbose, title=switch(method, match.pear3="Match Pearson III Dist'n", match.pear3gca="Match GCA Adjust. of Pearson III Dist'n")))
 	}
 	
 	## pre-computing all.ddelta.dw in grad.smoothp
@@ -99,7 +103,7 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 		ans=bw[idx]
 		if(verbose){
 			dev.new(width=10, height=5, noRStudioGD=TRUE); par(mfrow=1:2)
-			plot(log10(bw), (ss), xlab='bandwidth', ylab='SS of p-value gradients', type='o', axes=FALSE )
+			plot(log10(bw), (ss), xlab='bandwidth', ylab='SS of p-value gradients', type='o', axes=FALSE, main='\nMethod: Max SS of Derivative of Density' )
 			axis(2)
 			axis(1, at = log10(ans), labels=sprintf('%.1g',ans), col='blue',col.ticks='blue', col.axis='blue')
 			ats=axTicks(1)
@@ -155,7 +159,7 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 		par(mfrow=1:2)
 
 		plot(log10(bw), sses, xlab='bandwidth', ylab='SS of approx errors', type='o', main='', axes=FALSE)
-		title(main=switch(method, drop1='Backward Difference', add1='Forward Difference', keep1='Keep 1 Variable', sym1='Central Difference', dropadd1='Total From Backward and Forward Difference', dropaddsym1='Total From Backward, Forward and Central Difference'))
+		title(main=paste0('\nMethod: ',switch(method, drop1='Backward Difference', add1='Forward Difference', keep1='Keep 1 Variable', sym1='Central Difference', dropadd1='Backward + Forward Difference', dropaddsym1='Backward + Forward + Central Difference')))
 		axis(3, at = log10(ans), labels=sprintf('%.1g',ans), col='red',col.ticks='red',col.axis='red')
 		axis(2)
 		ats=axTicks(1)
@@ -165,22 +169,12 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 		axis(1, at = log10(ans), labels=sprintf('%.1g',ans), col='blue',col.ticks='blue', col.axis='blue')
 		abline(v=log10(ans), col='blue', lty=3)
 
-			eval(plot.expr)
-	if(FALSE){
-		hist(mrpp$all.statistics, breaks='FD', freq=FALSE, main='Density of MRPP statistics', ylab='Density', xlab='MRPP z-statistics')
-		pdf.final=dkde(mrpp$all.statistics, ans, kernel)
-		marg = diff(range(mrpp$all.statistics))/5
-		curve(pdf.final(x), min(mrpp$all.statistics)-marg, max(mrpp$all.statistics)+marg, add=TRUE)
-		rug(mrpp$all.statistics)
-		abline(v=mrpp$all.statistics[1L], col='blue', lty=3L)
-		axis(1L, at=mrpp$all.statistics[1L], labels=expression(z[1L]), col='blue', line=1, col.ticks='blue', col.axis='blue')
-		box()
-	}
+		eval(plot.expr)
 	}
 	ans
 }
 
-bw.matchpdf=function(x, kernel=.kernels, pdf, bw = NULL, verbose=FALSE)
+bw.matchpdf=function(x, kernel=.kernels, pdf, bw = NULL, verbose=FALSE, title=NULL)
 {
 	if(missing(bw) || is.null(bw)) bw = bw.range(x)
 	if(is.function(pdf)) pdf=pdf(x)
@@ -220,6 +214,7 @@ bw.matchpdf=function(x, kernel=.kernels, pdf, bw = NULL, verbose=FALSE)
 		dev.new(width=10, height=5, noRStudioGD=TRUE)
 		par(mfrow=1:2)
 		plot(log10(bw), log10(ss), xlab='bandwidth', ylab='log10(SSE of p-value density)', type='o', axes=FALSE )
+		if(!is.null(title))graphics::title(main=paste0('\nMethod: ', title)) else graphics::title(main='Matching Initial PDF')
 		axis(2L)
 		axis(1L, at = log10(ans), labels=sprintf('%.1g',ans), col='blue',col.ticks='blue', col.axis='blue', line=1)
 		ats=axTicks(1)
