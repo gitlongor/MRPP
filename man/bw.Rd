@@ -15,8 +15,8 @@ Bandwidth Selection for Kernel Approximation to Discrete Cumulative Distribution
 \usage{
 %bw.mse.pdf.asym(x,iter.max=1L,eps=1e-6,start.bw=bw.nrd, verbose=FALSE)
 bw.smoothp(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL, 
-	distFunc=dist,  kernel='gaussian', %weight.trt="df", 
-	method=c('drop1','keep1','dropkeep1','ss.gradp','kde.mse1'), verbose=FALSE, \dots)
+	distFunc=dist,  kernel='gaussian', 
+	method='sym1', verbose=TRUE, \dots)
 bw.range(x, length=200, lower=.05, upper=.95, safety=100)
 }
 %- maybe also "usage" for other objects documented here.
@@ -31,13 +31,12 @@ bw.range(x, length=200, lower=.05, upper=.95, safety=100)
 }
   \item{distFunc}{A function that returns a \code{"dist"} object, as in the \code{\link{dist}} function. 
 }
-  \item{kernel}{A character scalar indicating the kernel to be used. Allowed values are given at \code{\link{pkernel}}.
+  \item{kernel}{A character scalar indicating the kernel to be used. Allowed values are given in \code{\link{.kernels}}.
 }
-%  \item{weight.trt}{As in \code{\link{mrpp.test.dist}}.}
 
   \item{method}{A character scalar specifying the bandwidth selection method. See details. 
 }
-  \item{verbose}{Logical. When \code{TRUE}, the bandwidth for each iteration will be printed for \code{method="kde.mse0"}, and diagnostic plots will be produced for other methods. 
+  \item{verbose}{Logical. When \code{TRUE}, diagnostic plots will be produced. 
 }
   \item{\dots}{Additional arguments passed on to \code{\link{mrpp.test.dist}} or additional arguments for \code{method="kde.mse1"}. See details.
 }
@@ -52,24 +51,38 @@ bw.range(x, length=200, lower=.05, upper=.95, safety=100)
 
 }
 \details{
-For \code{bw.smoothp},  if \code{method="drop1"}, the bandwidth best approximating MRPP mid-p-values from dropping one variable at a time will be selected. 
+For \code{method},  currently supported values are as follows: 
 
-If \code{method="keep1"}, the bandwidth best approximating univariate MRPP mid-p-values will be selected. 
+\itemize{
+\item\code{method="drop1"}: The bandwidth best approximating MRPP mid-p-values from dropping one variable at a time will be selected. This is equivalent to a backward finite difference approximation to the derivative. 
 
-If \code{method="dropkeep1"}, the geometric mean from bandwidths based on \code{method="drop1"} and \code{method="keep1"} will be selected. 
+\item\code{method="add1"}: The bandwidth best approximating MRPP mid-p-values from adding one more redundant variable will be selected. This is equivalent to a forward finite difference approximation to the derivative. 
 
-If \code{method="ss.gradp"}, the bandwidth that maximize the sum of squared derivatives of smoothed p-values will be selected.
+\item\code{method="sym1"}: The bandwidth selected is such that the resulting derivative will best approximate two-sided symmetric finite difference. 
 
-If \code{method="kde.mse1"}, the bandwidth selection problem for approximating permutation statistics is treated as if finding the bandwidth in kernel \dQuote{density} estimation and an asymptotically optimal bandwidth minimizing mean squared error at the first data point will be used. In this case, the \code{\dots} argument can be named pairs with names being any subset of \code{c("iter.max","eps","start.bw")}. The procedure starts from the starting bandwidth specified by \code{start.bw}. The new bandwidth will be computed as 
+\item\code{method="dropadd1"}: The bandwidth selected is such that the resulting derivative will minimize the sum of squared approximation errors of both backward and forward finite difference. 
+
+\item\code{method="dropaddsym1"}: The bandwidth selected is such that the resulting derivative will minimize the sum of squared approximation errors of backward,  forward and symmetric finite difference. 
+
+\item\code{method="keep1"}: The bandwidth best approximating univariate MRPP mid-p-values will be selected. 
+
+\item\code{method='match.pear3'}: The bandwidth selected is such that the resulting kernel density estimate best approximates an initial density. The initial density is a Pearson type III distribution, whose first 3 moments match those of MRPP statistics exactly. See also \code{\link{dpearson3}}.
+
+\item\code{method='match.pear3gca'}: The bandwidth selected is such that the resulting kernel density estimate best approximates an initial density. The initial density is the Gram-Charlier type A approximation (GCA) to the Pearson type III distribution. The first 4 moments of the GCA are expected to match those of MRPP statistics. See also \code{\link{dpearson3gca}}. 
+
+\item\code{method="ss.gradp"}: The bandwidth that maximize the sum of squared derivatives of density of smoothed p-values will be selected.
+
+\item\code{method="kde.mse1"}: The bandwidth selection problem for approximating permutation statistics is treated as if finding the bandwidth in kernel \dQuote{density} estimation and an asymptotically optimal bandwidth minimizing mean squared error at the first data point will be used. In this case, the \code{\dots} argument can be named pairs with names being any subset of \code{c("iter.max","eps","start.bw")}. The procedure starts from the starting bandwidth specified by \code{start.bw}. The new bandwidth will be computed as 
 \deqn{
 \left[\frac{Rf(x_1)}{N\lbrace f''(x_1) \rbrace^2} \right]^{1/5}
 }{
 ( {R f(x_1)} / [N {f''(x_1)}^2] )^{1/5}
 }
 where \code{R} is approximately 0.2821 if \code{kernel="gaussian"} (c.f. \code{\link{density}} with \code{give.Rkern=TRUE}), \code{N} is the number of permutation statistics and \code{f} is the density estimate using the current bandwidth. 
+}
 
 Details of the \code{\dots} argument are as follows: 
-\itemize{
+\describe{
   \item{iter.max}{The max number of iterations. For an iterative procedure, set this to be  greater than 1L.
 }  
   \item{eps}{A small positive number such that iterations are terminated when the difference between successive bandwidths is below \code{eps}.
@@ -108,7 +121,7 @@ Wand, M. P. and Jones, M. C. (1995). Kernel Smoothing. Chapman and Hall, London.
 \author{Long Qu
 }
 \seealso{
-\code{\link{density}}, \code{\link[ks]{kdde}}
+\code{\link{dkde}}, \code{\link{dpearson3}}, \code{\link{mrpp}}, \code{\link{permuteTrt}}
 }
 \examples{
 set.seed(2340)

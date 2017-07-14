@@ -18,7 +18,6 @@ CDF, PDF and Fourier Transform of Univariate Kernel Densities
 \code{.kernels} is a vector containing the names of the kernel functions currently supported. 
 }
 \usage{
-.kernels
 pkernel(kernel= .kernels)
 dkernel(kernel= .kernels)
 fourier.kernel(kernel= .kernels, root.2pi=TRUE)
@@ -39,15 +38,17 @@ dkde(x, bw=bw.nrd, kernel=.kernels,	from=min(x)-3*median(bw), to=max(x)+3*median
   \item{from,to}{Numeric scalars, the left and right boundaries within which the estimated density is to be evaluated, as in \code{\link{density}}.
 }
 }
-\note{
-Currently, \code{.kernels} contains 
+\format{
+Currently, \code{.kernels} is the character vector
 
-\code{c("gaussian", "uniform", "rectangular", "epanechnikov", "triangular", "biweight", "triweight", "tricube", "logistic", "cosine")}, 
+\code{c("gaussian", "uniform", "rectangular", "epanechnikov", "triangular", "biweight", "triweight", "tricube", "logistic", "cosine")} 
 
 where \code{"uniform"} and \code{"rectangular"} are synonymous. Whenever the kernel has compact support, the support will be \code{[-1,1]}; thus, the variance of each kernel is not necessarily one, which behaves differently than \code{\link{density}}.
 
 High-order kernels that are not bona fide distributions or non-smooth kernels are not allowed. 
+}
 
+\note{
 The \code{pkde} implementation does \emph{not} make use of the fast Fourier transform (FFT); but the \code{dkde} uses FFT. 
 }
 \value{

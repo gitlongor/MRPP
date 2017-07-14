@@ -37,10 +37,10 @@ bw.range=function(x, length=200, lower=.05, upper=.95, safety=100)
 bw.smoothp <-
 function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL, 
 	distFunc=dist,  kernel='gaussian', 
-	method=c('sym1','drop1','add1','keep1','dropadd1','dropaddsym1','ss.gradp','kde.mse1','match.pear3','match.pear3gca'), verbose=FALSE, ...)
+	method='sym1', verbose=TRUE, ...)
 ## y=N-by-p data matrix; b=permutation index for the 1st trt; r=dimension index; 
 {
-	method=match.arg(method)
+	method=match.arg(method, choices=c('sym1','drop1','add1','keep1','dropadd1','dropaddsym1','ss.gradp','kde.mse1','match.pear3','match.pear3gca'))
     if(!is.matrix(y) && !is.data.frame(y)) y = as.matrix(y)
 	R=NCOL(y)
 	if(R==1L ) method='ss.gradp'
