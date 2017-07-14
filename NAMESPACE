@@ -8,6 +8,15 @@ importFrom(varComp, p.value)
 importFrom(moments, skewness, kurtosis, all.moments)
 importFrom(PDQutils, moment2cumulant,cumulant2moment,dapx_gca,papx_gca)
 
+  importFrom("grDevices", "dev.new")
+  importFrom("graphics", "abline", "axTicks", "axis", "box", "curve",
+             "hist", "legend", "lines", "par", "plot", "rug", "title")
+  importFrom("stats", "approx", "approxfun", "bw.nrd", "cmdscale",
+             "density", "dgamma", "dist", "dlogis", "dnorm", "fft",
+             "median", "model.frame", "model.frame.default", "nextn",
+             "optimize", "pbeta", "pgamma", "plogis", "pnorm", "qgamma",
+             "quantile", "rgamma", "rmultinom", "terms")
+  importFrom("utils", "combn", "tail")
 export(
 	mrpp,
 	mrpp.test, mrppBVS, mrppBVS.test, 
