@@ -60,7 +60,7 @@ cumulant(x, order,  \dots )
 	An object whose moments or cumulants to be computed. 
 }
   \item{y, na.rm, use}{
-	The same as in \code{\link[stats:var]{stats::var}} and/or \code{\link[stats:sd]{stats::sd}}. 
+	The same as in \code{\link[stats:cor]{stats::var}} and/or \code{\link[stats:sd]{stats::sd}}. 
 }
   \item{excess}{
 	Logical, the same as in \code{\link[moments:kurtosis]{moments::kurtosis}}.
@@ -79,7 +79,7 @@ cumulant(x, order,  \dots )
 \details{
 S3 methods \code{mean.mrpp}, \code{var.mrpp}, \code{sd.mrpp}, \code{skewness.mrpp} and \code{kurtosis.mrpp} compute the mean, variance, standard deviation, skewness and kurtosis for MRPP statistics of \code{"mrpp"} objects, respectively, with respective to the permutation distribution. The implementation does not require enumerating all MRPP statistics. 
 
-\code{var} and \code{sd} are S3 generic functions, with \code{default} methods being \code{stats::var} and \code{stats::sd}, respectively. 
+\code{var} and \code{sd} are S3 generic functions, with \code{default} methods being \code{\link[stats:cor]{stats::var}} and \code{stats::sd}, respectively. 
 
 \code{skewness} and \code{kurtosis} are S3 generic functions, with \code{default} methods being \code{moments::skewness} and \code{moments::kurtosis}, respectively. 
 
@@ -108,7 +108,7 @@ Long Qu
 }
 
 \seealso{
-\code{\link[stats:var]{var}}, \code{\link[stats:sd]{sd}} in \code{stats} package. 
+\code{\link[stats:cor]{var}}, \code{\link[stats:sd]{sd}} in \code{stats} package. 
 
 \code{\link[moments:skewness]{skewness}}, \code{\link[moments:kurtosis]{kurtosis}}, and \code{\link[moments:all.moments]{all.moments}} in the \code{moments} package.
 

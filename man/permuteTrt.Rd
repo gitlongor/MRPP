@@ -53,7 +53,7 @@ When \code{idxOnly} is \code{FALSE}, each matrix has \code{B} columns, where \co
 
 When \code{idxOnly} is \code{TRUE}, each matrix has only one column, corresponding to the original treatment assignment. The permutations being sampled are represented by the correspoding decimal factoradic numbers (stored as character) returned in the \code{"idx"} attribute. In this case, the length of the \code{"idx"} attribute is \code{B} and the first element is always \code{"0"}, corresponding to no permutations.
 
-\code{nparts} returns a \code{"\link[gmp:bigz]{bigz}"} object which is the total number of non-equivalent treatment assignments. 
+\code{nparts} returns a \code{"\link{bigz}"} object which is the total number of non-equivalent treatment assignments. 
 \code{nperms.permutedTrt} returns the total number of permutations. 
 \code{ntrt.permutedTrt} returns a named vector of sample sizes. 
 \code{trt.permutedTrt} returns a vector of treatment labels that is equivalent  to (i.e., might be a permutation of) the one passed to \code{permuteTrt}.
@@ -65,7 +65,7 @@ When \code{B} is less than \code{nparts(table(trt))}, ideally one could randomly
 Long Qu
 }
 \seealso{
-\code{\link{combn}}, \code{\link[gmp]{urand.bigz}}, \code{\link{HSEL.bigz}}, \code{\link{sample1}}, \code{\link{dec2permvec}}
+\code{\link{combn}}, \code{\link{urand.bigz}}, \code{\link{HSEL.bigz}}, \code{\link{sample1}}, \code{\link{dec2permvec}}
 }
 \examples{
 set.seed(2340)

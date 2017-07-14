@@ -69,7 +69,7 @@ For the \code{weight.trt} argument, suppose that \code{n} denote the vector samp
 }
 \note{
 Currently, the following S3 methods are available for the \code{"mrpp"} class: 
-\code{\link[MRPP:moment]{mean, sd, var, skewness, kurtosis,  moment, cumulant}} and \code{\link{mrpp.test}},  
+\code{\link[MRPP:cumulant]{mean, sd, var, skewness, kurtosis,  moment, cumulant}} and \code{\link{mrpp.test}},  
 }
 \section{Warning}{
 The \code{permutedTrt.env} component is an environemnt such that the duplication of a \code{"mrpp"} object will share the same environment. 
