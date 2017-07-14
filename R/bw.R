@@ -73,6 +73,7 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 		idx= nms=='' || nms%in%names(formals(bw.mse.pdf.asym))
 		ans = do.call('bw.mse.pdf.asym', lst[idx])
 		if(verbose) {
+			dev.new(noRStudioGD=TRUE)
 			eval(plot.expr)
 			title(main='\nMethod: KDE MSE formula')
 		}
@@ -107,7 +108,7 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 			axis(2)
 			axis(1, at = log10(ans), labels=sprintf('%.1g',ans), col='blue',col.ticks='blue', col.axis='blue')
 			ats=axTicks(1)
-			axis(1, at=ats, labels=parse(text=paste0('10^',ats))  )
+			axis(1, at=ats, labels=parse(text=paste0('10^',ats))  ,line=1)
 			abline(v=log10(ans), h=(ss[idx]), col='blue', lty=3)
 			box()
 			
@@ -166,7 +167,7 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 		axis(1, at=ats, labels=parse(text=paste0('10^',ats))  )
 		abline(h=min.sse, col='red', lty=3); box()
 		
-		axis(1, at = log10(ans), labels=sprintf('%.1g',ans), col='blue',col.ticks='blue', col.axis='blue')
+		axis(1, at = log10(ans), labels=sprintf('%.1g',ans), col='blue',col.ticks='blue', col.axis='blue', line=1)
 		abline(v=log10(ans), col='blue', lty=3)
 
 		eval(plot.expr)
@@ -233,6 +234,7 @@ bw.matchpdf=function(x, kernel=.kernels, pdf, bw = NULL, verbose=FALSE, title=NU
 		lines(x[ord.x], pdf[ord.x], col=2L)
 		legend('topleft', lty=1L, col=1:2, text.col=1:2, legend=c('kernel density', 'initial density'))
 		box()
+		title(sub=sprintf('bandwidth = %.3g', ans))
 	}
 	if(any( ans==range(bw) ) )warning('optimal bandwidth occurs at the boundary')
 	ans
