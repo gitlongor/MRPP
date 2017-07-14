@@ -46,7 +46,7 @@ function(y, permutedTrt, bw, r=seq_len(NCOL(y)), test=FALSE,
 ## y=N-by-p data matrix; b=permutation index for the 1st trt; r=dimension index; 
 {
     ## min.wts=1e-8  ### CHECKME: I cannot remember why the weight was introduced. Set it to zero for now to see what problems show up...
-	if(is.null(mrpp.stats)) mrpp.stats=mrpp.test.dist(distObj,permutedTrt=permutedTrt,weight.trt=weight.trt)$all.statistics
+	if(is.null(mrpp.stats)) mrpp.stats=mrpp.test.dist(distObj,permutedTrt=permutedTrt,weight.trt=weight.trt, method='permutation')$all.statistics
 	weight.trt = mrpp.weight.trt(weight.trt, trt.permutedTrt(permutedTrt))$weight.trt[names(permutedTrt)]
     B=length(mrpp.stats)
     b=if(isTRUE(test)) 1:B else 1L
@@ -58,8 +58,8 @@ function(y, permutedTrt, bw, r=seq_len(NCOL(y)), test=FALSE,
 
 	if(missing(bw)) bw='sym1'
 	if(is.character(bw))
-		bw=bw.smoothp(y,permutedTrt=permutedTrt,r=r, kernel=kernel, weight.trt=weight.trt, method=bw)
-	pars=list(kernel=kernel, weight.trt=weight.trt, adjust=adjust)
+		bw=bw.smoothp(y,permutedTrt=permutedTrt,r=r, kernel=kernel, weight.trt=weight.trt, method=bw, verbose=FALSE)
+	pars=list(kernel=kernel, weight.trt=weight.trt, adjust=adjust, bw=bw)
 #    weight=matrix(NA_real_, B, length(b))   ## this may require large memory when test=TRUE
 #    for(b.i in 1:length(b))
 #      weight[,b.i]=pmax(min.wts,dnorm((mrpp.stats[b[b.i]]-mrpp.stats),0,bw))
