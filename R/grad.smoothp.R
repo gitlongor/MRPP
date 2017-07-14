@@ -5,7 +5,7 @@ function(y, permutedTrt, bw, r=seq_len(NCOL(y)), test=FALSE, distFunc=dist,
     kernel='biweight', weight.trt="df", measure=c('grad','weighted.mean','scale','p'))
 {
 	distObj = distFunc(y)
-	if(is.null(mrpp.stats)) mrpp.stats=mrpp.test.dist(distObj,permutedTrt=permutedTrt,weight.trt=weight.trt)$all.statistics
+	if(is.null(mrpp.stats)) mrpp.stats=mrpp.test.dist(distObj,permutedTrt=permutedTrt,weight.trt=weight.trt, method='permutation')$all.statistics
 	weight.trt = mrpp.weight.trt(weight.trt, trt.permutedTrt(permutedTrt))$weight.trt[names(permutedTrt)]
     B=length(mrpp.stats)
     b=if(isTRUE(test)) 1:B else 1L
