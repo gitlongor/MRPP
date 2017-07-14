@@ -46,12 +46,11 @@ nbinom.vst = function(y, size = 1/invsize, invsize=1/size, adjust=c('none','ansc
 		ans=matrix(NA_real_, d[1L],d[2L])
 		for(i in seq_len(NROW(y))) {
 			for(j in seq_len(NCOL(y))) {
-				adjust=adjust0
-				if(adjust == 'anscombe2' && size[i,j] < 2) adjust='anscombe3'
-				if(adjust == 'anscombe3' && size[i,j] < 1) adjust='none'
-				if(adjust == 'anscombe1' && size[i,j] < 1) adjust='none'
+				if(adjust0 == 'anscombe2' && size[i,j] < 2) adjust0='anscombe3'
+				if(adjust0 == 'anscombe3' && size[i,j] < 1) adjust0='none'
+				if(adjust0 == 'anscombe1' && size[i,j] < 1) adjust0='none'
 				
-				ans[i,j] = switch(adjust, 
+				ans[i,j] = switch(adjust0, 
 					none      = 2/sqrt(invsize[i,j])*asinh(sqrt(invsize[i,j]*y[i,j])), 
 					anscombe1 = 2/trigamma(size[i,j]) *asinh(sqrt((y[i,j]+0.375)/(size[i,j]-0.75))), 
 					anscombe2 = asinh(sqrt((y[i,j]+0.375+twoThree.192*invsize[i,j])/(size[i,j]-0.75-twoThree.96*invsize[i,j]))) / trigamma(size[i,j]), 
@@ -60,11 +59,11 @@ nbinom.vst = function(y, size = 1/invsize, invsize=1/size, adjust=c('none','ansc
 			}
 		}
 	}else{
-		if(adjust == 'anscombe2' && size < 2) adjust='anscombe3'
-		if(adjust == 'anscombe3' && size < 1) adjust='none'
-		if(adjust == 'anscombe1' && size < 1) adjust='none'
+		if(adjust0 == 'anscombe2' && size < 2) adjust0='anscombe3'
+		if(adjust0 == 'anscombe3' && size < 1) adjust0='none'
+		if(adjust0 == 'anscombe1' && size < 1) adjust0='none'
 		
-		ans = switch(adjust, 
+		ans = switch(adjust0, 
 			none      = 2/sqrt(invsize)*asinh(sqrt(invsize*y)), 
 			anscombe1 = 2/trigamma(size) *asinh(sqrt((y+0.375)/(size-0.75))), 
 			anscombe2 = asinh(sqrt((y+0.375+twoThree.192*invsize)/(size-0.75-twoThree.96*invsize))) / trigamma(size), 
