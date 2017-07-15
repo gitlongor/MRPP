@@ -6,6 +6,7 @@
 \alias{pkde}
 \alias{dkde}
 \alias{.kernels}
+\alias{.smooth.kernels}
 %- Also NEED an "\alias" for EACH other topic documented here.
 \title{
 CDF, PDF and Fourier Transform of Univariate Kernel Densities
@@ -46,6 +47,12 @@ Currently, \code{.kernels} is the character vector
 where \code{"uniform"} and \code{"rectangular"} are synonymous. Whenever the kernel has compact support, the support will be \code{[-1,1]}; thus, the variance of each kernel is not necessarily one, which behaves differently than \code{\link{density}}.
 
 High-order kernels that are not bona fide distributions or non-smooth kernels are not allowed. 
+
+Currently, \code{.smooth.kernels} is the character vector
+
+.smooth.kernels=c("gaussian", "biweight", 'triweight', 'tricube',"logistic","cosine").
+
+These are the kernels with continuous derivative over the whole real line. 
 }
 
 \note{

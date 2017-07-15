@@ -42,7 +42,7 @@ function(y, permutedTrt, bw, r=seq_len(NCOL(y)), test=FALSE, distFunc=dist,
 grad.smoothp <-
 function(y, permutedTrt, bw, r=seq_len(NCOL(y)), test=FALSE, 
         distObj=dist(y), mrpp.stats=NULL, 
-        kernel='biweight', weight.trt="df", adjust='none')
+        kernel='biweight', weight.trt="df", adjust=NULL)
 ## y=N-by-p data matrix; b=permutation index for the 1st trt; r=dimension index; 
 {
     ## min.wts=1e-8  ### CHECKME: I cannot remember why the weight was introduced. Set it to zero for now to see what problems show up...
@@ -54,11 +54,15 @@ function(y, permutedTrt, bw, r=seq_len(NCOL(y)), test=FALSE,
     ans=matrix(NA_real_, length(b), length(r))
     N=as.integer(nrow(y))
     #if(missing(cperm.mat)) cperm.mat=apply(permutedTrt,2,function(kk)(1:N)[-kk])
-	adjust=match.arg(adjust, c('none','weighted.mean','scale'))
 
 	if(missing(bw)) bw='sym1'
 	if(is.character(bw))
 		bw=bw.smoothp(y,permutedTrt=permutedTrt,r=r, kernel=kernel, weight.trt=weight.trt, method=bw, verbose=FALSE)
+
+	if(is.null(adjust[1L])) adjust='none'
+	if(is.numeric(bw) && is.infinite(bw)) adjust='weighted.mean'
+	adjust=match.arg(adjust, c('none','weighted.mean','scale'))
+
 	pars=list(kernel=kernel, weight.trt=weight.trt, adjust=adjust, bw=bw)
 #    weight=matrix(NA_real_, B, length(b))   ## this may require large memory when test=TRUE
 #    for(b.i in 1:length(b))
@@ -93,14 +97,15 @@ function(y, permutedTrt, bw, r=seq_len(NCOL(y)), test=FALSE,
     structure(drop(ans), parameters=pars, midp=midp.empirical(mrpp.stats), class='grad.smoothp')
 }
 
-p.value.grad.smoothp = function(x, type=c('keep1','drop1'),...)
+p.value.grad.smoothp = function(x, type=c('keep1','drop1','add1'),...)
 {
 	if(attr(x, 'parameters')$adjust!='none') return(rep(NA_real_, length(x)))
 	type=match.arg(type)
 	x0=x; attributes(x0)=NULL
 	switch(type, 
 		drop1 = attr(x, 'midp') - x0, 
-		keep1 = attr(x, 'midp') - sum(x0) + x0
+		keep1 = attr(x, 'midp') - sum(x0) + x0, 
+		add1 = attr(x, 'midp') + x0
 	)
 }
 
@@ -130,7 +135,7 @@ hessian.smoothp <-
 function(y, permutedTrt, r=seq_len(NCOL(y)), test=FALSE, 
         distObj=dist(y), 
         mrpp.stats=mrpp.test.dist(distObj,permutedTrt=permutedTrt,weight.trt=weight.trt)$all.statistics,
-        kernel='gaussian', bw=bw.mse.pdf.asym(mrpp.stats), #cperm.mat, 
+        kernel='triweight', bw=bw.mse.pdf.asym(mrpp.stats), #cperm.mat, 
         weight.trt="df", scale=1, standardized=FALSE)
 ## y=N-by-p data matrix; r=dimension index; 
 {

@@ -36,7 +36,7 @@ bw.range=function(x, length=200, lower=.05, upper=.95, safety=100)
 
 bw.smoothp <-
 function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL, 
-	distFunc=dist,  kernel='gaussian', 
+	distFunc=dist,  kernel='biweight', 
 	method='sym1', verbose=TRUE, ...)
 ## y=N-by-p data matrix; b=permutation index for the 1st trt; r=dimension index; 
 {

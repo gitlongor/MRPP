@@ -118,6 +118,7 @@ vech=function(x){
 }		
 
 .kernels=c("gaussian", "uniform", "rectangular", "epanechnikov", "triangular", "biweight", 'triweight', 'tricube',"logistic","cosine")
+.smooth.kernels=c("gaussian", "biweight", 'triweight', 'tricube',"logistic","cosine")
 
 sinc =function(x){
 	s2=x*x; 
