@@ -1,3 +1,7 @@
+(R_CHECK_TIMINGS_ = Sys.getenv('_R_CHECK_TIMINGS_') != '')
+if(!R_CHECK_TIMINGS_){
+
+if(interactive()){
 #######  INSTALLATION OF MRPP PACKAGE VERSION 1.1-20170715-1120
 setRepositories() # CRAN and BioC software should be selected at the minimum
 chooseCRANmirror()
@@ -6,7 +10,7 @@ chooseBioCmirror()
 install.packages(c("gmp", "partitions", "QuasiSeq", "varComp", "moments", "PDQutils","devtools"))
 ## install MRPP package itself
 devtools::install_github('gitlongor/MRPP', ref='20170715-1120')
-
+}
 
 library(MRPP)
 #######  PERFORMING MRPP TESTS
@@ -70,3 +74,4 @@ iota_approx_to_tau=grad.smoothp(x, permutedTrt=permutedTrt, mrpp.stats=mrpp.stat
 plot(iota_approx_to_tau, tau); abline(0,1) # compare
 
 
+}
