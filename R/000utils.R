@@ -1,4 +1,5 @@
-constEnv=new.env()
+constEnv=new.env(hash=TRUE, size=55L)
+pkgEnv=parent.env(constEnv)
 constEnv$oneThird = 1/3
 constEnv$oneSixth = 1/6
 constEnv$twoThirds = 2/3
@@ -17,6 +18,36 @@ constEnv$sev0d81 = 70/81
 constEnv$one0d27 = 10/27
 constEnv$sev81 = 7/81
 constEnv$thr5d54 = 35/54
+# for fourier.kernel
+constEnv$iroot.2pi=1/sqrt(2*base::pi)
+constEnv$pipi=base::pi^2
+constEnv$one12=1/12; constEnv$one360=1/360
+constEnv$one280=1/280
+constEnv$one14=1/14; constEnv$one504=1/504; constEnv$one33264=1/33264
+constEnv$one18=1/18; constEnv$one792=1/792; constEnv$one61776=1/61776
+constEnv$three5d486=35/486; constEnv$one528=1/528; constEnv$one37440=1/37440; constEnv$one4199040=1/4199040
+constEnv$one6=1/6; constEnv$seven360=7/360; constEnv$three1d15120=31/15120
+constEnv$two80d9=280/9
+# for krRkernel
+constEnv$halfIrootPi=.5/sqrt(base::pi)
+constEnv$halfm4dpipi=.5-4/base::pi^2
+constEnv$five7=5/7
+constEnv$three50d429=350/429
+constEnv$one75d247=175/249
+constEnv$pipid6=base::pi^2/6
+constEnv$pipid8=base::pi^2/8
+constEnv$pipid16=base::pi^2/16
+constEnv$twodpipi=2/base::pi^2
+# for d2dkernel
+constEnv$ilogit=make.link('logit')$linkinv
+constEnv$one5d4=15/4
+constEnv$none05d16=-105/16
+constEnv$none40d9=-140/9
+constEnv$twodpi=2/base::pi
+constEnv$npi3d16=-base::pi^3/16
+# for dkernel
+constEnv$pid4=base::pi/4
+constEnv$pid2=base::pi/2
 
 ## constants used by 4th order cumulants
 constEnv$.order4.S2P.mat=matrix(c(
@@ -117,14 +148,18 @@ vech=function(x){
 	x[lower.tri(x, diag=TRUE)]
 }		
 
-.kernels=c("gaussian", "uniform", "rectangular", "epanechnikov", "triangular", "biweight", 'triweight', 'tricube',"logistic","cosine")
-.smooth.kernels=c("gaussian", "biweight", 'triweight', 'tricube',"logistic","cosine")
 
-sinc =function(x){
+.smooth2.kernels=c("gaussian", 'triweight', 'tricube',"logistic",'sech')
+.smooth1.kernels=c(.smooth2.kernels, 'biweight')
+.smooth0.kernels=c(.smooth1.kernels, 'epanechnikov','triangular','cosine')
+.kernels=c(.smooth0.kernels, 'uniform', 'rectangular')
+
+sinc =eval(substitute(function(x){
 	s2=x*x; 
 	ans=sin(x)/x 
 	idx=which(abs(x)<1e-2) ## close to 0/0 region: taylor series
 	ans[idx]=(1 - s2[idx]*oneSixth + s2[idx]*s2[idx]*one120)
 	ans		
-}
-environment(sinc)=constEnv
+},
+constEnv))
+attr(sinc, 'srcref')=NULL

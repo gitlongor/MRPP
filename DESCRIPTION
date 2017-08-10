@@ -1,7 +1,7 @@
 Package: MRPP
 Type: Package
 Title: Multiresponse Permutation Procedure and Variable Selection Methods
-Version: 1.1-20170810-1339
+Version: 1.1-20170810-1739
 Date: 2017-08-10
 Authors@R: c(
   person("Long", "Qu", role=c("aut", "cre","ctb",'trl'), email="rtistician@gmail.com"), 

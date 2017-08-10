@@ -1,83 +1,104 @@
-pkernel=function(kernel= .kernels)
-{## Optimized based on the fact that ^2 and * are faster than other ^ powers
-	thr5d32=two1d32=five32=sev0d81=one0d27=sev81=thr5d54=NULL
+skernel=function(kernel= .kernels)
+{# support of kernel dist'n
 	kernel=match.arg(kernel)
-	ans=switch(kernel,
+	switch(kernel,
+	cosine = ,
+	uniform = , rectangular = ,
+	triangular = ,
+	epanechnikov = ,
+	biweight = ,
+	triweight = ,
+	tricube = c(-1,1),
+	gaussian=,
+	logistic =,
+	sech=c(-Inf,Inf))
+}
+
+
+pkernel = eval(substitute(
+function(kernel= .kernels)
+{# cdf of kernel dist'n
+## Optimized based on the fact that ^2 and * are faster than other ^ powers
+	kernel=match.arg(kernel)
+	switch(kernel,
 	gaussian=pnorm,
-	cosine = function(x){
-		ans=numeric( length(x))
-		idx = which(abs(x)<1)
-		ans[idx]=0.5 * ( 1 + sin(1.5707963267948966 *x[idx]))
-		ans[x>=1]=1
-		attributes(ans)=attributes(x)
+	cosine = function(q){
+		ans=numeric( length(q))
+		idx = which(abs(q)<1)
+		ans[idx]=0.5 * ( 1 + sin(pid2 *q[idx]))
+		ans[q>=1]=1
+		attributes(ans)=attributes(q)
 		ans
 	},
-	uniform = , rectangular = function(x){
-		ans=numeric( length(x))
-		idx = which(abs(x)<1)
-		ans[idx]=0.5 * ( 1 + x[idx])
-		ans[x>=1]=1
-		attributes(ans)=attributes(x)
+	uniform = , rectangular = function(q){
+		ans=numeric( length(q))
+		idx = which(abs(q)<1)
+		ans[idx]=0.5 * ( 1 + q[idx])
+		ans[q>=1]=1
+		attributes(ans)=attributes(q)
 		ans
 	},
-	triangular = function(x){
-		ans=numeric( length(x))
-		idx = which(abs(x)<1)
-		x0=x[idx]; ans[idx] = tmp=.5*(1-abs(x0))^2
+	triangular = function(q){
+		ans=numeric( length(q))
+		idx = which(abs(q)<1)
+		x0=q[idx]; ans[idx] = tmp=.5*(1-abs(x0))^2
 		idx0=which(x0>0)
 		ans[idx[idx0]]=1-tmp[idx0]
-		ans[x>=1]=1
-		attributes(ans)=attributes(x)
+		ans[q>=1]=1
+		attributes(ans)=attributes(q)
 		ans
 	},
-	epanechnikov = function(x){
-		ans=numeric( length(x))
-		idx = which(abs(x)<1)
-		x0=x[idx]
+	epanechnikov = function(q){
+		ans=numeric( length(q))
+		idx = which(abs(q)<1)
+		x0=q[idx]
 		ans[idx]=0.5 + x0* ( 0.75 - 0.25 *x0*x0)
-		ans[x>=1]=1
-		attributes(ans)=attributes(x)
+		ans[q>=1]=1
+		attributes(ans)=attributes(q)
 		ans
 	},
-	biweight = function(x){
-		ans=numeric( length(x))
-		idx = which(abs(x)<1)
-		x0=x[idx]
+	biweight = function(q){
+		ans=numeric( length(q))
+		idx = which(abs(q)<1)
+		x0=q[idx]
 		x02=x0^2
 		ans[idx]=0.5 + x0*(0.9375 + x02*(0.1875*x02-0.625))
-		ans[x>=1]=1
-		attributes(ans)=attributes(x)
+		ans[q>=1]=1
+		attributes(ans)=attributes(q)
 		ans
 	},
-	triweight = function(x){
-		ans=numeric( length(x))
-		idx = which(abs(x)<1)
-		x0=x[idx]
+	triweight = function(q){
+		ans=numeric( length(q))
+		idx = which(abs(q)<1)
+		x0=q[idx]
 		x02 = x0 ^2; #x03 = x02 * x0
 		ans[idx]=0.5 + x0*(thr5d32 + x02*(x02*(two1d32 - five32*x02) -thr5d32))
-		ans[x>=1]=1
-		attributes(ans)=attributes(x)
+		ans[q>=1]=1
+		attributes(ans)=attributes(q)
 		ans
 	},
-	tricube = function(x){
-		ans=numeric( length(x))
-		idx = which(abs(x)<1)
-		x0=x[idx]
+	tricube = function(q){
+		ans=numeric( length(q))
+		idx = which(abs(q)<1)
+		x0=q[idx]
 		sig = sign(x0)
 		x03=x0*x0*x0; 
 		ans[idx]=0.5+x0*(sev0d81 + x03 * (x03*(one0d27-sev81*sig*x03) -sig*thr5d54))
-		ans[x>=1]=1
-		attributes(ans)=attributes(x)
+		ans[q>=1]=1
+		attributes(ans)=attributes(q)
 		ans
 	},
-	logistic =plogis)
-	if(any(kernel==c('triweight','tricube'))) environment(ans)=constEnv
-	ans
-}
-#formals(pkernel)$kernel=.kernels
+	logistic =plogis,
+	sech = function(q)twodpi*atan(exp(q))
+	) # of switch
+	
+},  # of function
+constEnv) # of substitute
+) # of eval
+attr(pkernel, 'srcref')=NULL
 
-dkernel=function(kernel= .kernels)
-{
+dkernel=eval(substitute(function(kernel= .kernels)
+{# pdf of kernel dist'n
 	kernel=match.arg(kernel)
 	switch(kernel,
 	gaussian=dnorm,
@@ -85,7 +106,7 @@ dkernel=function(kernel= .kernels)
 		ans=numeric( length(x))
 		idx = which(abs(x)<1)
 		x0=x[idx]
-		ans[idx]=0.78539816339744828*cos(1.5707963267948966*x0)
+		ans[idx]=pid4*cos(pid2*x0)
 		attributes(ans)=attributes(x)
 		ans
 	},
@@ -130,90 +151,193 @@ dkernel=function(kernel= .kernels)
 		ans=numeric( length(x))
 		idx = which(abs(x)<1)
 		ax0=abs(x[idx]); tmp=1-ax0*ax0*ax0
-		ans[idx]=0.86419753086419748*tmp*tmp*tmp
+		ans[idx]=sev0d81*tmp*tmp*tmp
 		attributes(ans)=attributes(x)
 		ans
 	},
-	logistic =dlogis)
+	logistic =dlogis, 
+	sech = function(x)twodpi/(exp(x)+exp(-x))
+	) # of switch
 }
-#formals(dkernel)$kernel=.kernels
+,constEnv) # of substitute
+) # of eval
+attr(dkernel, 'srcref')=NULL
 
-fourier.kernel=local({
-	iroot.2pi=one12=one14=one18=one280=one33264=
-	one360=one37440=one4199040=one504=one528=one6=
-	one61776=one792=pipi=seven360=three1d15120=
-	three5d486=two80d9=NULL
-function(kernel= .kernels, root.2pi=TRUE)
+krRkernel=eval(substitute(function(kernel=.kernels)
+{# Parzen (1962) constants used in asym. optimal bandwidth
+	kernel=match.arg(kernel)
+	
+	switch(kernel,
+	#gaussian=c(kr=.5, r=2,R=.5/sqrt(base::pi)),
+	gaussian=c(kr=.5, r=2,R=halfIrootPi),
+	#cosine =c(kr=.5-4/base::pi^2, r=2, R=base::pi^2/16),
+	cosine =c(kr=halfm4dpipi, r=2, R=pipid16),
+	uniform = , rectangular = c(kr=oneSixth, r=2, R=.5),
+	triangular=c(kr=one12, r=2, R=twoThirds),
+	epanechnikov=c(kr=.1,r=2,R=0.6),
+	#biweight=c(kr=1/14,r=2,R=5/7),
+	biweight=c(kr=one14,r=2,R=five7),
+	#triweight=c(kr=1/18,r=2,R=350/429),
+	triweight=c(kr=one18,r=2,R=three50d429),
+	#tricube=c(kr=35/486,r=2,R=175/247),
+	tricube=c(kr=three5d486,r=2,R=one75d247),
+	#logistic=c(kr=base::pi^2/6,r=2,R=1/6),
+	logistic=c(kr=pipid6,r=2,R=oneSixth),
+	#sech=c(kr=base::pi^2/8,r=2,R=2/base::pi^2)
+	sech=c(kr=pipid8,r=2,R=twodpipi)
+	)# of switch
+}
+, constEnv) # of substitute
+) # of eval
+attr(krRkernel,'srcref')=NULL
+
+d2dkernel=eval(substitute(function(kernel=.kernels)
 {
 	kernel=match.arg(kernel)
-	enclEnv=new.env(hash=TRUE, size=37L)
-	enclEnv$iroot.2pi= if(root.2pi) 1/sqrt(2*base::pi) else 1
-	enclEnv$pipi=base::pi^2
-	enclEnv$one12=1/12; enclEnv$one360=1/360
-	enclEnv$one280=1/280
-	enclEnv$one14=1/14; enclEnv$one504=1/504; enclEnv$one33264=1/33264
-	enclEnv$one18=1/18; enclEnv$one792=1/792; enclEnv$one61776=1/61776
-	enclEnv$three5d486=35/486; enclEnv$one528=1/528; enclEnv$one37440=1/37440; enclEnv$one4199040=1/4199040
-	enclEnv$one6=1/6; enclEnv$seven360=7/360; enclEnv$three1d15120=31/15120
-	enclEnv$two80d9=280/9
-	ans=switch(kernel,
-	gaussian=function(s) exp(-.5*s*s) *iroot.2pi,
-	cosine=function(s)	pipi*cos(s)/(pipi-4*s*s) * iroot.2pi, 
+	switch(kernel,
+		gaussian=function(x){
+			x2=x*x; #iroot.2pi=1/sqrt(2*base::pi)
+			exp(-.5*x2) * (x2-1)*iroot.2pi
+		},
+		cosine=function(x){
+			ans=numeric(length(x))
+			ax=abs(x)
+			ans[ax<1]=npi3d16*cos(pid2*x)
+			ans[ax==1]=NA_real_
+			attributes(ans)=attributes(x)
+			ans
+		},
+		uniform=, rectangular=function(x){
+			ans=numeric(length(x))
+			ans[abs(x)==1]=NA_real_
+			attributes(ans)=attributes(x)
+			ans
+		}, 
+		triangular=function(x){
+			ans=numeric(length(x))
+			ans[abs(x)==1]=NA_real_
+			ans[x==0]=NA_real_
+			attributes(ans)=attributes(x)
+			ans
+		}, 
+		epanechnikov=function(x){
+			ans=numeric(length(x))
+			ax=abs(x)
+			ans[ax<1]=-1.5
+			ans[ax==1]=NA_real_
+			attributes(ans)=attributes(x)
+			ans
+		},
+		biweight=function(x){
+			ans=numeric(length(x))
+			ax=abs(x); x=x[ax<1]
+			ans[ax==1]=NA_real_
+			ans[ax<1]=one5d4 * (3*x* x-1)
+			attributes(ans)=attributes(x)
+			ans
+		},
+		triweight=function(x){
+			ans=numeric(length(x))
+			ax=abs(x); x2=x[ax<1]^2
+			ans[ax<1]=none05d16 * (1 - 6 *x2 + 5 *x2*x2)
+			attributes(ans)=attributes(x)
+			ans
+		},
+		tricube=function(x){
+			ax=abs(x); idx=which(ax<1); 
+			ax=ax[idx]; ax3=ax^3
+			ans=numeric(length(x))
+			ans[idx]=none40d9* (ax - 5 *ax3*ax + 4 *ax3*ax3*ax)
+			attributes(ans)=attributes(x)
+			ans
+		},
+		logistic=function(x){
+			# 1/8 *(cosh(x)-2)/cosh(x/2)^4 # this over-flows
+			
+			ilogit.x=ilogit(as.numeric(x))
+			ilogit.x1_x=ilogit.x*(1-ilogit.x)
+			
+			ilogit.x1_x*((2*ilogit.x-1)^2-2*ilogit.x1_x)
+		},
+		sech=function(x){
+			ax=abs(x) # even function; the code below works better for positive x's 
+			ilogit.2x=ilogit(2*ax)
+			ilogit.2x1_2x=ilogit.2x*(1-ilogit.2x)
+			
+			twodpi*ilogit.2x*((2*ilogit.2x-1)^2-4*ilogit.2x1_2x)/exp(ax)
+		}
+	) # of switch
+},
+constEnv) # of substitute
+) # of eval 
+attr(d2dkernel,'srcref')=NULL
+
+fourier.kernel=eval(substitute(function(kernel= .kernels, root.2pi=TRUE)
+{
+	kernel=match.arg(kernel)
+	iroot.2pi.0 =if(root.2pi) iroot.2pi else 1
+	
+	switch(kernel,
+	gaussian=function(s) exp(-.5*s*s) *iroot.2pi.0,
+	cosine=function(s)	pipi*cos(s)/(pipi-4*s*s) * iroot.2pi.0, 
 	uniform = , rectangular = function(s){
-		sinc(s) * iroot.2pi
+		sinc(s) * iroot.2pi.0
 	},
 	triangular = function(s){
 		s2=s*s; 
-		ans=2*(1-cos(s))/s2 * iroot.2pi
+		ans=2*(1-cos(s))/s2 * iroot.2pi.0
 		idx=which(abs(s)<1e-2) ## close to 0/0 region: taylor series
-		ans[idx]=(1 + s2[idx]*(s2[idx]*one360 - one12)) * iroot.2pi
+		ans[idx]=(1 + s2[idx]*(s2[idx]*one360 - one12)) * iroot.2pi.0
 		ans	
 	},
 	epanechnikov = function(s){
 		s2=s*s; 
-		ans=3*(sin(s)-s*cos(s))/(s2*s) * iroot.2pi
+		ans=3*(sin(s)-s*cos(s))/(s2*s) * iroot.2pi.0
 		idx=which(abs(s)<1e-2) ## close to 0/0 region: taylor series
-		ans[idx]=(1 + s2[idx]*(s2[idx]*one280-0.1)) * iroot.2pi
+		ans[idx]=(1 + s2[idx]*(s2[idx]*one280-0.1)) * iroot.2pi.0
 		ans
 	},
 	biweight = function(s){
 		ss=sin(s); s2=s*s; s4=s2*s2
-		ans=((45*(ss - s*cos(s)) - 15*s2*ss))/(s4*s) * iroot.2pi
+		ans=((45*(ss - s*cos(s)) - 15*s2*ss))/(s4*s) * iroot.2pi.0
 		idx=which(abs(s)<5e-2) ## close to 0/0 region: taylor series
-		ans[idx]=(1 + s2[idx]*(s2[idx]*(one504 - s2[idx]*one33264)--one14)) * iroot.2pi
+		ans[idx]=(1 + s2[idx]*(s2[idx]*(one504 - s2[idx]*one33264)--one14)) * iroot.2pi.0
 		ans
 	},
 	triweight = function(s){
 		cs=cos(s); ss=sin(s);
 		s2=s*s; s4=s2*s2; s6=s4*s2; 
-		ans=(105*(s2*s*cs + 15*(ss -s*cs) - 6*s2*ss))/(s6*s) *iroot.2pi
+		ans=(105*(s2*s*cs + 15*(ss -s*cs) - 6*s2*ss))/(s6*s) *iroot.2pi.0
 		idx=which(abs(s)<1e-1) ## close to 0/0 region
-		ans[idx]=(1 + s2[idx]*( s2[idx]*(one792 - s2[idx]*one61776) -one18))* iroot.2pi
+		ans[idx]=(1 + s2[idx]*( s2[idx]*(one792 - s2[idx]*one61776) -one18))* iroot.2pi.0
 		ans
 	},
 	tricube = function(s){
 		cs=cos(s); ss=sin(s);
 		s2=s*s; s4=s2*s2; s6=s4*s2
 		ans=(two80d9*(20160 - s6 - 9*(2240 - 1120*s2 + 80*s4 - s6)*cs - 
-			s*(20160 - 3240*s2 + 108*s4)*ss))/(s4*s6) *iroot.2pi
+			s*(20160 - 3240*s2 + 108*s4)*ss))/(s4*s6) *iroot.2pi.0
 		idx=which(abs(s)<3.5e-1) ## close to 0/0 region
-		ans[idx]=(1 + s2[idx]*(s2[idx]*(one528 - s2[idx]*(s2[idx]*one4199040-one37440)) -three5d486)) *iroot.2pi
+		ans[idx]=(1 + s2[idx]*(s2[idx]*(one528 - s2[idx]*(s2[idx]*one4199040-one37440)) -three5d486)) *iroot.2pi.0
 		ans
    },
 	logistic =function(s){
 		ps=base::pi*s
-		ans=ps/sinh(ps) *iroot.2pi
+		ans=ps/sinh(ps) *iroot.2pi.0
 		idx=which(abs(s)<1e-2) ## close to 0/0 region
 		ps2=ps*ps; ps4=ps2*ps2
-		ans[idx]=(1 + ps2[idx]*(ps2[idx]*(seven360 - ps2[idx]*three1d15120) -one6)) *iroot.2pi
+		ans[idx]=(1 + ps2[idx]*(ps2[idx]*(seven360 - ps2[idx]*three1d15120) -one6)) *iroot.2pi.0
 		ans
+	},
+	sech = function(s){
+		1/cosh(pid2 *s) *iroot.2pi.0
 	}
-	)
-	environment(ans)=enclEnv
-	ans
+	)  # of switch 
 }
-#formals(fourier.kernel)$kernel=.kernels
-})
+,constEnv) # of substitute
+) # of eval 
+attr(fourier.kernel, 'srcref')=NULL
+
 
 pkde=function(x, bw=bw.nrd, kernel=.kernels)
 {
@@ -226,16 +350,16 @@ pkde=function(x, bw=bw.nrd, kernel=.kernels)
 	stopifnot(Kernel(-Inf)==0 && Kernel(Inf)==1)
 
 	knots=x; n=length(knots); rm(x)
-	function(x)
-	{	nx=length(x)
-		xdiff=x-rep(knots, each=nx)
+	function(q)
+	{	nx=length(q)
+		xdiff=q-rep(knots, each=nx)
 		dim(xdiff) = c(nx, n)
 		ans=.rowMeans(Kernel(xdiff/bw), nx, n)
-		attributes(ans)=attributes(x)
+		attributes(ans)=attributes(q)
 		ans
 	}
 }
-#formals(pkde)$kernel=.kernels
+
 
 if(FALSE) {
 dkde=function(x, bw=bw.nrd, kernel=.kernels)
@@ -256,11 +380,6 @@ dkde=function(x, bw=bw.nrd, kernel=.kernels)
 		attributes(ans)=attributes(x)
 		ans
 	}
-}
-dkde=function(x, bw=bw.nrd, kernel=.kernels)
-{## not sure what R does when kernel is not gaussian
-	fit=density(x, bw=bw, kernel=kernel, from=min(x)-3*bw, to=max(x)+3*bw, n=nextn(length(x)*2L,2L))
-	approxfun(fit$x, fit$y)
 }
 }
 
@@ -308,4 +427,4 @@ dkde=function(x, bw=bw.nrd, kernel=.kernels, from=min(x)-3*median(bw), to=max(x)
 		environment=environment()
 	)
 }
-#formals(dkde)$kernel=.kernels
+

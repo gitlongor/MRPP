@@ -15,7 +15,7 @@ importFrom(PDQutils, moment2cumulant,cumulant2moment,dapx_gca,papx_gca)
              "density", "dgamma", "dist", "dlogis", "dnorm", "fft",
              "median", "model.frame", "model.frame.default", "nextn",
              "optimize", "pbeta", "pgamma", "plogis", "pnorm", "qgamma",
-             "quantile", "rgamma", "rmultinom", "terms")
+             "quantile", "rgamma", "rmultinom", "terms", 'make.link')
   importFrom("utils", "combn", "tail")
 export(
 	mrpp,
@@ -36,7 +36,7 @@ export(
 	
 	transform.matrix, transform.numeric, 
 	
-	.kernels, .smooth.kernels, pkernel, dkernel, pkde, dkde, fourier.kernel,
+	.kernels, .smooth0.kernels, .smooth1.kernels, .smooth2.kernels, pkernel, dkernel, pkde, dkde, fourier.kernel,
 	
 	p.value, 
 	
