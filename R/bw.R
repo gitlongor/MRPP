@@ -1,24 +1,23 @@
 bw.mse.pdf.asym=function(x,iter.max=1L,eps=1e-6,start.bw=bw.nrd, kernel='gaussian', verbose=FALSE)
-{#require(ks)
+{
     if(is.function(start.bw)) bw0=start.bw(x)
     if(is.numeric(start.bw)) bw0=start.bw
     if(is.character(start.bw)) bw0=call(start.bw, x)
 
-    Rkern=density(x,bw0,from=x[1L],to=x[1L],n=1L,kernel=kernel, give.Rkern=TRUE)
-
+	kr.r.R=krRkernel(kernel);
+		kr=kr.r.R['kr'];  Rk=kr.r.R['R']
+		stopifnot(kr.r.R['r']==2)
 	dkern=dkernel(kernel)
+	d2dkern=d2dkernel(kernel)
+    
     n.iter=1L
     xdiff=x[1L]-x
     repeat{
-#### these lines are using the ks:::drvkde and or ks::kdde functions and  are replaced by explicit calculations
-#        f.1=density(x,bw0,from=x[1],to=x[1],n=1)$y
-#        ddf=drvkde(x,2,bw0,se=FALSE)
-#        ddf.1=approx(ddf$x.grid[[1]],ddf$est,xout=x[1])$y
             tmp=xdiff/bw0
             f.1=mean(dkern(tmp))/bw0
-            ddf.1=mean(dkern(tmp)*(tmp*tmp-1))/bw0/bw0/bw0
-        bw=(f.1/ddf.1/ddf.1*Rkern/length(x))^.2
-        if(abs(bw-bw0)<eps || n.iter>=iter.max) return(bw)
+            ddf.1=mean(d2dkern(tmp))/bw0^3
+        bw=(f.1*Rk)/(length(x)*4*(kr*ddf.1)^2)^.2
+        if(abs(bw-bw0)<eps || n.iter>=iter.max) return(bw[[1L]])
         if(verbose && isTRUE(n.iter%%verbose==0))cat(bw,fill=TRUE)
         bw0=bw
         n.iter=n.iter+1
@@ -32,6 +31,20 @@ bw.range=function(x, length=200, lower=.05, upper=.95, safety=100)
 	hi = diff(quantile(uniqstat, prob=c(lower, upper)))
 	lf = log10(safety)
 	10^seq(log10(lo)-lf, log10(hi)+lf, length=length)
+}
+
+bw.safety=function(x, kernel, nNonzero=3L)
+{
+	if(length(x)<nNonzero+1L){
+	}
+	supp=skernel(kernel)
+	if(all(is.infinite(supp))) return(0)
+	
+	diffs=x[1L]-x
+	u.a.d=unique(abs(diffs))
+	ord=order(u.a.d)
+	n.u.a.d=length(u.a.d)
+	if(nNonzero<n.u.a.d) u.a.d[ord[nNonzero+1L]] else tail(u.a.d,1L)
 }
 
 bw.smoothp <-
@@ -53,6 +66,8 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 	idx=names(lst)%in%nms
 	mrpp = do.call('mrpp.test.dist', c(lst[idx],list(method='permutation')))
 	
+	lower.bound = bw.safety(mrpp$all.statistics, kernel)
+	
 	plot.expr=expression({
 		hist(mrpp$all.statistics, breaks='FD', freq=FALSE, main='Density of MRPP statistics', ylab='Density', xlab='MRPP z-statistics')
 		pdf.final=dkde(mrpp$all.statistics, ans, kernel)
@@ -72,6 +87,10 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 		nms=names(lst)
 		idx= nms=='' || nms%in%names(formals(bw.mse.pdf.asym))
 		ans = do.call('bw.mse.pdf.asym', lst[idx])
+		if(ans<lower.bound){
+			ans=lower.bound
+			if(verbose)warning('bandwidth selected is too small; replaced by a safer lower bound.')
+		}
 		if(verbose) {
 			dev.new(noRStudioGD=TRUE)
 			eval(plot.expr)
@@ -83,13 +102,21 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 	weight.trt = attr(mrpp$parameter, 'weight.trt')
 	
 	if(missing(bw) || is.null(bw)) bw = bw.range(mrpp$all.statistics)	
+	bw=bw[bw>=lower.bound]
 	n.bw=length(bw)
+	if(n.bw==0L) stop('bandwidth range is not suitable')
 	
 	if(method=='match.pear3' || method=='match.pear3gca') {
 		cums=cumulant(mrpp(y[,r,drop=FALSE], permutedTrt=permutedTrt, weight.trt=weight.trt, distFunc=distFunc,idxOnly=TRUE),order=1:4); cums[2L]=sqrt(cums[2L]); cums[3L]=cums[3L]/cums[2L]^3; cums[4L]=cums[4L]/cums[2L]^4
 		pdf0x = if(method=='match.pear3') dpearson3(mrpp$all.statistics, cums[1L], cums[2L], cums[3L]) else 
 		dpearson3gca(mrpp$all.statistics, cums[1L], cums[2L], cums[3L], cums[4L]) 
-		return(bw.matchpdf(mrpp$all.statistics, kernel=kernel, pdf=pdf0x, bw=bw, verbose=verbose, title=switch(method, match.pear3="Match Pearson III Dist'n", match.pear3gca="Match GCA Adjust. of Pearson III Dist'n")))
+		ans=bw.matchpdf(mrpp$all.statistics, kernel=kernel, pdf=pdf0x, bw=bw, verbose=verbose, title=switch(method, match.pear3="Match Pearson III Dist'n", match.pear3gca="Match GCA Adjust. of Pearson III Dist'n"))
+		if(ans<lower.bound){
+			ans=lower.bound
+			if(verbose) warning('bandwidth selected is too small; replaced by a safer lower bound.')
+		}
+		return(ans)
+
 	}
 	
 	## pre-computing all.ddelta.dw in grad.smoothp
@@ -115,7 +142,13 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 			eval(plot.expr)
 		}
 		if(idx==1L || idx==length(bw))warning('optimal bandwidth occurs at the boundary')
-		return(  exp(mean(log(ans)))  )
+		ans =  exp(mean(log(ans)))  
+		if(ans<lower.bound){
+			ans=lower.bound
+			if(verbose)warning('bandwidth selected is too small; replaced by a safer lower bound.')
+		}
+		return(ans)
+		
 	}
 	
 	if(method%in%c('drop1','sym1','dropadd1', 'dropaddsym1')){
@@ -154,6 +187,11 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 	idx=which.min(sses)
 	ans=bw[idx]
 	min.sse=sses[idx]
+
+	if(ans<lower.bound){
+		ans=lower.bound
+		if(verbose)warning('bandwidth selected is too small; replaced by a safer lower bound.')
+	}
 	
 	if(verbose){
 		dev.new(width=10, height=5, noRStudioGD=TRUE)
@@ -172,7 +210,9 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 
 		eval(plot.expr)
 	}
+	
 	ans
+	
 }
 
 bw.matchpdf=function(x, kernel=.kernels, pdf, bw = NULL, verbose=FALSE, title=NULL)
@@ -239,7 +279,7 @@ bw.matchpdf=function(x, kernel=.kernels, pdf, bw = NULL, verbose=FALSE, title=NU
 	if(any( ans==range(bw) ) )warning('optimal bandwidth occurs at the boundary')
 	ans
 }
-#formals(bw.matchpdf)$kernel=.kernels
+
 
 if(FALSE){
 
