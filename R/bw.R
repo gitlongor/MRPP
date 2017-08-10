@@ -33,18 +33,26 @@ bw.range=function(x, length=200, lower=.05, upper=.95, safety=100)
 	10^seq(log10(lo)-lf, log10(hi)+lf, length=length)
 }
 
-bw.safety=function(x, kernel, nNonzero=3L)
+bw.safety=function(x, kernel, nNonzero=3L, pdf.cut=1e-3)
 {
 	if(length(x)<nNonzero+1L){
 	}
-	supp=skernel(kernel)
-	if(all(is.infinite(supp))) return(0)
+	k=1/pdf.cut
+	supp=skernel(kernel)[2L]
+	if(is.infinite(supp))
+		supp=switch(kernel,
+			gaussian=sqrt(2*log(k/sqrt(2*base::pi))),
+			logistic=log(.5* k + .5*sqrt((-4 + k)* k)-1),
+			sech=log((k + sqrt(k*k - base::pi^2))/base::pi)
+		)
+	
 	
 	diffs=x[1L]-x
 	u.a.d=unique(abs(diffs))
 	ord=order(u.a.d)
 	n.u.a.d=length(u.a.d)
-	if(nNonzero<n.u.a.d) u.a.d[ord[nNonzero+1L]] else tail(u.a.d,1L)
+	ans0 = if(nNonzero<n.u.a.d) u.a.d[ord[nNonzero+1L]] else tail(u.a.d,1L)
+	ans0 / supp
 }
 
 bw.smoothp <-
