@@ -156,7 +156,8 @@ dkernel=eval(substitute(function(kernel= .kernels)
 		ans
 	},
 	logistic =dlogis, 
-	sech = function(x)twodpi/(exp(x)+exp(-x))
+	sech = function(x)#twodpi/(exp(x)+exp(-x))
+		onedpi/cosh(x)
 	) # of switch
 }
 ,constEnv) # of substitute

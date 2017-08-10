@@ -1,4 +1,4 @@
-constEnv=new.env(hash=TRUE, size=55L)
+constEnv=new.env(hash=TRUE, size=56L)
 pkgEnv=parent.env(constEnv)
 constEnv$oneThird = 1/3
 constEnv$oneSixth = 1/6
@@ -48,6 +48,7 @@ constEnv$npi3d16=-base::pi^3/16
 # for dkernel
 constEnv$pid4=base::pi/4
 constEnv$pid2=base::pi/2
+constEnv$onedpi=1/base::pi
 
 ## constants used by 4th order cumulants
 constEnv$.order4.S2P.mat=matrix(c(
