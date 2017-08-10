@@ -96,13 +96,7 @@ cumulant.default=function(x, order=1:4, ...)
 	ans = c(0, moment2cumulant(mu.raw[-1L]))
 	structure(ans[order+1L], names=as.character(order))
 }
-cumulant.mrpp=local({
-	## constants defined in constEnv
-	.order4.S2P.mat=
-	.order4.f.alpha=
-	.order4.P2D.ord=
-	rising.fact.int.bound=NULL
-	
+cumulant.mrpp=eval(substitute(	
 	function(x, order=1:4,...)
 	{
 		order=as.integer(order)
@@ -308,9 +302,9 @@ cumulant.mrpp=local({
 			ans[order==4L] = as.numeric(mean.delta4 - 4*mean.delta3*mu-3*mean.delta2^2 + 12*mean.delta2*mu2-6*mu2*mu2)
 		}
 		ans
-	}
-})
-environment(cumulant.mrpp)=constEnv
+	} ## of function
+  ,constEnv) ## of substitute
+) ## of eval
 
 if(FALSE){
 naiveEnumSum=function(ord,n, idx.List, delta, verbose=FALSE) ## enumeration of the summation in D functions
