@@ -12,7 +12,7 @@ Authors@R: c(
 Description: Multiresponse permutation procedure, permutation-based variable importance, backward response variable selection, penalized response variable selection, transformation of count data.
 Depends: R (>= 2.14.0), gmp
 Imports: partitions, QuasiSeq (>= 1.0.9), varComp (>= 0.2-0), moments, PDQutils
-Suggests: microbenchmark, combinat
+Suggests: microbenchmark, combinat, devtools
 NeedsCompilation: yes
 License: GPL (>=2)
 LazyLoad: yes
