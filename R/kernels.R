@@ -1,18 +1,43 @@
-skernel=function(kernel= .kernels)
-{# support of kernel dist'n
+skernel=eval(substitute(function(kernel= .kernels, eps=1e-3)
+{# (effective) support of kernel dist'n
 	kernel=match.arg(kernel)
-	switch(kernel,
-	cosine = ,
-	uniform = , rectangular = ,
-	triangular = ,
-	epanechnikov = ,
-	biweight = ,
-	triweight = ,
-	tricube = c(-1,1),
-	gaussian=,
-	logistic =,
-	sech=c(-Inf,Inf))
-}
+	if(eps==0){
+		switch(kernel,
+		cosine = ,
+		uniform = , rectangular = ,
+		triangular = ,
+		epanechnikov =, parabolic=,
+		biweight = , quartic=,
+		triweight = ,
+		tricube = c(-1,1),
+		gaussian=,normal=,
+		logistic =,
+		sech=c(-Inf,Inf))
+	}else{
+		k=1/eps
+		fix.root=function(rt, im.eps=1e-5){
+			im=Im(rt);re=Re(rt); 
+			idx=abs(im)<=im.eps & re<=1 & re>0; 
+			max(re[idx])
+		}
+
+		c(-1,1)*switch(kernel, 
+			cosine=2*acos(fourdpi/k)*onedpi,
+			uniform=, rectangular=1,
+			triangular=(k-1)/k,
+			epanechnikov=,parabolic=sqrt(1-fourThirds/k),
+			biweight=, quartic=fix.root(polyroot(c(-16+ 15 *k, 0,- 30* k,0, 15* k))),
+			triweight=fix.root(polyroot(c(32 - 35* k,0,105 *k ,0, - 105 *k,0 ,35* k))),
+			tricube=fix.root(polyroot(c(81 - 70 *k,0,0, 210 *k,0,0, - 210 *k ,0,0, 70* k))),
+			gaussian=,normal=sqrt(2*log(k*iroot.2pi)),
+			logistic=log(.5* k + .5*sqrt((-4 + k)* k)-1),
+			sech=log(k + sqrt(k*k - pipi))-logpi
+		)
+	}
+} #of function
+,constEnv ) # of substitute
+) # of eval 
+attr(skernel, 'srcref')=NULL
 
 
 pkernel = eval(substitute(
@@ -21,7 +46,7 @@ function(kernel= .kernels)
 ## Optimized based on the fact that ^2 and * are faster than other ^ powers
 	kernel=match.arg(kernel)
 	switch(kernel,
-	gaussian=pnorm,
+	gaussian=,normal=pnorm,
 	cosine = function(q){
 		ans=numeric( length(q))
 		idx = which(abs(q)<1)
@@ -48,7 +73,7 @@ function(kernel= .kernels)
 		attributes(ans)=attributes(q)
 		ans
 	},
-	epanechnikov = function(q){
+	epanechnikov =, parabolic= function(q){
 		ans=numeric( length(q))
 		idx = which(abs(q)<1)
 		x0=q[idx]
@@ -57,7 +82,7 @@ function(kernel= .kernels)
 		attributes(ans)=attributes(q)
 		ans
 	},
-	biweight = function(q){
+	biweight = , quartic=function(q){
 		ans=numeric( length(q))
 		idx = which(abs(q)<1)
 		x0=q[idx]
@@ -101,7 +126,7 @@ dkernel=eval(substitute(function(kernel= .kernels)
 {# pdf of kernel dist'n
 	kernel=match.arg(kernel)
 	switch(kernel,
-	gaussian=dnorm,
+	gaussian=,normal=dnorm,
 	cosine = function(x){
 		ans=numeric( length(x))
 		idx = which(abs(x)<1)
@@ -123,7 +148,7 @@ dkernel=eval(substitute(function(kernel= .kernels)
 		attributes(ans)=attributes(x)
 		ans
 	},
-	epanechnikov = function(x){
+	epanechnikov =, parabolic= function(x){
 		ans=numeric( length(x))
 		idx = which(abs(x)<1)
 		x0=x[idx]
@@ -131,7 +156,7 @@ dkernel=eval(substitute(function(kernel= .kernels)
 		attributes(ans)=attributes(x)
 		ans		
 	},
-	biweight = function(x){
+	biweight = , quartic=function(x){
 		ans=numeric( length(x))
 		idx = which(abs(x)<1)
 		x0=x[idx]
@@ -170,14 +195,14 @@ krRkernel=eval(substitute(function(kernel=.kernels)
 	
 	switch(kernel,
 	#gaussian=c(kr=.5, r=2,R=.5/sqrt(base::pi)),
-	gaussian=c(kr=.5, r=2,R=halfIrootPi),
+	gaussian=,normal=c(kr=.5, r=2,R=halfIrootPi),
 	#cosine =c(kr=.5-4/base::pi^2, r=2, R=base::pi^2/16),
 	cosine =c(kr=halfm4dpipi, r=2, R=pipid16),
 	uniform = , rectangular = c(kr=oneSixth, r=2, R=.5),
 	triangular=c(kr=one12, r=2, R=twoThirds),
-	epanechnikov=c(kr=.1,r=2,R=0.6),
+	epanechnikov=,parabolic=c(kr=.1,r=2,R=0.6),
 	#biweight=c(kr=1/14,r=2,R=5/7),
-	biweight=c(kr=one14,r=2,R=five7),
+	biweight=, quartic=c(kr=one14,r=2,R=five7),
 	#triweight=c(kr=1/18,r=2,R=350/429),
 	triweight=c(kr=one18,r=2,R=three50d429),
 	#tricube=c(kr=35/486,r=2,R=175/247),
@@ -196,7 +221,7 @@ d2dkernel=eval(substitute(function(kernel=.kernels)
 {
 	kernel=match.arg(kernel)
 	switch(kernel,
-		gaussian=function(x){
+		gaussian=,normal=function(x){
 			x2=x*x; #iroot.2pi=1/sqrt(2*base::pi)
 			exp(-.5*x2) * (x2-1)*iroot.2pi
 		},
@@ -221,7 +246,7 @@ d2dkernel=eval(substitute(function(kernel=.kernels)
 			attributes(ans)=attributes(x)
 			ans
 		}, 
-		epanechnikov=function(x){
+		epanechnikov=,parabolic=function(x){
 			ans=numeric(length(x))
 			ax=abs(x)
 			ans[ax<1]=-1.5
@@ -229,7 +254,7 @@ d2dkernel=eval(substitute(function(kernel=.kernels)
 			attributes(ans)=attributes(x)
 			ans
 		},
-		biweight=function(x){
+		biweight=, quartic=function(x){
 			ans=numeric(length(x))
 			ax=abs(x); x=x[ax<1]
 			ans[ax==1]=NA_real_
@@ -273,13 +298,13 @@ constEnv) # of substitute
 ) # of eval 
 attr(d2dkernel,'srcref')=NULL
 
-fourier.kernel=eval(substitute(function(kernel= .kernels, root.2pi=TRUE)
+ckernel=fourier.kernel=eval(substitute(function(kernel= .kernels, root.2pi=FALSE, const=NULL)
 {
 	kernel=match.arg(kernel)
 	iroot.2pi.0 =if(root.2pi) iroot.2pi else 1
 	
-	switch(kernel,
-	gaussian=function(s) exp(-.5*s*s) *iroot.2pi.0,
+	ans=switch(kernel,
+	gaussian=,normal=function(s) exp(-.5*s*s) *iroot.2pi.0,
 	cosine=function(s)	pipi*cos(s)/(pipi-4*s*s) * iroot.2pi.0, 
 	uniform = , rectangular = function(s){
 		sinc(s) * iroot.2pi.0
@@ -291,14 +316,14 @@ fourier.kernel=eval(substitute(function(kernel= .kernels, root.2pi=TRUE)
 		ans[idx]=(1 + s2[idx]*(s2[idx]*one360 - one12)) * iroot.2pi.0
 		ans	
 	},
-	epanechnikov = function(s){
+	epanechnikov =, parabolic= function(s){
 		s2=s*s; 
 		ans=3*(sin(s)-s*cos(s))/(s2*s) * iroot.2pi.0
 		idx=which(abs(s)<1e-2) ## close to 0/0 region: taylor series
 		ans[idx]=(1 + s2[idx]*(s2[idx]*one280-0.1)) * iroot.2pi.0
 		ans
 	},
-	biweight = function(s){
+	biweight = , quartic=function(s){
 		ss=sin(s); s2=s*s; s4=s2*s2
 		ans=((45*(ss - s*cos(s)) - 15*s2*ss))/(s4*s) * iroot.2pi.0
 		idx=which(abs(s)<5e-2) ## close to 0/0 region: taylor series
@@ -334,10 +359,47 @@ fourier.kernel=eval(substitute(function(kernel= .kernels, root.2pi=TRUE)
 		1/cosh(pid2 *s) *iroot.2pi.0
 	}
 	)  # of switch 
+	ans.const=numeric(0L)
+	if(!is.null(const)){
+		tmp.const=krRkernel(kernel)
+		
+		if(isTRUE(const)) const=c('exponent','coefficient')
+		if(is.character(const[1L])) const=pmatch(const, c('exponent','coefficient'), duplicates.ok=TRUE)
+		if(any('exponent'==const)) ans.const=c(ans.const, exponent=tmp.const['r'])
+		if(any('coefficient'==const)) ans.const=c(ans.const, coefficient=tmp.const['kr'])
+	}
+	attr(ans, 'const')=ans.const 
+	ans
 }
 ,constEnv) # of substitute
 ) # of eval 
-attr(fourier.kernel, 'srcref')=NULL
+attr(ckernel,'srcref')=attr(fourier.kernel, 'srcref')=NULL
+
+mkernel=eval(substitute(function(kernel=.kernels, order=1:4, R=TRUE)
+{
+	kernel=match.arg(kernel)
+	if(any(order>4L)) order=order[order<=4]
+	ans=switch(kernel,
+		gaussian=,normal=c(0,1,0,3),
+		cosine=c(0, onem8dpi, 0, cos.4m),		
+		uniform=,rectangular=c(0,oneThird,0,.2),
+		triangular=c(0,oneSixth,0,oneFifteenth),
+		epanechnikov=,parabolic=c(0,.2,0,thrd35),
+		biweight=, quartic=c(0,oneSeventh,0,oned21),
+		triweight=c(0,oneNinth,0,oned33),
+		tricube=c(0,three5d243,0,oned22),
+		logistic=c(0, pipid3, 0, pi4.7d15),
+		sech=c(0, pipid4, 0, pi4.5d16)
+	)
+	ans=ans[order]; names(ans)=as.character(order)
+	if(isTRUE(R) || length(order)==0L){
+		ans=c(ans, krRkernel(kernel)['R'])
+	}
+	ans
+} # of function
+,constEnv) # of substitute
+) # of eval
+attr(mkernel,'srcref')=NULL
 
 
 pkde=function(x, bw=bw.nrd, kernel=.kernels)

@@ -57,7 +57,7 @@ bw.safety=function(x, kernel, nNonzero=3L, pdf.cut=1e-3)
 
 bw.smoothp <-
 function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL, 
-	distFunc=dist,  kernel='biweight', 
+	distFunc=dist,  kernel='triweight', 
 	method='sym1', verbose=TRUE, ...)
 ## y=N-by-p data matrix; b=permutation index for the 1st trt; r=dimension index; 
 {

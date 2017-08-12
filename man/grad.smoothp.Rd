@@ -18,7 +18,7 @@ Permutation-based variable importance measure
 \usage{
 grad.smoothp(y, permutedTrt, bw, r=seq_len(NCOL(y)), test=FALSE, 
         distObj=dist(y), mrpp.stats=NULL, 
-        kernel='biweight', weight.trt="df", adjust=NULL)
+        kernel='triweight', weight.trt="df", adjust=NULL)
 get.p.dd.dw(y, permutedTrt, r = seq_len(ncol(y)), weight.trt="df", eps=1e-8)
 \method{p.value}{grad.smoothp}(x, type=c("keep1","drop1","add1"), \dots)
 }
@@ -40,7 +40,7 @@ get.p.dd.dw(y, permutedTrt, r = seq_len(ncol(y)), weight.trt="df", eps=1e-8)
 
   will be called to obtain it.  
 }
-  \item{kernel}{A character scalar taking values in \code{\link{.smooth.kernels}}.  
+  \item{kernel}{A character scalar taking values in \code{\link{.smooth1.kernels}}.  
 }
   \item{bw}{A numeric or character scalar. If being numeric, it gives the bandwidth used for kernel density estimation of \code{mrpp.stats}. This might be positive infinity. If \code{bw} is a character, it takes values as the \code{method} argument of \code{\link{bw.smoothp}}. 
 }

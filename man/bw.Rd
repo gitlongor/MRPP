@@ -15,7 +15,7 @@ Bandwidth Selection for Kernel Approximation to Discrete Cumulative Distribution
 \usage{
 %bw.mse.pdf.asym(x,iter.max=1L,eps=1e-6,start.bw=bw.nrd, verbose=FALSE)
 bw.smoothp(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL, 
-	distFunc=dist,  kernel='biweight', 
+	distFunc=dist,  kernel='triweight', 
 	method='sym1', verbose=TRUE, \dots)
 bw.range(x, length=200, lower=.05, upper=.95, safety=100)
 }
@@ -31,7 +31,7 @@ bw.range(x, length=200, lower=.05, upper=.95, safety=100)
 }
   \item{distFunc}{A function that returns a \code{"dist"} object, as in the \code{\link{dist}} function. 
 }
-  \item{kernel}{A character scalar indicating the kernel to be used. Allowed values are given in \code{\link{.smooth.kernels}}.
+  \item{kernel}{A character scalar indicating the kernel to be used. Except when \code{method='kde.mse1'}, the allowed values are given in \code{\link{.smooth1.kernels}}. When \code{method='kde.mse1'}, the allowed values are given in \code{\link{.smooth2.kernels}}.
 }
 
   \item{method}{A character scalar specifying the bandwidth selection method. See details. 

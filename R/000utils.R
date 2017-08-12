@@ -1,4 +1,4 @@
-constEnv=new.env(hash=TRUE, size=56L)
+constEnv=new.env(hash=TRUE, size=74L)
 pkgEnv=parent.env(constEnv)
 constEnv$oneThird = 1/3
 constEnv$oneSixth = 1/6
@@ -18,7 +18,7 @@ constEnv$sev0d81 = 70/81
 constEnv$one0d27 = 10/27
 constEnv$sev81 = 7/81
 constEnv$thr5d54 = 35/54
-# for fourier.kernel
+# for fourier.kernels
 constEnv$iroot.2pi=1/sqrt(2*base::pi)
 constEnv$pipi=base::pi^2
 constEnv$one12=1/12; constEnv$one360=1/360
@@ -49,6 +49,24 @@ constEnv$npi3d16=-base::pi^3/16
 constEnv$pid4=base::pi/4
 constEnv$pid2=base::pi/2
 constEnv$onedpi=1/base::pi
+# for skernel
+constEnv$logpi=log(base::pi)
+constEnv$fourdpi=4/base::pi
+constEnv$onedpi=1/base::pi
+# for mkernel
+constEnv$onem8dpi=1-8/base::pi
+constEnv$cos.4m=with(constEnv, (384 - 48 *pipi + pipi*pipi)/pipi/pipi)
+constEnv$oneFifteenth=1/15
+constEnv$thrd35=3/35
+constEnv$oneSeventh=1/7
+constEnv$oned21=1/21
+constEnv$oned33=1/33
+constEnv$three5d243=35/243
+constEnv$oned22=1/22
+constEnv$pipid3=base::pi^2/3
+constEnv$pipid4=base::pi^2/4
+constEnv$pi4.7d15=base::pi^4*7/15
+constEnv$pi4.5d16=base::pi^4*5/16
 
 ## constants used by 4th order cumulants
 constEnv$.order4.S2P.mat=matrix(c(
@@ -150,9 +168,9 @@ vech=function(x){
 }		
 
 
-.smooth2.kernels=c("gaussian", 'triweight', 'tricube',"logistic",'sech')
-.smooth1.kernels=c(.smooth2.kernels, 'biweight')
-.smooth0.kernels=c(.smooth1.kernels, 'epanechnikov','triangular','cosine')
+.smooth2.kernels=c("gaussian", 'normal','triweight', 'tricube',"logistic",'sech')
+.smooth1.kernels=c(.smooth2.kernels, 'biweight','quartic')
+.smooth0.kernels=c(.smooth1.kernels, 'epanechnikov','parabolic','triangular','cosine')
 .kernels=c(.smooth0.kernels, 'uniform', 'rectangular')
 
 sinc =eval(substitute(function(x){

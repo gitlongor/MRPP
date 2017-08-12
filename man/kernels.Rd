@@ -1,27 +1,44 @@
 \name{kernel}
 \Rdversion{1.1}
+\alias{skernel}
 \alias{pkernel}
 \alias{dkernel}
+\alias{d2dkernel}
 \alias{fourier.kernel}
+\alias{ckernel}
+\alias{mkernel}
 \alias{pkde}
 \alias{dkde}
 \alias{.kernels}
-\alias{.smooth.kernels}
+\alias{.smooth0.kernels}
+\alias{.smooth1.kernels}
+\alias{.smooth2.kernels}
 %- Also NEED an "\alias" for EACH other topic documented here.
 \title{
-CDF, PDF and Fourier Transform of Univariate Kernel Densities
+Support Functions For Univariate Kernel Densities
 }
 \description{
-\code{pkernel}, \code{dkernel} and \code{fourier.kernel} return the cumulative distribution function, probability density function and Fourier transform of the density, respectively, for common univariate kernels specified by names. 
+\code{pkernel}, \code{dkernel} and \code{ckernel} return the cumulative distribution function, probability density function and characteristic function, respectively, for common univariate kernels specified by names. \code{fourier.kernel} is a synonym of \code{ckernel}. 
+
+\code{skernel} returns the support of the requested kernel. \code{d2dkernel} returns the 2nd derivative of the density of the requested kernel. 
+\code{mkernel} returns the raw moments of the requested kernel distribution. 
 
 \code{pkde} and \code{dkde} return the \emph{fitted} cumulative distribution function and probability density function. 
 
 \code{.kernels} is a vector containing the names of the kernel functions currently supported. 
+\code{.smooth0.kernels} is a vector containing the names of the supported kernel functions that are continuous over the real line. 
+\code{.smooth1.kernels} is a vector containing the names of the supported kernel functions of which the first derivatives are continuous over the real line. 
+\code{.smooth2.kernels} is a vector containing the names of the supported kernel functions of which the second derivatives are continuous over the real line. 
 }
 \usage{
 pkernel(kernel= .kernels)
 dkernel(kernel= .kernels)
-fourier.kernel(kernel= .kernels, root.2pi=TRUE)
+d2dkernel(kernel=.kernels)
+ckernel(kernel= .kernels, root.2pi=FALSE, const=NULL)
+fourier.kernel(kernel= .kernels, root.2pi=FALSE, const=NULL)
+
+skernel(kernel=.kernels, eps=1e-3)
+mkernel(kernel=.kernels, order=1:4, R=TRUE)
 
 pkde(x, bw=bw.nrd, kernel=.kernels)
 dkde(x, bw=bw.nrd, kernel=.kernels,	from=min(x)-3*median(bw), to=max(x)+3*median(bw))
@@ -32,6 +49,14 @@ dkde(x, bw=bw.nrd, kernel=.kernels,	from=min(x)-3*median(bw), to=max(x)+3*median
 }
   \item{root.2pi}{A logical scalar. When \code{TRUE}, a factor of \code{1/sqrt(2*base::pi)} will be multiplied to the integral transform; otherwise, the integral transform itself is computed. 
 }
+  \item{const}{Either \code{NULL} or a character vector with elements among \code{c('exponent','coefficient')}. This specifies whether the characteristic exponent and/or the characteristic coefficient of the transform will be added to the result as an attribute. See Parzen (1962) for their definitions. 
+}
+  \item{eps}{A small non-negative number. The effective support reported exclude regions with density values below \code{eps}. If \code{eps=0},  non-compact kernels like \code{gaussian} will have a reported support being the whole real line. 
+}
+  \item{order}{An integer vector, being a subvector of \code{1:4}. Orders larger than 4 are not yet supported. This could be a \code{0}-length vector, in which case \code{R=TRUE} will be assumed. 
+}
+  \item{R}{A logical scalar. If \code{TRUE}, then the integral of square of the density will be reported. Cf. the \code{give.Rkern} argument of \code{\link{density}}.
+}
   \item{x}{A numeric vector of data values.
 }
   \item{bw}{A positive vector indicating the bandwidth to be used in kernel density estimation. Alternatively, this can be a function that computes the bandwidth, or the character name of such a function. 
@@ -40,33 +65,47 @@ dkde(x, bw=bw.nrd, kernel=.kernels,	from=min(x)-3*median(bw), to=max(x)+3*median
 }
 }
 \format{
-Currently, \code{.kernels} is the character vector
+Currently, \code{.smooth2.kernels} is the character vector
 
-\code{c("gaussian", "uniform", "rectangular", "epanechnikov", "triangular", "biweight", "triweight", "tricube", "logistic", "cosine")} 
+\code{c("gaussian", 'normal', 'triweight', 'tricube',"logistic",'sech')}.
 
-where \code{"uniform"} and \code{"rectangular"} are synonymous. Whenever the kernel has compact support, the support will be \code{[-1,1]}; thus, the variance of each kernel is not necessarily one, which behaves differently than \code{\link{density}}.
+\code{.smooth1.kernels} additionally includes \code{'biweight', 'quartic'}. 
 
-High-order kernels that are not bona fide distributions or non-smooth kernels are not allowed. 
+\code{.smooth0.kernels} further includes \code{'epanechnikov','parabolic', 'triangular','cosine'}. 
 
-Currently, \code{.smooth.kernels} is the character vector
+And \code{.kernels} includes all above, plus \code{'uniform','rectangular'}. 
 
-.smooth.kernels=c("gaussian", "biweight", 'triweight', 'tricube',"logistic","cosine").
 
-These are the kernels with continuous derivative over the whole real line. 
+High-order kernels that are not bona fide distributions are not allowed. 
+
+In the above \code{"uniform"} and \code{"rectangular"} are synonymous; \code{'gaussian'} and \code{'normal'} are synonymous; \code{'epanechnikov'} and \code{'parabolic'} are synonymous; \code{'biweight'} and \code{'quartic'} are synonymous. 
+
+Whenever the kernel has compact support, the support will be \code{[-1,1]}; thus, the variance of each kernel is not necessarily one, which behaves differently than \code{\link{density}}.
+
+
 }
 
 \note{
 The \code{pkde} implementation does \emph{not} make use of the fast Fourier transform (FFT); but the \code{dkde} uses FFT. 
 }
 \value{
-Except for \code{dkde}, the result is a function (closure) that accepts a numeric vector as the argument. 
+For \code{pkernel}, \code{dkernel}, \code{ckernel}, and \code{d2dkernel}, the result is a function (closure) that accepts a numeric vector as its argument, with formal arguments being \code{q}, \code{x}, \code{s}, and \code{x}, respectively.
 
 For \code{dkde}, if \code{length(bw)==1}, then the result is a function; otherwise, the result is a list of functions, corresponding to each bandwidth. In either case, the \code{attr(*, "environment")} attribute is set to the evaluation frame of \code{dkde}, allowing the access of some intermediate objects. 
+
+For \code{mkernel}, the result is a numeric vector of the requested moments. 
+
+For \code{skernel}, the result is a numeric vector of length 2, being the lower and upper bound of the (effective) support. 
+
+For \code{ckernel} and \code{fourier.kernel}, when the \code{const} is set to non-\code{NULL}, an additional attribute \code{const} will be set to a numeric vector requested. 
 }
 \references{
 \url{https://en.wikipedia.org/wiki/Kernel_(statistics)}
 
-Section 3.5 of Bernard W. Silverman (198) Density Estimation for Statistics and Data Analysis. London; Newyork: Chapman & Hall. 
+Section 3.5 of Bernard W. Silverman (1986) Density Estimation for Statistics and Data Analysis. London; Newyork: Chapman & Hall. 
+
+Emanuel Parzen (1962) On Estimation of a Probability Density Function and Mode. Annals of Mathematical Statistics, 33(3), 1065-1076.
+
 }
 \author{Long Qu
 }
@@ -83,6 +122,10 @@ f(-2:2)
 F(-2:2)
 ft=fourier.kernel('biweight')
 ft(-2:2)
+sapply(.kernels, mkernel)
+sapply(.kernels, skernel, eps=0)
+sapply(.kernels, skernel, eps=1e-5)
+
 if(interactive()){
 	curve(dkernel('gau')(x),-2,2, ylim=c(0,1.1))
 	curve(dkernel('biw')(x),-2,2, add=TRUE, col=2)
