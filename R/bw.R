@@ -1,4 +1,4 @@
-bw.mse.pdf.asym=function(x,iter.max=1L,eps=1e-6,start.bw=bw.nrd, kernel='gaussian', verbose=FALSE)
+bw.mse.pdf.asym=function(x,iter.max=1L,eps=1e-6,start.bw=bw.nrd, kernel='triweight', verbose=FALSE)
 {
     if(is.function(start.bw)) bw0=start.bw(x)
     if(is.numeric(start.bw)) bw0=start.bw
@@ -41,7 +41,7 @@ bw.safety=function(x, kernel, nNonzero=3L, pdf.cut=1e-3)
 	supp=skernel(kernel)[2L]
 	if(is.infinite(supp))
 		supp=switch(kernel,
-			gaussian=sqrt(2*log(k/sqrt(2*base::pi))),
+			gaussian=,normal=sqrt(2*log(k/sqrt(2*base::pi))),
 			logistic=log(.5* k + .5*sqrt((-4 + k)* k)-1),
 			sech=log((k + sqrt(k*k - base::pi^2))/base::pi)
 		)

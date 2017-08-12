@@ -45,7 +45,7 @@ function(kernel= .kernels)
 {# cdf of kernel dist'n
 ## Optimized based on the fact that ^2 and * are faster than other ^ powers
 	kernel=match.arg(kernel)
-	switch(kernel,
+	ans=switch(kernel,
 	gaussian=,normal=pnorm,
 	cosine = function(q){
 		ans=numeric( length(q))
@@ -116,7 +116,9 @@ function(kernel= .kernels)
 	logistic =plogis,
 	sech = function(q)twodpi*atan(exp(q))
 	) # of switch
-	
+	attr(ans ,'srcref')=NULL
+	if(identical(environment(ans),sys.frame(sys.nframe()))) environment(ans)=pkgEnv
+	ans
 },  # of function
 constEnv) # of substitute
 ) # of eval
@@ -125,7 +127,7 @@ attr(pkernel, 'srcref')=NULL
 dkernel=eval(substitute(function(kernel= .kernels)
 {# pdf of kernel dist'n
 	kernel=match.arg(kernel)
-	switch(kernel,
+	ans=switch(kernel,
 	gaussian=,normal=dnorm,
 	cosine = function(x){
 		ans=numeric( length(x))
@@ -184,6 +186,9 @@ dkernel=eval(substitute(function(kernel= .kernels)
 	sech = function(x)#twodpi/(exp(x)+exp(-x))
 		onedpi/cosh(x)
 	) # of switch
+	attr(ans, 'srcref')=NULL
+	if(identical(environment(ans),sys.frame(sys.nframe()))) environment(ans)=pkgEnv
+	ans	
 }
 ,constEnv) # of substitute
 ) # of eval
@@ -220,7 +225,7 @@ attr(krRkernel,'srcref')=NULL
 d2dkernel=eval(substitute(function(kernel=.kernels)
 {
 	kernel=match.arg(kernel)
-	switch(kernel,
+	ans=switch(kernel,
 		gaussian=,normal=function(x){
 			x2=x*x; #iroot.2pi=1/sqrt(2*base::pi)
 			exp(-.5*x2) * (x2-1)*iroot.2pi
@@ -228,21 +233,22 @@ d2dkernel=eval(substitute(function(kernel=.kernels)
 		cosine=function(x){
 			ans=numeric(length(x))
 			ax=abs(x)
-			ans[ax<1]=npi3d16*cos(pid2*x)
-			ans[ax==1]=NA_real_
+			idx=which(ax<1)
+			ans[idx]=npi3d16*cos(pid2*x[idx])
+			ans[ax==1]=NaN
 			attributes(ans)=attributes(x)
 			ans
 		},
 		uniform=, rectangular=function(x){
 			ans=numeric(length(x))
-			ans[abs(x)==1]=NA_real_
+			ans[abs(x)==1]=NaN
 			attributes(ans)=attributes(x)
 			ans
 		}, 
 		triangular=function(x){
 			ans=numeric(length(x))
-			ans[abs(x)==1]=NA_real_
-			ans[x==0]=NA_real_
+			ans[abs(x)==1]=NaN
+			ans[x==0]=NaN
 			attributes(ans)=attributes(x)
 			ans
 		}, 
@@ -250,16 +256,16 @@ d2dkernel=eval(substitute(function(kernel=.kernels)
 			ans=numeric(length(x))
 			ax=abs(x)
 			ans[ax<1]=-1.5
-			ans[ax==1]=NA_real_
+			ans[ax==1]=NaN
 			attributes(ans)=attributes(x)
 			ans
 		},
 		biweight=, quartic=function(x){
 			ans=numeric(length(x))
-			ax=abs(x); x=x[ax<1]
-			ans[ax==1]=NA_real_
-			ans[ax<1]=one5d4 * (3*x* x-1)
 			attributes(ans)=attributes(x)
+			ax=abs(x); x=x[ax<1]
+			ans[ax==1]=NaN
+			ans[ax<1]=one5d4 * (3*x* x-1)
 			ans
 		},
 		triweight=function(x){
@@ -293,7 +299,10 @@ d2dkernel=eval(substitute(function(kernel=.kernels)
 			twodpi*ilogit.2x*((2*ilogit.2x-1)^2-4*ilogit.2x1_2x)/exp(ax)
 		}
 	) # of switch
-},
+	attr(ans, 'srcref')=NULL
+	if(identical(environment(ans),sys.frame(sys.nframe()))) environment(ans)=pkgEnv
+	ans
+}, # of function
 constEnv) # of substitute
 ) # of eval 
 attr(d2dkernel,'srcref')=NULL
@@ -301,74 +310,77 @@ attr(d2dkernel,'srcref')=NULL
 ckernel=fourier.kernel=eval(substitute(function(kernel= .kernels, root.2pi=FALSE, const=NULL)
 {
 	kernel=match.arg(kernel)
-	iroot.2pi.0 =if(root.2pi) iroot.2pi else 1
+	iroot.2pi.this =if(root.2pi) iroot.2pi else 1
 	
-	ans=switch(kernel,
-	gaussian=,normal=function(s) exp(-.5*s*s) *iroot.2pi.0,
-	cosine=function(s)	pipi*cos(s)/(pipi-4*s*s) * iroot.2pi.0, 
+	ans=eval(substitute(switch(kernel,
+	gaussian=,normal=function(s) exp(-.5*s*s) *iroot.2pi.this,
+	cosine=function(s)	pipi*cos(s)/(pipi-4*s*s) * iroot.2pi.this, 
 	uniform = , rectangular = function(s){
-		sinc(s) * iroot.2pi.0
+		sinc(s) * iroot.2pi.this
 	},
 	triangular = function(s){
 		s2=s*s; 
-		ans=2*(1-cos(s))/s2 * iroot.2pi.0
+		ans=2*(1-cos(s))/s2 * iroot.2pi.this
 		idx=which(abs(s)<1e-2) ## close to 0/0 region: taylor series
-		ans[idx]=(1 + s2[idx]*(s2[idx]*one360 - one12)) * iroot.2pi.0
+		ans[idx]=(1 + s2[idx]*(s2[idx]*one360 - one12)) * iroot.2pi.this
 		ans	
 	},
 	epanechnikov =, parabolic= function(s){
 		s2=s*s; 
-		ans=3*(sin(s)-s*cos(s))/(s2*s) * iroot.2pi.0
+		ans=3*(sin(s)-s*cos(s))/(s2*s) * iroot.2pi.this
 		idx=which(abs(s)<1e-2) ## close to 0/0 region: taylor series
-		ans[idx]=(1 + s2[idx]*(s2[idx]*one280-0.1)) * iroot.2pi.0
+		ans[idx]=(1 + s2[idx]*(s2[idx]*one280-0.1)) * iroot.2pi.this
 		ans
 	},
 	biweight = , quartic=function(s){
 		ss=sin(s); s2=s*s; s4=s2*s2
-		ans=((45*(ss - s*cos(s)) - 15*s2*ss))/(s4*s) * iroot.2pi.0
+		ans=((45*(ss - s*cos(s)) - 15*s2*ss))/(s4*s) * iroot.2pi.this
 		idx=which(abs(s)<5e-2) ## close to 0/0 region: taylor series
-		ans[idx]=(1 + s2[idx]*(s2[idx]*(one504 - s2[idx]*one33264)--one14)) * iroot.2pi.0
+		ans[idx]=(1 + s2[idx]*(s2[idx]*(one504 - s2[idx]*one33264)--one14)) * iroot.2pi.this
 		ans
 	},
 	triweight = function(s){
 		cs=cos(s); ss=sin(s);
 		s2=s*s; s4=s2*s2; s6=s4*s2; 
-		ans=(105*(s2*s*cs + 15*(ss -s*cs) - 6*s2*ss))/(s6*s) *iroot.2pi.0
+		ans=(105*(s2*s*cs + 15*(ss -s*cs) - 6*s2*ss))/(s6*s) *iroot.2pi.this
 		idx=which(abs(s)<1e-1) ## close to 0/0 region
-		ans[idx]=(1 + s2[idx]*( s2[idx]*(one792 - s2[idx]*one61776) -one18))* iroot.2pi.0
+		ans[idx]=(1 + s2[idx]*( s2[idx]*(one792 - s2[idx]*one61776) -one18))* iroot.2pi.this
 		ans
 	},
 	tricube = function(s){
 		cs=cos(s); ss=sin(s);
 		s2=s*s; s4=s2*s2; s6=s4*s2
 		ans=(two80d9*(20160 - s6 - 9*(2240 - 1120*s2 + 80*s4 - s6)*cs - 
-			s*(20160 - 3240*s2 + 108*s4)*ss))/(s4*s6) *iroot.2pi.0
+			s*(20160 - 3240*s2 + 108*s4)*ss))/(s4*s6) *iroot.2pi.this
 		idx=which(abs(s)<3.5e-1) ## close to 0/0 region
-		ans[idx]=(1 + s2[idx]*(s2[idx]*(one528 - s2[idx]*(s2[idx]*one4199040-one37440)) -three5d486)) *iroot.2pi.0
+		ans[idx]=(1 + s2[idx]*(s2[idx]*(one528 - s2[idx]*(s2[idx]*one4199040-one37440)) -three5d486)) *iroot.2pi.this
 		ans
    },
 	logistic =function(s){
 		ps=base::pi*s
-		ans=ps/sinh(ps) *iroot.2pi.0
+		ans=ps/sinh(ps) *iroot.2pi.this
 		idx=which(abs(s)<1e-2) ## close to 0/0 region
 		ps2=ps*ps; ps4=ps2*ps2
-		ans[idx]=(1 + ps2[idx]*(ps2[idx]*(seven360 - ps2[idx]*three1d15120) -one6)) *iroot.2pi.0
+		ans[idx]=(1 + ps2[idx]*(ps2[idx]*(seven360 - ps2[idx]*three1d15120) -one6)) *iroot.2pi.this
 		ans
 	},
 	sech = function(s){
-		1/cosh(pid2 *s) *iroot.2pi.0
+		1/cosh(pid2 *s) *iroot.2pi.this
 	}
 	)  # of switch 
+	))
 	ans.const=numeric(0L)
 	if(!is.null(const)){
 		tmp.const=krRkernel(kernel)
 		
 		if(isTRUE(const)) const=c('exponent','coefficient')
-		if(is.character(const[1L])) const=pmatch(const, c('exponent','coefficient'), duplicates.ok=TRUE)
-		if(any('exponent'==const)) ans.const=c(ans.const, exponent=tmp.const['r'])
-		if(any('coefficient'==const)) ans.const=c(ans.const, coefficient=tmp.const['kr'])
+		if(is.character(const[1L])) const=pmatch(const, c('exponent','coefficient'), duplicates.ok=TRUE) else stop('"const" is misspecified.')
+		if(any(1L==const)) ans.const=c(ans.const, exponent=tmp.const['r'])
+		if(any(2L==const)) ans.const=c(ans.const, coefficient=tmp.const['kr'])
 	}
 	attr(ans, 'const')=ans.const 
+	attr(ans ,'srcref')=NULL
+	if(identical(environment(ans),sys.frame(sys.nframe()))) environment(ans)=pkgEnv
 	ans
 }
 ,constEnv) # of substitute

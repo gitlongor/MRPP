@@ -36,7 +36,7 @@ export(
 	
 	transform.matrix, transform.numeric, 
 	
-	.kernels, .smooth0.kernels, .smooth1.kernels, .smooth2.kernels, pkernel, dkernel,skernel,mkernel, ckernel, pkde, dkde, fourier.kernel,
+	.kernels, .smooth0.kernels, .smooth1.kernels, .smooth2.kernels, pkernel, dkernel,d2dkernel, skernel,mkernel, ckernel, pkde, dkde, fourier.kernel,
 	
 	p.value, 
 	

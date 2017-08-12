@@ -1,4 +1,4 @@
-constEnv=new.env(hash=TRUE, size=74L)
+constEnv=new.env(hash=TRUE, size=73L)
 pkgEnv=parent.env(constEnv)
 constEnv$oneThird = 1/3
 constEnv$oneSixth = 1/6
@@ -39,7 +39,6 @@ constEnv$pipid8=base::pi^2/8
 constEnv$pipid16=base::pi^2/16
 constEnv$twodpipi=2/base::pi^2
 # for d2dkernel
-constEnv$ilogit=make.link('logit')$linkinv
 constEnv$one5d4=15/4
 constEnv$none05d16=-105/16
 constEnv$none40d9=-140/9
@@ -182,3 +181,5 @@ sinc =eval(substitute(function(x){
 },
 constEnv))
 attr(sinc, 'srcref')=NULL
+
+ilogit=make.link('logit')$linkinv
