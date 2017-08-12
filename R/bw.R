@@ -1,5 +1,6 @@
-bw.mse.pdf.asym=function(x,iter.max=1L,eps=1e-6,start.bw=bw.nrd, kernel='triweight', verbose=FALSE)
+bw.mse.pdf.asym=function(x,iter.max=1L,eps=1e-6,start.bw, kernel='triweight', verbose=FALSE)
 {
+	if(missing(start.bw)) start.bw=function(x)bw.nrd(x)*sqrt(mkernel(kernel,order=2L,R=FALSE))
     if(is.function(start.bw)) bw0=start.bw(x)
     if(is.numeric(start.bw)) bw0=start.bw
     if(is.character(start.bw)) bw0=call(start.bw, x)
@@ -48,7 +49,7 @@ bw.safety=function(x, kernel, nNonzero=3L, pdf.cut=1e-3)
 bw.smoothp <-
 function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL, 
 	distFunc=dist,  kernel='triweight', 
-	method='sym1', verbose=TRUE, ...)
+	method='sym1', verbose=TRUE, subset, ...)
 ## y=N-by-p data matrix; b=permutation index for the 1st trt; r=dimension index; 
 {
 	method=match.arg(method, choices=c('sym1','drop1','add1','keep1','dropadd1','dropaddsym1','ss.gradp','kde.mse1','match.pear3','match.pear3gca'))
@@ -118,6 +119,15 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 	}
 	
 	## pre-computing all.ddelta.dw in grad.smoothp
+	r.bak=r
+	if(!missing(subset) && method%in%c('sym1','drop1','add1','keep1','dropadd1','dropaddsym1','ss.gradp')) {
+		if(is.null(subset)){
+			if(length(r)<=100L) subset=seq_along(r) else
+			subset=sort(sample(length(r), round(100+.2*(length(r)-100))))
+		}
+	    r=r[subset]
+	}
+	
 	gradEnv=new.env()
 	gradEnv$mrpp.stats=mrpp$all.statistics
 	gradEnv$scale=1
