@@ -38,14 +38,7 @@ bw.safety=function(x, kernel, nNonzero=3L, pdf.cut=1e-3)
 	if(length(x)<nNonzero+1L){
 	}
 	k=1/pdf.cut
-	supp=skernel(kernel)[2L]
-	if(is.infinite(supp))
-		supp=switch(kernel,
-			gaussian=,normal=sqrt(2*log(k/sqrt(2*base::pi))),
-			logistic=log(.5* k + .5*sqrt((-4 + k)* k)-1),
-			sech=log((k + sqrt(k*k - base::pi^2))/base::pi)
-		)
-	
+	supp=skernel(kernel, pdf.cut)[2L]
 	
 	diffs=x[1L]-x
 	u.a.d=unique(abs(diffs))
