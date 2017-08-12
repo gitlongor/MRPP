@@ -35,9 +35,6 @@ bw.range=function(x, length=200, lower=.05, upper=.95, safety=100)
 
 bw.safety=function(x, kernel, nNonzero=3L, pdf.cut=1e-3)
 {
-	if(length(x)<nNonzero+1L){
-	}
-	k=1/pdf.cut
 	supp=skernel(kernel, pdf.cut)[2L]
 	
 	diffs=x[1L]-x
