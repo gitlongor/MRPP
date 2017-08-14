@@ -496,7 +496,7 @@ dkde=function(x, bw=bw.nrd, kernel=.kernels, from=min(x)-3*median(bw), to=max(x)
 		#zetak.bak = colSums(exp((l%o%kk)/M*(1i)*-2*pi)*zetalstar) ## correct but slow
 		#zetak=fft(zetalstar)*exp(1i*pi*kk)
 		zetak=fft(zetalstar)*c(1,-1)
-		ans[[i]] = approxfun(tk0, pmax.int(0,Re(zetak)), ties='ordered')
+		ans[[i]] = approxfun(tk0, pmax.int(0,Re(zetak)), ties='ordered',yleft=2, yright=0)
 	}
 	structure(if(length(ans)==1L) ans[[1L]] else ans, 
 		environment=environment()

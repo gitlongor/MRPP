@@ -7,6 +7,8 @@ importFrom(QuasiSeq, nlsolve)
 importFrom(varComp, p.value)
 importFrom(moments, skewness, kurtosis, all.moments)
 importFrom(PDQutils, moment2cumulant,cumulant2moment,dapx_gca,papx_gca)
+importFrom(kedd, h.amise, h.ucv)
+
 
   importFrom("grDevices", "dev.new")
   importFrom("graphics", "abline", "axTicks", "axis", "box", "curve",

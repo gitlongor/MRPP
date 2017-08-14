@@ -1,6 +1,7 @@
 .Rproj.user
 .Rbuildignore
 .Rhistory
+.RData
 MRPP.Rproj
 ToDoList.txt
 src/*.o

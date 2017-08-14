@@ -1,6 +1,12 @@
+if(FALSE){
+# starting from Scott's rule as prelim bw
+# then using kernels with this bw to estimate f(x[x]) and f''(x[1]) 
 bw.mse.pdf.asym=function(x,iter.max=1L,eps=1e-6,start.bw, kernel='triweight', verbose=FALSE)
 {
-	if(missing(start.bw)) start.bw=function(x)bw.nrd(x)*sqrt(mkernel(kernel,order=2L,R=FALSE))
+	if(missing(start.bw)) {
+		start.bw=bw.SJ(x)*sqrt(mkernel(kernel,2L,R=FALSE)) 
+		start.bw=function(x)bw.nrd(x)*sqrt(mkernel(kernel,order=2L,R=FALSE))
+	}
     if(is.function(start.bw)) bw0=start.bw(x)
     if(is.numeric(start.bw)) bw0=start.bw
     if(is.character(start.bw)) bw0=call(start.bw, x)
@@ -23,6 +29,71 @@ bw.mse.pdf.asym=function(x,iter.max=1L,eps=1e-6,start.bw, kernel='triweight', ve
         bw0=bw
         n.iter=n.iter+1
     }
+}
+
+# starting from a bw that matches Pearson Type III dist'n
+# then using kernels with this bw to estimate f(x[x]) and f''(x[1]) 
+bw.mse.pdf.asym=function(x, mrpp,iter.max=1L,eps=1e-6,kernel='triweight', verbose=FALSE)
+{
+	cums=cumulant(mrpp, order=1:4)
+	cums[2L]=sqrt(cums[2L])
+	cums[3L]=cums[3L]/cums[2L]^3
+	cums[4L]=cums[4L]/cums[2L]^4
+
+	pdf0=	dpearson3gca(x, cums[1L], cums[2L], cums[3L], cums[4L])
+	bw0=bw.matchpdf(x, kernel=kernel, pdf=pdf0)
+	
+	kr.r.R=krRkernel(kernel);
+		kr=kr.r.R['kr'];  Rk=kr.r.R['R']
+		stopifnot(kr.r.R['r']==2)
+	dkern=dkernel(kernel)
+	d2dkern=d2dkernel(kernel)
+    
+    n.iter=1L
+    xdiff=x[1L]-x
+	#bw0=Inf 
+	#f.1=dpearson3(x[1], cums[1L], cums[2L], cums[3L])
+	#ddf.1=d2dpearson3(x[1], cums[1L], cums[2L], cums[3L])
+    repeat{
+		tmp=xdiff/bw0
+		f.1=mean(dkern(tmp))/bw0
+		ddf.1=mean(d2dkern(tmp))/bw0^3
+
+		bw=(f.1*Rk)/(length(x)*4*(kr*ddf.1)^2)^.2
+        if(abs(bw-bw0)<eps || n.iter>=iter.max) return(bw[[1L]])
+        if(verbose && isTRUE(n.iter%%verbose==0))cat(bw,fill=TRUE)
+        bw0=bw
+        n.iter=n.iter+1
+    }
+}
+}
+
+# Using unbiased CV to obtain bw for f() and for f''() separately, with a max of 500 data values
+# Then using kernels with such estimated bw's to obtain f(x[x]) and f''(x[1]) 
+bw.mse.pdf.asym=function(x, kernel='triweight', verbose=FALSE)
+{
+	nmax=512L;	nx=length(x); iter.max=1L; eps=1e-6
+	x.idx=if(nx<nmax) seq(nmax) else as.integer(round(seq(from=1L, to=nx, length=nmax))) 
+	bw00=kedd::h.ucv(x[x.idx], deriv.order=0L, kernel=kernel)$h*(nmax/nx)^.2
+	bw02=kedd::h.ucv(x[x.idx], deriv.order=2L, kernel=kernel)$h*(nmax/nx)^(1/9)
+	
+	kr.r.R=krRkernel(kernel);
+		kr=kr.r.R['kr'];  Rk=kr.r.R['R']
+		stopifnot(kr.r.R['r']==2)
+	dkern=dkernel(kernel)
+	d2dkern=d2dkernel(kernel)
+    
+    xdiff=x[1L]-x
+	f.1=mean(dkern(xdiff/bw00))/bw00
+	ddf.1=mean(d2dkern(xdiff/bw02))/bw02^3
+
+	bw=(f.1*Rk)/(length(x)*4*(kr*ddf.1)^2)^.2
+	
+	if(isTRUE(verbose)){
+		attr(bw, 'bw.f(x[1])')=bw00
+		attr(bw, "bw.f''(x[1])")=bw02
+	}
+	bw
 }
 
 bw.range=function(x, length=200, lower=.05, upper=.95, safety=100)
@@ -57,13 +128,23 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 	R=NCOL(y)
 	if(R==1L ) method='ss.gradp'
 
-	distObj = distFunc(y[,r,drop=FALSE])
 	lst=list(...)
-	lst$y = distObj
+	lst$y=y[,r,drop=FALSE]
 	lst$permutedTrt=permutedTrt
-	nms = setdiff(c(names(formals(mrpp.test.dist)), names(formals(mrpp))), '...')
+	lst$distFunc=distFunc 
+	nms = setdiff(names(formals(mrpp)), '...')
 	idx=names(lst)%in%nms
-	mrpp = do.call('mrpp.test.dist', c(lst[idx],list(method='permutation')))
+	mrpp.obj = do.call('mrpp', lst[idx])
+	mrpp=mrpp.test(mrpp.obj, method='permutation')
+	distObj=mrpp.obj$distObj
+	
+#	distObj = distFunc(y[,r,drop=FALSE])
+#	lst=list(...)
+#	lst$y = distObj
+#	lst$permutedTrt=permutedTrt
+#	nms = setdiff(c(names(formals(mrpp.test.dist)), names(formals(mrpp))), '...')
+#	idx=names(lst)%in%nms
+#	mrpp = do.call('mrpp.test.dist', c(lst[idx],list(method='permutation')))
 	
 	lower.bound = bw.safety(mrpp$all.statistics, kernel)
 	
@@ -81,10 +162,11 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 	if(method=='kde.mse1'){
 		lst=list(...)
 		lst$x=mrpp$all.statistics
+		#lst$mrpp=mrpp.obj
 		lst$kernel=kernel
-		lst$verbose=verbose
+		#lst$verbose=verbose
 		nms=names(lst)
-		idx= nms=='' || nms%in%names(formals(bw.mse.pdf.asym))
+		idx= nms=='' | nms%in%names(formals(bw.mse.pdf.asym))
 		ans = do.call('bw.mse.pdf.asym', lst[idx])
 		if(ans<lower.bound){
 			ans=lower.bound
@@ -120,10 +202,12 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 	
 	## pre-computing all.ddelta.dw in grad.smoothp
 	r.bak=r
-	if(!missing(subset) && method%in%c('sym1','drop1','add1','keep1','dropadd1','dropaddsym1','ss.gradp')) {
-		if(is.null(subset)){
+	if(method%in%c('sym1','drop1','add1','keep1','dropadd1','dropaddsym1','ss.gradp')) {
+		if(missing(subset)){
 			if(length(r)<=100L) subset=seq_along(r) else
 			subset=sort(sample(length(r), round(100+.2*(length(r)-100))))
+		}else if(is.null(subset)){
+			subset=seq_along(r)
 		}
 	    r=r[subset]
 	}

@@ -28,6 +28,21 @@ dpearson3=function(x, mean, sd, skew, log=FALSE)
 	if(log) ans-log(sd) else ans/sd 
 }
 
+d2dpearson3=function(x, mean, sd, skew)
+{
+	y=x
+	eval(pearson3.common)
+	std=(x-mean)/sd
+	shape=k=twoskew2; scale=theta=abs(skew*.5)
+	y=sign(skew)*(std+twoskew)
+	ifelse(skew!=0,
+		dgamma(y, shape=k, scale=theta)
+		*(theta^-2-2*(k-1)/theta/y+(k-1)*(k-2)/y^2)
+		/sd^3, 
+		dnorm(std)*(std^2-1)/sd^3
+	)
+}
+
 ppearson3=function(q, mean, sd, skew, lower.tail=TRUE, log.p=FALSE)
 {
 	y=q
@@ -60,6 +75,7 @@ rpearson3=function(n, mean, sd, skew)
 environment(dpearson3)=
 environment(ppearson3)=
 environment(qpearson3)=
+environment(d2dpearson3)=
 environment(rpearson3)=pearson3.env
 
 
