@@ -45,7 +45,7 @@ function(y, permutedTrt, bw, r=seq_len(NCOL(y)), test=FALSE,
         kernel='triweight', weight.trt="df", adjust=NULL)
 ## y=N-by-p data matrix; b=permutation index for the 1st trt; r=dimension index; 
 {
-    ## min.wts=1e-8  ### CHECKME: I cannot remember why the weight was introduced. Set it to zero for now to see what problems show up...
+    ## min.wts=1e-8  ### this was handled by bw.safety()
 	if(is.null(mrpp.stats)) mrpp.stats=mrpp.test.dist(distObj,permutedTrt=permutedTrt,weight.trt=weight.trt, method='permutation')$all.statistics
 	weight.trt = mrpp.weight.trt(weight.trt, trt.permutedTrt(permutedTrt))$weight.trt[names(permutedTrt)]
     B=length(mrpp.stats)
