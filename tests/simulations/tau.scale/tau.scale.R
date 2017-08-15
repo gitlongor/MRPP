@@ -6,11 +6,11 @@ trt=gl(ntrt, n)
 pmat=permuteTrt(trt,B=Inf)
 (B = nperms.permutedTrt(pmat))
 mh.trt=gl(ntrt, reps)
-mh.blk=factor(rep(seq(reps), ntrt))
+mh.blk=factor(rep(seq_len(reps), ntrt))
 
 simTau=function(sds=c(1,1), standardize=FALSE){
 	y=cbind(rnorm(N, mu1, sds[1L]), replicate(R-1L, rnorm(N,,sds[-1L])))
-	dists = lapply(seq(NCOL(y)), function(x) dist(y[,x])^2/(dist(y)+dist(y[,-x])) )
+	dists = lapply(seq_len(NCOL(y)), function(x) dist(y[,x])^2/(dist(y)+dist(y[,-x])) )
 	sapply(dists, function(dd)scale(mrpp.test(dd, permutedTrt=pmat)$all.statistics, scale=standardize)[1L])
 }
 

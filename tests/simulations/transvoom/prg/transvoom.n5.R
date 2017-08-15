@@ -73,7 +73,7 @@ trans.name = function(i)
 	if(is.null(trans.args[[i]])) return(ans)
 	sprintf("%s\n%s=%s", ans, names(trans.args[[i]]), as.character(trans.args[[i]]))
 }
-trans.names=sapply(seq(n.trans), trans.name)
+trans.names=sapply(seq_len(n.trans), trans.name)
 
 
 ### Set simulation variables
@@ -119,7 +119,7 @@ wghts <- 1 - fdrtool(probs, statistic = "pvalue", plot = FALSE, verbose = FALSE)
 
 ### Initialize matrix of p-value output for each statistical method
 pvals=array(NA_real_, dim=c(n.genes.trim, n.iter, 2L, n.trans))
-dimnames(pvals)=list(seq(n.genes.trim), seq(n.iter), c('simseq','nb'), trans.names)
+dimnames(pvals)=list(seq_len(n.genes.trim), seq_len(n.iter), c('simseq','nb'), trans.names)
 
 
 ### Preprocessing steps for simulating NB data

@@ -14,7 +14,7 @@ n.genes.trim <- 5000 # No of genes to trim down to
 n.diff.trim <- 1000 # No of DE genes to trim down to
 filter.mean <- 0 # lower bound of average read count for simulated genes
 filter.nonzero <- 1 # lower bound for nonzero read counts for simulated genes
-qval.cuts <- seq(0, 0.15, by = 0.001)
+qval.cuts <- seq.int(from=0, to=0.15, by = 0.001)
 null.genes <- c( rep(TRUE, n.genes.trim - n.diff.trim), rep(FALSE, n.diff.trim))
 
 ### Load Data

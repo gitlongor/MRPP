@@ -20,7 +20,7 @@ mrpp.stats.R=function(y, trt, wt='df', round=8)
 	
 	sum1trt=function(idx)sum(distMat[idx,idx])
 	stat=function(trt){
-		idxes = outer(seq(ntrt), trt, '==')
+		idxes = outer(seq_len(ntrt), trt, '==')
 		sums = apply(idxes, 1L, sum1trt)
 		sum(sums * wt / tabtrt / pmax(1,tabtrt - 1) )
 	}
@@ -52,7 +52,7 @@ do.test=function(n=c(3,5), wts=c('df','n','equal','pairs'), R=5)
 
 set.seed(2340)
 if(!R_CHECK_TIMINGS_){
-	for(i in seq(1e1L)){
+	for(i in seq_len(1e1L)){
 		ntrt = sample(2:4, 1)
 		n=sample(rpois(ntrt, 2)+1)
 		R = sample(rpois(1, 10)+1)

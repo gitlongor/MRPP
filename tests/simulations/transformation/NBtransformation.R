@@ -74,7 +74,7 @@ trans.name = function(i)
 	if(is.null(trans.args[[i]])) return(ans)
 	sprintf("%s\n%s=%s", ans, names(trans.args[[i]]), as.character(trans.args[[i]]))
 }
-trans.names=sapply(seq(n.trans), trans.name)
+trans.names=sapply(seq_len(n.trans), trans.name)
 
 plot.factor=500
 for(invsize.i in seq_along(invsizes)) {

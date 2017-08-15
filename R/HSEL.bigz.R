@@ -192,7 +192,7 @@ sample.bigz=function(N, M)
 		if(ssize.rle$values[k]==0L){
 			prior = prior + imaxz * ssize.rle$length[k]
 		}else{
-			for(j in seq(ssize.rle$length[k])){
+			for(j in seq_len(ssize.rle$length[k])){
 				ans[i:(i+ssize.rle$values[k]-1L)]=as.character(prior + sample.int(imax, ssize.rle$values[k])) 
 				i = i + ssize.rle$values[k]
 				prior = prior + imaxz

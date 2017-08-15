@@ -130,12 +130,12 @@ midp.empirical = function(x, eps=1e-8)
 		return(1/tmp)
 	}
 	if(is.numeric(start) && start==round(start) ){
-		ans = prod.bigz(as.bigz(seq(from=start, length=nterms)))
+		ans = prod.bigz(as.bigz(seq.int(from=start, by=1L, length.out=nterms)))
 		if(is.integer(start)) {
 			tryCatch(as.integer(ans), warning=function(w)ans)
 		}else as.numeric(ans)
 	}else if(inherits(start, c('bigz','bigq','numeric'))){
-		ans = prod.bigq(as.bigq(start+seq(from=0, length=nterms)))
+		ans = prod.bigq(as.bigq(start+seq.int(from=0, by=1, length.out=nterms)))
 		do.call(paste0(c('as',class(start)), collapse='.'),list(ans))
 	}else stop('unsupported class of "start"')
 }

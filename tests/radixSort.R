@@ -2,7 +2,7 @@
 
 
 library(MRPP)
-for(i in seq(if(R_CHECK_TIMINGS_) 10L else 1e4L)){
+for(i in seq_len(if(R_CHECK_TIMINGS_) 10L else 1e4L)){
 	dat=sample(rpois(1, 30L)+1);
 	sdat=sort(dat);
 	d2=dat; d2[1];

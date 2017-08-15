@@ -467,7 +467,7 @@ dkde=function(x, bw=bw.nrd, kernel=.kernels, from=min(x)-3*median(bw), to=max(x)
 	x=x-from; to=to-from; from=0
 	M=nextn(n*2L, 2L)
 	delta=(to-from)/M
-	tk=seq(from=from, to=to, length=M+1L)
+	tk=seq.int(from=from, to=to, length.out=M+1L)
 	#cuts=as.integer(cut(x, tk))
 	cuts=findInterval(x, tk)
 		buf=integer(M)

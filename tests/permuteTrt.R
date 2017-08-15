@@ -28,7 +28,7 @@ if(!R_CHECK_TIMINGS_){
 	stopifnot(ncol(pmat[[1L]]) == 92378L)
 	
 	
-	for(i in seq(50)){
+	for(i in seq_len(50)){
 		trt=sample(gl(3,3))
 		pmat=permuteTrt(trt, 1e6L)
 		stopifnot(ncol(pmat[[1L]]) == nparts(rep(3,3)))

@@ -2,7 +2,7 @@ if (FALSE) {
 ### This is obsoleted code that relies on Witten & Tibshirani (JASA, 2010) criterion. 
 
 smrpp.test.default <-
-function(y, trt, B=nparts(table(trt)), permutedTrt, weight.trt="df", eps=1e-8, spar=seq(1,sqrt(ncol(y)),length=100L), ...) ## this uses C code
+function(y, trt, B=nparts(table(trt)), permutedTrt, weight.trt="df", eps=1e-8, spar=seq.int(from=1,to=sqrt(ncol(y)),length.out=100L), ...) ## this uses C code
 ## y is a dist object; wtmethod: 0=sample size-1; 1=sample size
 {
     p1=2  ## order of univariate minkowski dist, to the power of p1
@@ -30,7 +30,7 @@ function(y, trt, B=nparts(table(trt)), permutedTrt, weight.trt="df", eps=1e-8, s
     
     get.bcss=function(thisPerm){
       ans=numeric(R)
-      for(r in seq(R)){
+      for(r in seq_len(R)){
         thisDist=dist(y[,r,drop=FALSE], method='minkowski', p=p1)^p1
         ans[r]=sum(thisDist)*2/(N-wtmethod) - .Call(mrppstats, thisDist, thisPerm, wtmethod, PACKAGE='MRPP')
       }
@@ -72,7 +72,7 @@ function(y, trt, B=nparts(table(trt)), permutedTrt, weight.trt="df", eps=1e-8, s
       }
     }    
     stats=numeric(B)
-    for(b in seq(B)){
+    for(b in seq_len(B)){
       thisPerm=lapply(permutedTrt, '[', , b, drop=FALSE)
       bcss=get.bcss(thisPerm)
       
@@ -116,13 +116,13 @@ function(dp.dw, max.ratio=2, nspar=100L)
     if(!is.matrix(dp.dw) && is.numeric(dp.dw)) {dropf=drop; dp.dw=matrix(dp.dw, 1L)} else dropf=I
     B=nrow(dp.dw); R=ncol(dp.dw)
     ans=matrix(NA_real_, B, nspar)
-    for(b in seq(B)){
+    for(b in seq_len(B)){
         m1=min(dp.dw[b,])
         m2=min(dp.dw[b, dp.dw[b,]>m1])
         mR=max(dp.dw[b,])
         min. = (m2-m1)*.5/R*sum(dp.dw[b,]==m1)
         max. = .5*( (k*mR-m1)/(k-1)-mean(dp.dw[b,]))
-        ans[b,]=c(10^seq(from=log10(min.), to=log10(max.), length=nspar-1L), Inf)
+        ans[b,]=c(10^seq.int(from=log10(min.), to=log10(max.), length.out=nspar-1L), Inf)
     }
     unclass(dropf(ans))
 }
@@ -141,11 +141,11 @@ function(dp.dw, max.ratio=2, nspar=100L, denseProp=.25)
     nDense=round(nspar*denseProp)
     nDense=min(nspar, max(1, nDense))
     nSparse= nspar - nDense
-    spQuants=seq(0, 1, length=nSparse)
+    spQuants=seq.int(from=0, to=1, length.out=nSparse)
 
     B=nrow(dp.dw); R=ncol(dp.dw)
     ans=matrix(NA_real_, B, nspar)
-    for(b in seq(B)){
+    for(b in seq_len(B)){
         m1=min(dp.dw[b,])
         #m2=min(dp.dw[b, dp.dw[b,]>m1])
         mR=max(dp.dw[b,])
@@ -153,7 +153,7 @@ function(dp.dw, max.ratio=2, nspar=100L, denseProp=.25)
 #        max. = .5*( (k*mR-m1)/(k-1)-mean(dp.dw[b,]))
 #        ans[b,]=c(10^seq(from=log10(min.), to=log10(max.), length=nspar-1L), Inf)
         spAns=quantile(dp.dw[b, dp.dw[b,]>m1], probs=spQuants)
-        dsAns=seq(mR, (k*mR-m1)/(k-1), length=nDense-1)
+        dsAns=seq.int(from=mR, to=(k*mR-m1)/(k-1), length.out=nDense-1)
         ans[b,]=c(spAns, dsAns, Inf)
     }
     unclass(dropf(ans))
@@ -187,7 +187,7 @@ function(dp.dw, spar, simplify=TRUE)
 
     for(b in seq_len(B)){
         o=order(dp.dw[b,])
-        grids=(seq(R-1L))*dp.dw[b,o[-1L]]-cumsum(dp.dw[b,o[-R]])  ## this defines finer grids for searching for delta
+        grids=(seq_len(R-1L))*dp.dw[b,o[-1L]]-cumsum(dp.dw[b,o[-R]])  ## this defines finer grids for searching for delta
 #        rg=-rev(range(dp.dw[b,]))      ### this range is too wide
         for(l in seq_len(L)){
             if(is.infinite(spar[b,l])) {ans[l, b, ]=1; next}
@@ -270,7 +270,7 @@ function(y, trt, B=nparts(table(trt)), permutedTrt, weight.trt="df", eps=1e-8, s
     if(missing(spar)){
         nspar=100L
         sparMax=max(sparMinMax[2L,])
-        spar=c(10^seq(from=log10(sparMin), to=log10(sparMax), length=nspar-1L), Inf)
+        spar=c(10^seq.int(from=log10(sparMin), to=log10(sparMax), length.out=nspar-1L), Inf)
     } else {
         sparMax=max(spar, sparMinMax[2L,])
         spar=sort(spar[ spar>=sparMin ])
@@ -280,7 +280,7 @@ function(y, trt, B=nparts(table(trt)), permutedTrt, weight.trt="df", eps=1e-8, s
 
 #    get.bcss=function(thisPerm){
 #      ans=numeric(R)
-#      for(r in seq(R)){
+#      for(r in seq_len(R)){
 #        thisDist=dist(y[,r,drop=FALSE], method='minkowski', p=p1)^p1
 #        ans[r]=sum(thisDist)*2/(N-wtmethod) - .Call(mrppstats, thisDist, thisPerm, wtmethod, PACKAGE='MRPP')
 #      }
@@ -326,7 +326,7 @@ function(y, trt, B=nparts(table(trt)), permutedTrt, weight.trt="df", eps=1e-8, s
     stats=numeric(B)
     all.weights=smrpp.penWt(dp.dw, spar, simplify=FALSE)
 
-    for(b in seq(B)){
+    for(b in seq_len(B)){
 #      thisPerm=lapply(permutedTrt, '[', , b, drop=FALSE)
 #      bcss=get.bcss(thisPerm)
       
@@ -437,7 +437,7 @@ function(y, trt, B=nparts(table(trt)), permutedTrt, weight.trt="df",  outerStat=
         outerStatFunName='Sparse Weighted DISCO 1/F'
     }else stop('Should not reach this line')
 
-    for(b in seq(B)){
+    for(b in seq_len(B)){
         if (verbose && isTRUE(b%%verbose == 0L)) 
                     cat("outer permutation:", b - 1L, " out of", B, 
                         "\t\t\r")

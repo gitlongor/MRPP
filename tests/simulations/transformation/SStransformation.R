@@ -64,14 +64,14 @@ trans.name = function(i)
 	if(is.null(trans.args[[i]])) return(ans)
 	sprintf("%s\n%s=%s", ans, names(trans.args[[i]]), as.character(trans.args[[i]]))
 }
-trans.names=sapply(seq(n.trans), trans.name)
+trans.names=sapply(seq_len(n.trans), trans.name)
 
 plot.factor=500
-for(invsize.i in seq(n.invsize)) {
+for(invsize.i in seq_len(n.invsize)) {
 	png(sprintf('kidney.tumor.qq.invsize%d.png',invsize.i), width = plot.factor*n.trans, height = plot.factor * n.mu, pointsize=30)
 		par(mfrow=c(n.mu, n.trans), mai=rep(2,4))
 
-	for(mu.i in seq(n.mu)){
+	for(mu.i in seq_len(n.mu)){
 		this.idx = which(as.integer(ins.blk) == invsize.i & as.integer(mu.blk) == mu.i)
 		if(length(this.idx)==0L){
 			for(tr.i in seq_along(trans)) plot(0,0,xlab='',ylab='',main='',axes=FALSE, type='n')
@@ -138,14 +138,14 @@ trans.name = function(i)
 	if(is.null(trans.args[[i]])) return(ans)
 	sprintf("%s\n%s=%s", ans, names(trans.args[[i]]), as.character(trans.args[[i]]))
 }
-trans.names=sapply(seq(n.trans), trans.name)
+trans.names=sapply(seq_len(n.trans), trans.name)
 
 plot.factor=500
-for(invsize.i in seq(n.invsize)) {
+for(invsize.i in seq_len(n.invsize)) {
 	png(sprintf('kidney.nontumor.qq.invsize%d.png',invsize.i), width = plot.factor*n.trans, height = plot.factor * n.mu, pointsize=30)
 		par(mfrow=c(n.mu, n.trans), mai=rep(2,4))
 
-	for(mu.i in seq(n.mu)){
+	for(mu.i in seq_len(n.mu)){
 		this.idx = which(as.integer(ins.blk) == invsize.i & as.integer(mu.blk) == mu.i)
 		if(length(this.idx)==0L){
 			for(tr.i in seq_along(trans)) plot(0,0,xlab='',ylab='',main='',axes=FALSE, type='n')

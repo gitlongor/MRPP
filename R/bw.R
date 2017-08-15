@@ -73,7 +73,7 @@ bw.mse.pdf.asym=function(x, mrpp,iter.max=1L,eps=1e-6,kernel='triweight', verbos
 bw.mse.pdf.asym=function(x, kernel='triweight', verbose=FALSE)
 {
 	nmax=512L;	nx=length(x); iter.max=1L; eps=1e-6
-	x.idx=if(nx<nmax) seq(nmax) else as.integer(round(seq(from=1L, to=nx, length=nmax))) 
+	x.idx=if(nx<nmax) seq_len(nmax) else as.integer(round(seq.int(from=1L, to=nx, length.out=nmax))) 
 	bw00=kedd::h.ucv(x[x.idx], deriv.order=0L, kernel=kernel)$h*(nmax/nx)^.2
 	bw02=kedd::h.ucv(x[x.idx], deriv.order=2L, kernel=kernel)$h*(nmax/nx)^(1/9)
 	
@@ -102,7 +102,7 @@ bw.range=function(x, length=200, lower=.05, upper=.95, safety=100)
 	lo = quantile(diff(uniqstat), lower)
 	hi = diff(quantile(uniqstat, prob=c(lower, upper)))
 	lf = log10(safety)
-	10^seq(log10(lo)-lf, log10(hi)+lf, length=length)
+	10^seq.int(from=log10(lo)-lf, to=log10(hi)+lf, length.out=length)
 }
 
 bw.safety=function(x, kernel, nNonzero=3L, pdf.cut=1e-3)
@@ -459,7 +459,7 @@ bw.constr.midp=function(x, eps = 1e-8, verbose=FALSE)
 	curve(dnorm, lty=3, col="grey", add=TRUE)
 	}
 	
-	xx=seq(min(x), max(x), length=1e5)
+	xx=seq.int(from=min(x), to=max(x), length.out=1e5)
 	midpKde=kde(x, ,bw.constr.midp(x), eval.points=xx)
 	
 }

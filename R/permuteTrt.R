@@ -20,7 +20,7 @@ function(trt, B=100L, idxOnly = FALSE) ## matrices of permutation vectors for on
         sp=setparts(n) # values are treatment indices
         B=ncol(sp)
 		## locating/swapping the original treatment assignment
-		b=seq(B)
+		b=seq_len(B)
 		for(i in seq_along(n)){ ## pretty fast as the size of b is keeping shrinking
 			if(n[i]<=1L)break;
 			j0=part0[[i]][1]
@@ -36,7 +36,7 @@ function(trt, B=100L, idxOnly = FALSE) ## matrices of permutation vectors for on
 		class(sp)='factor'; attr(sp,'levels')=levs
 		ans=split(rep.int(1:N,B),sp);  
 		## the previous block was originally implemented as ans=split(row(sp),sp) 
-		for(i in seq(ntrts)) dim(ans[[i]])=c(length(ans[[i]])%/%B,B)   ## "/" returns double but %/% returns integer
+		for(i in seq_len(ntrts)) dim(ans[[i]])=c(length(ans[[i]])%/%B,B)   ## "/" returns double but %/% returns integer
 		## the previous block was initially implemented as for(i in seq(ntrts))  ans[[i]]=matrix( apply(sp==i,2L,function(xx)sort(which(xx)) ), ncol=B)
 		
 		ans = ans[levels(trt)]
@@ -68,9 +68,9 @@ function(trt, B=100L, idxOnly = FALSE) ## matrices of permutation vectors for on
 		
 		perms = sapply(decfrCC, dec2permvec, N=N)
 			if(length(idx1)>0L) perms[,idx1]=perms[,1L]
-			perms[,1L] = seq(N)
+			perms[,1L] = seq_len(N)
 		ans = split.data.frame(perms, trt)
-	   for(i in seq(ntrts)) ans[[i]] = .Call(radixSort1PassByCol, ans[[i]], N)
+	   for(i in seq_len(ntrts)) ans[[i]] = .Call(radixSort1PassByCol, ans[[i]], N)
 	   
 		attr(ans, 'idx') = NA_character_
 		class(ans)='permutedTrt'

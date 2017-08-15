@@ -62,7 +62,7 @@ function(trt, B=100L) ## permutation matrix for one way design
                     remainder=rep(1L, R)
                 }
             }else{
-                remainder=table(bdSample(seq(choose(length(vec), n[1L])), 
+                remainder=table(bdSample(seq_len(choose(length(vec), n[1L])), 
                                          R, 
                                          get.choose(length(vec)-n[1L], n[-1L])
                                          )
@@ -100,7 +100,7 @@ bdSample=function(x, n, ubounds)
 # sample n elements of vector x with replacement subject to the number of each element being sampled to be no larger than the corresponding upper bound ubounds
 {
     N=length(x)
-    x0=seq(N)
+    x0=seq_len(N)
     if(length(ubounds)!=N) ubounds=rep(ubounds, length=N)
     stopifnot(sum(ubounds)>n)
     counts=integer(N)
