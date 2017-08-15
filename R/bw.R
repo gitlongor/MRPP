@@ -120,10 +120,11 @@ bw.safety=function(x, kernel, nNonzero=3L, pdf.cut=1e-3)
 bw.smoothp <-
 function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL, 
 	distFunc=dist,  kernel='triweight', 
-	method='sym1', verbose=TRUE, subset, ...)
+	method='sym1', verbose=TRUE, subset, adjust='log scale',...)
 ## y=N-by-p data matrix; b=permutation index for the 1st trt; r=dimension index; 
 {
 	method=match.arg(method, choices=c('sym1','drop1','add1','keep1','dropadd1','dropaddsym1','ss.gradp','kde.mse1','match.pear3','match.pear3gca'))
+	adjust=match.arg(adjust, choices=c('none','log scale'))
     if(!is.matrix(y) && !is.data.frame(y)) y = as.matrix(y)
 	R=NCOL(y)
 	if(R==1L ) method='ss.gradp'
@@ -265,17 +266,34 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 		keep1pval=sapply(seq_along(r), keep1)
 		#t(smps - gradEnv$ans%*%(1-diag(1, length(r), length(r))))
 	}
-	sses = switch(method, 
-		drop1= .rowSums((gradEnv$ans - (p.value(mrpp, type='midp') - drop1pval)[col(gradEnv$ans)])^2, n.bw, length(r)) ,
-		add1 = .rowSums((gradEnv$ans - (add1pval - p.value(mrpp, type='midp'))[col(gradEnv$ans)])^2, n.bw, length(r)) , 
-		sym1 = .rowSums((gradEnv$ans - .5*(add1pval- drop1pval)[col(gradEnv$ans)])^2, n.bw, length(r)) , 
-		keep1= .rowSums((gradEnv$ans%*%(1-diag(1, length(r), length(r)))-keep1pval[col(gradEnv$ans)])^2, n.bw, length(r)) , 
-		dropadd1 = .rowSums((gradEnv$ans - (p.value(mrpp, type='midp') - drop1pval)[col(gradEnv$ans)])^2, n.bw, length(r)) 
-			+ .rowSums((gradEnv$ans - (add1pval - p.value(mrpp, type='midp'))[col(gradEnv$ans)])^2, n.bw, length(r)) ,
-		dropaddsym1 = .rowSums((gradEnv$ans - (p.value(mrpp, type='midp') - drop1pval)[col(gradEnv$ans)])^2, n.bw, length(r)) 
-			+ .rowSums((gradEnv$ans - (add1pval - p.value(mrpp, type='midp'))[col(gradEnv$ans)])^2, n.bw, length(r))
-			+ .rowSums((gradEnv$ans - .5*(add1pval- drop1pval)[col(gradEnv$ans)])^2, n.bw, length(r)) 
-	)
+	pval0=p.value(mrpp, type='midp')
+	if(adjust=='none'){
+		sses = switch(method, 
+			drop1= .rowSums((gradEnv$ans - (pval0 - drop1pval)[col(gradEnv$ans)])^2, n.bw, length(r)) ,
+			add1 = .rowSums((gradEnv$ans - (add1pval - pval0)[col(gradEnv$ans)])^2, n.bw, length(r)) , 
+			sym1 = .rowSums((gradEnv$ans - .5*(add1pval- drop1pval)[col(gradEnv$ans)])^2, n.bw, length(r)) , 
+			keep1= .rowSums((gradEnv$ans%*%(1-diag(1, length(r), length(r)))-keep1pval[col(gradEnv$ans)])^2, n.bw, length(r)) , 
+			dropadd1 = .rowSums((gradEnv$ans - (pval0 - drop1pval)[col(gradEnv$ans)])^2, n.bw, length(r)) 
+				+ .rowSums((gradEnv$ans - (add1pval - pval0)[col(gradEnv$ans)])^2, n.bw, length(r)) ,
+			dropaddsym1 = .rowSums((gradEnv$ans - (pval0 - drop1pval)[col(gradEnv$ans)])^2, n.bw, length(r)) 
+				+ .rowSums((gradEnv$ans - (add1pval - pval0)[col(gradEnv$ans)])^2, n.bw, length(r))
+				+ .rowSums((gradEnv$ans - .5*(add1pval- drop1pval)[col(gradEnv$ans)])^2, n.bw, length(r)) 
+		)
+	}else if(adjust=='log scale'){
+		log.p0=log(pval0)
+		gradEnv$ans = gradEnv$ans/pval0
+		sses = switch(method, 
+			drop1= .rowSums((gradEnv$ans - (log.p0 - log(drop1pval))[col(gradEnv$ans)])^2, n.bw, length(r)) ,
+			add1 = .rowSums((gradEnv$ans - (log(add1pval) - log.p0)[col(gradEnv$ans)])^2, n.bw, length(r)) , 
+			sym1 = .rowSums((gradEnv$ans - .5*(log(add1pval)- log(drop1pval))[col(gradEnv$ans)])^2, n.bw, length(r)) , 
+			keep1= .rowSums((gradEnv$ans%*%(1-diag(1, length(r), length(r)))-log(keep1pval)[col(gradEnv$ans)])^2, n.bw, length(r)) , 
+			dropadd1 = .rowSums((gradEnv$ans - (log.p0 - log(drop1pval))[col(gradEnv$ans)])^2, n.bw, length(r)) 
+				+ .rowSums((gradEnv$ans - (log(add1pval) - log.p0)[col(gradEnv$ans)])^2, n.bw, length(r)) ,
+			dropaddsym1 = .rowSums((gradEnv$ans - (log.p0 - log(drop1pval))[col(gradEnv$ans)])^2, n.bw, length(r)) 
+				+ .rowSums((gradEnv$ans - (log(add1pval) - log.p0)[col(gradEnv$ans)])^2, n.bw, length(r))
+				+ .rowSums((gradEnv$ans - .5*(log(add1pval)- log(drop1pval))[col(gradEnv$ans)])^2, n.bw, length(r)) 
+		)
+	}
 	idx=which.min(sses)
 	ans=bw[idx]
 	min.sse=sses[idx]

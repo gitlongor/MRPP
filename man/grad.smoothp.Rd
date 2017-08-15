@@ -47,9 +47,8 @@ get.p.dd.dw(y, permutedTrt, r = seq_len(ncol(y)), weight.trt="df", eps=1e-8)
 %  \item{cperm.mat}{}
   \item{weight.trt}{As in \code{\link{mrpp.test.dist}}.
 }
-  \item{adjust}{Either \code{NULL} or a character scalar being one of \code{c('none','weighted.mean','scale')}. See details. 
+  \item{adjust}{Either \code{NULL} or a character scalar being one of \code{c('none','weighted.mean','scale','log scale')}. See details. 
 }
-%  \item{min.wts}{}
   \item{eps}{A small positive tolerance, the same as described in \code{\link{mrpp.test}}. }
   \item{x}{An \code{"grad.smoothp"} object returned from calling \code{grad.smooothp}.
 }
@@ -63,7 +62,7 @@ get.p.dd.dw(y, permutedTrt, r = seq_len(ncol(y)), weight.trt="df", eps=1e-8)
 \code{grad.smoothp} first uses kernel density estimator to approximate the distribution of \code{mrpp.stats} and obtain a continuous approximate p-value for the MRPP test. Then it computes the partial derivative of the approximate p-value with respect to the hypothetical weight of each variable, evaluated at weight 1. 
 That is, if the partial derivative is negatively large, then the corresponding variable will be more important, because increasing its weight will quickly decreasing the approximate MRPP p-value. Vice versa. 
 
-When \code{adjust='none'}, the partial derivatives will be returned. When \code{adjust='weighted.mean'}, the partial derivatives will be treated as a weighted average, i.e., will be divided by total weights. When \code{adjust='scale'}, they are further divided standard deviations. When \code{adjust=NULL}, then as long as \code{bw} being used is finite, \code{adjust='none'} will be the default setting; otherwise, \code{adjust='weighted.mean'} will be the default setting. 
+When \code{adjust='none'}, the partial derivatives of p-value with respect to weights will be returned. When \code{adjust='weighted.mean'}, the partial derivatives will be treated as a weighted average, i.e., will be divided by total weights. When \code{adjust='scale'}, they are further divided standard deviations. When \code{adjust='log scale'}, the partial derivatives are first computed on the log p-value scale and the results are then exponentiated. When \code{adjust=NULL}, then as long as \code{bw} being used is finite, \code{adjust='none'} will be the default setting; otherwise, \code{adjust='weighted.mean'} will be the default setting. 
 
 \code{get.p.dd.dw} first computes the partial derivative of the Euclidian distance measure with respect to the hypothetical weights for each variable. This is then used as the distance function for the variable to be used in MRPP. The resulting MRPP p-value is returned as the variable importance. The smaller, the more important.
 }

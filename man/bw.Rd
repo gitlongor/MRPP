@@ -16,7 +16,7 @@ Bandwidth Selection for Kernel Approximation to Discrete Cumulative Distribution
 %bw.mse.pdf.asym(x,iter.max=1L,eps=1e-6,start.bw=bw.nrd, verbose=FALSE)
 bw.smoothp(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL, 
 	distFunc=dist,  kernel='triweight', 
-	method='sym1', verbose=TRUE, subset, \dots)
+	method='sym1', verbose=TRUE, subset, adjust='log scale',\dots)
 bw.range(x, length=200, lower=.05, upper=.95, safety=100)
 }
 %- maybe also "usage" for other objects documented here.
@@ -37,6 +37,8 @@ bw.range(x, length=200, lower=.05, upper=.95, safety=100)
   \item{method}{A character scalar specifying the bandwidth selection method. See details. 
 }
   \item{subset}{NULL, missing, or an integer vector. When \code{subset} is missing, all variables specified by \code{r} will be used to choose bandwidth. If \code{subset} is an integer vector, then only the \code{r[subset]} variables will be used to choose a bandwidth in order to reduce computational time when \code{r} is huge. If \code{subset} is missing, then the default behavior is to use all \code{r} variables when \code{length(r)<=100L}; otherwise, a random subset of 100 plus 20\% additional variables will be used. 
+}
+  \item{adjust}{Either \code{"none"} or \code{"log scale"}. This specifies whether derivative approximation to discrete changes is minimized on the original p-value scale or it log scale. 
 }
   \item{verbose}{Logical. When \code{TRUE}, diagnostic plots will be produced. 
 }
