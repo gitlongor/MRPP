@@ -34,7 +34,7 @@ function(y,permutedTrt, Bperm=nperms.permutedTrt(permutedTrt),
 #        lastperm=permutedTrt[,1]=permutedTrt[,b]; lastcperm=cperm.mat[,1]=cperm.mat[,b]
 #        permutedTrt[,b]=perm1;  cperm.mat[,b]=cperm1
         if(is.na(attr(permutedTrt, 'idx')[1L])) {
-            for(tt in seq(ntrt)) {
+            for(tt in seq_len(ntrt)) {
                 permutedTrt[[tt]][,1L] -> tmp
                 permutedTrt[[tt]][,1L] <- permutedTrt[[tt]][,bseqs[b.i]]
                 tmp                    -> permutedTrt[[tt]][,bseqs[b.i]]
