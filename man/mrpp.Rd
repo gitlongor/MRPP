@@ -1,6 +1,8 @@
 \name{MRPP object}
 \Rdversion{1.1}
 \alias{mrpp}
+\alias{mrpp.matrix}
+\alias{mrpp.dist}
 %- Also NEED an "\alias" for EACH other topic documented here.
 \title{
 MRPP Object
@@ -9,24 +11,30 @@ MRPP Object
 The \code{"mrpp"} object is a setup that allows the multiresponse permutation procedure (MRPP) method. 
 }
 \usage{
-mrpp(y, trt, B=as.integer(min(nparts(table(trt)), 1e4L)),
-	permutedTrt, weight.trt="df", distFunc=dist, idxOnly=FALSE)
+mrpp(y, trt, B=as.integer(min(nparts(table(trt)), 1e4L)), permutedTrt, weight.trt='df', idxOnly=FALSE,...)
+
+\method{mrpp}{matrix}(y, trt, B=as.integer(min(nparts(table(trt)), 1e4L)), permutedTrt, weight.trt='df', idxOnly=FALSE, distFunc=dist,...)
+\method{mrpp}{dist}(y, trt, B=as.integer(min(nparts(table(trt)), 1e4L)), permutedTrt, weight.trt='df', idxOnly=FALSE, distFunc=dist, R, ...)
 }
 %- maybe also "usage" for other objects documented here.
 \arguments{
-  \item{y}{A numeric data matrix, with rows being samples and columns being response variables. 
+  \item{y}{A numeric data matrix for \code{mrpp.matrix}, with rows being samples and columns being response variables. For \code{mrpp.dist}, this is a \code{dist} object containing the pairwise inter-sample distances. 
 }
   \item{trt}{A vector of treatment assignments. If missing, the first permutation in \code{permutedTrt} will be used as the original treatment assignment. As least one of \code{trt} or \code{permutedTrt} need to be given. 
 }
   \item{B}{A positive integer number of permutations requested. This will only be used when \code{permutedTrt} is missing. This will be overwritten by the \code{ncol(permutedTrt)}.
 }
-  \item{permutedTrt}{An optional permutation index matrix. If missing, this will be computed as \code{permuteTrt(trt,B)}. See \code{\link{permuteTrt}}. 
+  \item{permutedTrt}{An optional \code{permutedTrt} object specifying the permutations of treatment assignments. If missing, this will be computed as \code{permuteTrt(trt,B)}. See \code{\link{permuteTrt}}. 
 }
   \item{weight.trt}{Either a character scalar being one of \code{c("df", "n", "equal", "pairs")} or a positive numeric vector of length \code{nlevels(trt)} subject to sum-to-1 constraint. See details. 
 }
   \item{distFunc}{A function that computes a \code{\link{dist}} object given data \code{y}.
 }
   \item{idxOnly}{As in \code{\link{permuteTrt}}.
+}
+  \item{R}{A positive integer, equal to the number of response variables.
+}
+  \item{\dots}{Additional arguments to be passed on. 
 }
 }
 \details{

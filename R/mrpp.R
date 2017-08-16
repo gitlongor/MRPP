@@ -1,5 +1,5 @@
 
-.mrpp.expr=expression({
+.mrpp.expr=quote({
 	if(missing(trt)&&missing(permutedTrt))
 		stop('"trt" and "permutedTrt" cannot be both missing')
     if(missing(trt)) {  ## recovering trt from the first permutation
@@ -25,47 +25,11 @@
 	wtmethod=tmp$wtmethod; weight.trt=tmp$weight.trt[trtc]
 })
 
-mrpp <- function(y, trt, B=as.integer(min(nparts(table(trt)), 1e4L)), permutedTrt, weight.trt='df', distFunc=dist, idxOnly=FALSE)
-{
-	eval(.mrpp.expr)
-    if(missing(permutedTrt)) {
-        dname=paste('"dist" object',deparse(substitute(y)), 
-                             'and treatment group', deparse(substitute(trt)))
-    }else{
-		dname=paste('"dist" object',deparse(substitute(y)), 
-                             'and permuted treatment', deparse(substitute(permutedTrt)))
-	}
-if(FALSE){	
-    if(missing(trt)) {  ## recovering trt from the first permutation
-      trt=trt.permutedTrt(permutedTrt)
-    }
-	permutedTrt.env=new.env(hash=FALSE, parent=constEnv)
-    if(missing(permutedTrt)) {
-		delayedAssign('permutedTrt', permuteTrt(trt,B, idxOnly), eval.env=environment(), assign.env=permutedTrt.env)
-        dname=paste('"dist" object',deparse(substitute(y)), 
-                             'and treatment group', deparse(substitute(trt)))
-    }else{
-		permutedTrt.env$permutedTrt = permutedTrt
-		dname=paste('"dist" object',deparse(substitute(y)), 
-                             'and permuted treatment', deparse(substitute(permutedTrt)))
-		idxOnly = !is.na(attr(permutedTrt, 'idx')[1L])
-	}
-	delayedAssign('B', nperms.permutedTrt(permutedTrt), eval.env=permutedTrt.env, assign.env=permutedTrt.env)
+mrpp <- function(y, trt, B=as.integer(min(nparts(table(trt)), 1e4L)), permutedTrt, weight.trt='df', idxOnly=FALSE,...) UseMethod('mrpp')
 
-	{
-		n=table(trt)
-		cn=cumsum(n)
-		ntrt=length(n)
-		N=cn[ntrt]
-		ordn=order(-n, names(n), decreasing=FALSE)
-		trt=ordered(trt, levels=names(n)[ordn])
-		trtc=levels(trt)
-		tabtrt = n[ordn]
-	}
-	
-	tmp=mrpp.weight.trt(weight.trt, as.factor(trt))
-	wtmethod=tmp$wtmethod; weight.trt=tmp$weight.trt[trtc]
-}
+mrpp.matrix <- eval(bquote(function(y, trt, B=as.integer(min(nparts(table(trt)), 1e4L)), permutedTrt, weight.trt='df', idxOnly=FALSE, distFunc=dist,...)
+{	stopifnot(is.numeric(y))
+	.(.mrpp.expr)
 	if(N != NROW(y)) stop('NROW(y) != length(trt)')
 	R = NCOL(y)
 	structure(list(distObj=distFunc(y), 
@@ -83,5 +47,30 @@ if(FALSE){
 			  ),
 			  class='mrpp'
 	)
-}
+}, # of function
+) # of bquote
+) # of eval 
 
+mrpp.dist=eval(bquote(function(y, trt, B=as.integer(min(nparts(table(trt)), 1e4L)), permutedTrt, weight.trt='df', idxOnly=FALSE, distFunc=dist, R, ...)
+{
+	.(.mrpp.expr)
+	if(N != attr(y,'Size')) stop('attr(y,"Size") != length(trt)')
+	if(missing(R)) R = attr(y,'Size')-1L
+	structure(list(distObj=y, 
+					n=tabtrt, 
+					ntrt=ntrt,
+					nparts=nparts(tabtrt),
+					nobs = N, 
+					R=R, 
+					B.requested=B, 
+					trt=trt,
+					permutedTrt.env=permutedTrt.env, 
+					idxOnly = idxOnly,
+					weight.trt=structure(weight.trt, 'method'=wtmethod), 
+					distFunc = distFunc
+			  ),
+			  class='mrpp'
+	)
+} # of function
+) # of bquote
+) # of eval

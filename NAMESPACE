@@ -48,6 +48,8 @@ export(
 	dpearson3gca, ppearson3gca, dgammagca, pgammagca
 )
 
+S3method(mrpp, matrix)
+S3method(mrpp, dist)
 
 S3method(mrpp.test, formula)
 S3method(mrpp.test, dist)
