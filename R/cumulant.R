@@ -72,7 +72,7 @@ moment.mrpp=function(x, order=1:4, central=FALSE,...)
 	order=as.integer(order)
 	mOrd=max(order)
 	if(mOrd>=5L) .NotYetImplemented()
-	cum=cumulant(x, seq(mOrd))
+	cum=cumulant(x, seq_len(mOrd))
 	
 	ans=numeric(length(order)); names(ans)=as.character(order)
 
