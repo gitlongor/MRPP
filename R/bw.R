@@ -257,25 +257,37 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 		return(ans)
 		
 	}
-	
+
+
+	mrpp.obj1=mrpp.obj
 	if(method%in%c('drop1','sym1','dropadd1', 'dropaddsym1')){
 		drop1p = function(r.i){
-			lst$y=distFunc(y[,r[-r.i],drop=FALSE])
-			p.value(do.call('mrpp.test.dist', lst),type="midp")
+			#lst$y=distFunc(y[,r[-r.i],drop=FALSE])
+			#p.value(do.call('mrpp.test.dist', lst),type="midp")
+			mrpp.obj1$distObj=distFunc(y[,r[-r.i],drop=FALSE])
+			mrpp.obj1$R=mrpp.obj$R-1L
+			p.value(mrpp.test(mrpp.obj1), type='midp')
 		}
 		drop1pval= sapply(seq_along(r), drop1p)
 	}
 	if(method%in%c('add1','sym1','dropadd1','dropaddsym1')){
 		add1p = function(r.i){
-			lst$y=distFunc(y[,c(r,r[r.i]),drop=FALSE])
-			p.value(do.call('mrpp.test.dist', lst),type="midp")
+			#lst$y=distFunc(y[,c(r,r[r.i]),drop=FALSE])
+			#p.value(do.call('mrpp.test.dist', lst),type="midp")
+			mrpp.obj1$distObj=distFunc(y[,c(r,r[r.i]),drop=FALSE])
+			mrpp.obj1$R=mrpp.obj$R+1L
+			p.value(mrpp.test(mrpp.obj1), type='midp')
+			
 		}
 		add1pval=sapply(seq_along(r), add1p)
 	}
 	if(method%in%c('keep1')){
 		keep1 = function(r.i){
-			lst$y=distFunc(y[,r[r.i],drop=FALSE])
-			p.value(do.call('mrpp.test.dist', lst),type="midp")
+			#lst$y=distFunc(y[,r[r.i],drop=FALSE])
+			#p.value(do.call('mrpp.test.dist', lst),type="midp")
+			mrpp.obj1$distObj=distFunc(y[,r[r.i],drop=FALSE])
+			mrpp.obj1$R=1L
+			p.value(mrpp.test(mrpp.obj1), type='midp')
 		}
 		keep1pval=sapply(seq_along(r), keep1)
 		#t(smps - gradEnv$ans%*%(1-diag(1, length(r), length(r))))
