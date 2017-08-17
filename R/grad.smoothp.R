@@ -62,7 +62,7 @@ function(y, permutedTrt, bw, r=seq_len(NCOL(y)), test=FALSE,
 
 	if(is.null(adjust[1L])) adjust='none'
 	if(is.numeric(bw) && is.infinite(bw)) adjust='weighted.mean'
-	adjust=match.arg(adjust, c('none','weighted.mean','scale'))
+	adjust=match.arg(adjust, c('none','weighted.mean','scale', 'log scale'))
 
 	pars=list(kernel=kernel, weight.trt=weight.trt, adjust=adjust, bw=bw)
 	adjust0=adjust; if(adjust=='log scale') adjust='none'
