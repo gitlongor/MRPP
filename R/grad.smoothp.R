@@ -96,7 +96,7 @@ function(y, permutedTrt, bw, r=seq_len(NCOL(y)), test=FALSE,
 #        }
 		eval(expr)    ## this lines replace the above 3 lines
 	}
-	if(adjust0=='log scale') ans==exp(ans/pval0)
+	if(adjust0=='log scale') ans=exp(ans/pval0)
     structure(drop(ans), parameters=pars, midp=pval0, class='grad.smoothp')
 }
 
