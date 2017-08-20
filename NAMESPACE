@@ -1,4 +1,4 @@
-importFrom(partitions, setparts)
+importFrom(partitions, setparts, perms)
 import(gmp)
 #importFrom(pi0,combn2R)
 ##importExcept(Matrix, summary, update)
@@ -8,7 +8,7 @@ importFrom(varComp, p.value)
 importFrom(moments, skewness, kurtosis, all.moments)
 importFrom(PDQutils, moment2cumulant,cumulant2moment,dapx_gca,papx_gca)
 importFrom(kedd, h.amise, h.ucv)
-
+importFrom(uniqueAtomMat, duplicated.matrix)
 
   importFrom("grDevices", "dev.new")
   importFrom("graphics", "abline", "axTicks", "axis", "box", "curve",
@@ -19,6 +19,7 @@ importFrom(kedd, h.amise, h.ucv)
              "optimize", "pbeta", "pgamma", "plogis", "pnorm", "qgamma",
              "quantile", "rgamma", "rmultinom", "terms", 'make.link')
   importFrom("utils", "combn", "tail")
+  
 export(
 	mrpp,
 	mrpp.test, mrppBVS, mrppBVS.test, 
