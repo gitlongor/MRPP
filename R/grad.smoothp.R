@@ -70,7 +70,7 @@ function(y, permutedTrt, bw, r=seq_len(NCOL(y)), test=FALSE,
 #    for(b.i in 1:length(b))
 #      weight[,b.i]=pmax(min.wts,dnorm((mrpp.stats[b[b.i]]-mrpp.stats),0,bw))
 	weight = dkernel(kernel)( (mrpp.stats-rep(mrpp.stats[b],each=B) )/ bw)
-	dim(weight)=c(B, length(b))
+	#dim(weight)=c(B, length(b))
 	if(adjust=='none'){
 		  weight=weight/bw/B
 	}else weight=weight/rep(.colSums(weight, B, length(b)), each=B)
