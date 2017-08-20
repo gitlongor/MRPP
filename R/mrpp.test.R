@@ -22,7 +22,7 @@ mrpp.weight.trt=function(weight.trt, trt)
 mrpp.test.mrpp = function(y, method='pearson3gca', eps=1e-8, ... )
 {
 	if(!missing(...)).NotYetUsed(..., error=FALSE)
-	dname = paste('"mrpp" object',dQuote(as.character(match.call()[['y']])))
+	dname = paste('"mrpp" object',dQuote(substr(as.character(match.call()[['y']]), 1L, 20L)))
 	
 	methods=unlist(strsplit(method[1L], ".", fixed=TRUE))
 	if(length(methods)>2L) stop('unknown method')

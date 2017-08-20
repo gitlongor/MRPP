@@ -5,6 +5,11 @@
     if(missing(trt)) {  ## recovering trt from the first permutation
       trt=trt.permutedTrt(permutedTrt)
     }
+	if(missing(B)){
+		B=if(missing(permutedTrt)) {
+			as.integer(min(nparts(table(trt)), 1e4L)) 
+		}else nperms.permutedTrt(permutedTrt)
+	}
 	permutedTrt.env=new.env(hash=FALSE, parent=constEnv)
     if(missing(permutedTrt)) {
 		delayedAssign('permutedTrt', permuteTrt(trt,B, idxOnly), eval.env=environment(), assign.env=permutedTrt.env)
@@ -25,9 +30,9 @@
 	wtmethod=tmp$wtmethod; weight.trt=tmp$weight.trt[trtc]
 })
 
-mrpp <- function(y, trt, B=as.integer(min(nparts(table(trt)), 1e4L)), permutedTrt, weight.trt='df', idxOnly=FALSE,...) UseMethod('mrpp')
+mrpp <- function(y, trt, B, permutedTrt, weight.trt='df', idxOnly=FALSE,...) UseMethod('mrpp')
 
-mrpp.matrix <- eval(bquote(function(y, trt, B=as.integer(min(nparts(table(trt)), 1e4L)), permutedTrt, weight.trt='df', idxOnly=FALSE, distFunc=dist,...)
+mrpp.matrix <- eval(bquote(function(y, trt, B, permutedTrt, weight.trt='df', idxOnly=FALSE, distFunc=dist,...)
 {	stopifnot(is.numeric(y))
 	.(.mrpp.expr)
 	if(N != NROW(y)) stop('NROW(y) != length(trt)')
@@ -51,7 +56,7 @@ mrpp.matrix <- eval(bquote(function(y, trt, B=as.integer(min(nparts(table(trt)),
 ) # of bquote
 ) # of eval 
 
-mrpp.dist=eval(bquote(function(y, trt, B=as.integer(min(nparts(table(trt)), 1e4L)), permutedTrt, weight.trt='df', idxOnly=FALSE, distFunc=dist, R, ...)
+mrpp.dist=eval(bquote(function(y, trt, B, permutedTrt, weight.trt='df', idxOnly=FALSE, distFunc=dist, R, ...)
 {
 	.(.mrpp.expr)
 	if(N != attr(y,'Size')) stop('attr(y,"Size") != length(trt)')
