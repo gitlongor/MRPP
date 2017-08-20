@@ -1,7 +1,7 @@
 mrppBVS.test<-
 function(y,permutedTrt, Bperm=nperms.permutedTrt(permutedTrt), 
          importance=c('approx.keep1', 'grad.smoothp','p.grad.dist'),
-         alpha.inc=NULL, alpha.exc=0, size.inc=1L, stepwise=FALSE, 
+         inc.thresh=NULL, exc.thresh=0, size.inc=1L, stepwise=FALSE, 
 		 niter=Inf, verbose=FALSE, ...)
 {
     dname=paste("Response data", deparse(substitute(y)), 'and permuted treatment', deparse(substitute(permutedTrt)))
@@ -13,10 +13,10 @@ function(y,permutedTrt, Bperm=nperms.permutedTrt(permutedTrt),
     importance=match.arg(importance)
 
 #    if(missing(cperm.mat)) cperm.mat=apply(permutedTrt,2,function(kk)(1:N)[-kk])
-    if(missing(alpha.inc)) alpha.inc=if(importance=='dp.dw') 0 else 0.1
+    if(missing(inc.thresh)) inc.thresh=if(importance=='dp.dw') 0 else 0.1
     selected.pvals=numeric(Bperm)
     fit0=mrppBVS(y=y,permutedTrt=permutedTrt, verbose=FALSE, niter=niter, importance=importance, 
-            alpha.inc=alpha.inc, alpha.exc=alpha.exc, stepwise=stepwise, size.inc=size.inc, 
+            inc.thresh=inc.thresh, exc.thresh=exc.thresh, stepwise=stepwise, size.inc=size.inc, 
             ...)
     bsfit=tail(fit0,1L)[[1L]]
     selected.pvals[1]=if(length(bsfit$p.value)>0) bsfit$p.value else 1
@@ -46,7 +46,7 @@ function(y,permutedTrt, Bperm=nperms.permutedTrt(permutedTrt),
         }
 
         selected.pvals[b.i+1L]={tmp=tail(mrppBVS(y=y,permutedTrt=permutedTrt, verbose=FALSE, niter=niter, 
-                        importance=importance, alpha.inc=alpha.inc, alpha.exc=alpha.exc, 
+                        importance=importance, inc.thresh=inc.thresh, exc.thresh=exc.thresh, 
                         stepwise=stepwise, size.inc=size.inc, ...),1L)[[1L]]$p.value;
                            if(length(tmp)>0) tmp else 1}
     }

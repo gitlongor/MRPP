@@ -12,11 +12,11 @@ Backward variable selection for the MRPP
 \usage{
 mrppBVS(y,permutedTrt, 
          importance=c('approx.keep1', 'grad.smoothp','p.grad.dist'),
-         alpha.inc=NULL, alpha.exc=0, size.inc=0L, stepwise=FALSE,
+         inc.thresh=NULL, exc.thresh=0, size.inc=0L, stepwise=FALSE,
 		 niter=Inf, verbose=FALSE, ...)
 mrppBVS.test(y,permutedTrt, Bperm=nperms.permutedTrt(permutedTrt), 
          importance=c('approx.keep1', 'grad.smoothp','p.grad.dist'),
-         alpha.inc=NULL, alpha.exc=0, size.inc=1L, stepwise=FALSE,
+         inc.thresh=NULL, exc.thresh=0, size.inc=1L, stepwise=FALSE,
 		 niter=Inf, verbose=FALSE,  ...)
 }
 %- maybe also "usage" for other objects documented here.
@@ -30,17 +30,17 @@ mrppBVS.test(y,permutedTrt, Bperm=nperms.permutedTrt(permutedTrt),
   \item{importance}{
 	Either \code{"dp.dw"} or \code{"p.dd.dw"}. The importance measure. \code{"dp.dw"} means the derivative of approximate p-value with respect to weights. \code{"p.dd.dw"} means the permutation p-value using the derivative of Euclidean distance with respect to weights as the new distance measure. 
 }
-  \item{alpha.inc}{
+  \item{inc.thresh}{
 	Desired minimally allowable level of importance for selected variables. By default, this is set to 0 if \code{importance="dp.dw"}; and 0.1 if \code{importance="p.dd.dw"}.
 }
-  \item{alpha.exc}{
+  \item{exc.thresh}{
 	Desired minimally allowable MRPP p-value for excluded variables. If this is set to zero, then even if the MRPP p-value for the deleted variables becomes small, the iterations continue until any other exit criteria is met.
 }
   \item{size.inc}{
 	Minimally allowable number of selected variables. If the number of variables to be kept in the next iteration falls below this number, the iteration terminates.
 }
   \item{stepwise}{
-	Logical. If \code{TRUE}, then only the variables with least importance are removed. Otherwise, all variables with importance less than \code{alpha.inc} are removed.
+	Logical. If \code{TRUE}, then only the variables with least importance are removed. Otherwise, all variables with importance less than \code{inc.thresh} are removed.
 }
   \item{niter}{
 	Maximum number of iterations. 
@@ -59,7 +59,7 @@ mrppBVS.test(y,permutedTrt, Bperm=nperms.permutedTrt(permutedTrt),
 }
 }
 \details{
-\code{mrppBVS} performs backward variable selection for the MRPP. It starts from all \code{ncol(y)} response variables, and compute the variable importance measure specified by \code{importance}. In each iteration, it deletes a set of least important variables. When \code{stepwise=TRUE}, the variables with importance measure equal to the largest variable importance measures will delted. When \code{stepwise=FALSE}, variables with importance measure not smaller than \code{alpha.inc} will be deleted. This process is iterated until the all remaining variables have importance measure not larger than \code{alpha.inc}, \emph{or} the MRPP p-value for the deleted variables is not larger than \code{alpha.exc}, \emph{or} the number of remaining variables will be smaller than \code{size.inc} in the next iteration, \emph{or} the number of remaining variable is zero. 
+\code{mrppBVS} performs backward variable selection for the MRPP. It starts from all \code{ncol(y)} response variables, and compute the variable importance measure specified by \code{importance}. In each iteration, it deletes a set of least important variables. When \code{stepwise=TRUE}, the variables with importance measure equal to the largest variable importance measures will delted. When \code{stepwise=FALSE}, variables with importance measure not smaller than \code{inc.thresh} will be deleted. This process is iterated until the all remaining variables have importance measure not larger than \code{inc.thresh}, \emph{or} the MRPP p-value for the deleted variables is not larger than \code{exc.thresh}, \emph{or} the number of remaining variables will be smaller than \code{size.inc} in the next iteration, \emph{or} the number of remaining variable is zero. 
 
 \code{mrppBVS.test} performs a permutation test with the test statistic being the MRPP p-value of selected variable from the last iteration of the \code{mrppBVS} result. For simplicity, the current implementation assumes that outer permutations (that performs the final test) will be a subset of the inner permutations (that performs variable selection) specified by \code{permutedTrt}. Therefore, \code{Bperm} will be no larger than \code{ncol(permutedTrt[[1L]])}.
 }
@@ -70,7 +70,7 @@ For \code{mrppBVS}, the result is a list with each component being list of :
   \item{influence }{The variable importance measures for the remaining variables;}
   \item{p.value }{The raw MRPP p-value for the remaining variables;}
   \item{deleted.p.value }{The raw MRPP p-value for the excluded variables.}
-In addition, the result also has the attribute \code{"parameter"}, which is a list of \code{importance, alpha.inc, alpha.exc, size.inc, stepwise, niter} of input parameters, and the attribute \code{"status"}, which is a character vector giving the exit status(es).
+In addition, the result also has the attribute \code{"parameter"}, which is a list of \code{importance, inc.thresh, exc.thresh, size.inc, stepwise, niter} of input parameters, and the attribute \code{"status"}, which is a character vector giving the exit status(es).
 
 
 \code{mrppBVS.test} returns an \code{htest} object with the last element of the result from \code{mrppBVS}, and 
