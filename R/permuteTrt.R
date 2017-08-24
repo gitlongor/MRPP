@@ -35,10 +35,13 @@ eqv.trt=function(trt)
 	eqv.trts
 }
 
+if(FALSE){
+# old working version
 permuteTrt <-
-function(trt, B=100L, idxOnly = FALSE, sample.method=c('sample','permute')) ## matrices of permutation vectors for one way design
+function(trt, B=100L, idxOnly = FALSE, sample.method=c('permute','sample.bigz')) ## matrices of permutation vectors for one way design
 {
 	sample.method=match.arg(sample.method)
+	if(!is.factor(trt)) trt=as.factor(trt)
     n=table(trt)
     cn=cumsum(n)
     ntrts=length(n)
@@ -82,8 +85,9 @@ function(trt, B=100L, idxOnly = FALSE, sample.method=c('sample','permute')) ## m
         }#else{
             attr(ans, 'idx') = NA_character_
     		class(ans)='permutedTrt'
+			return(ans)
         #}
-    }else if(sample.method=='sample')
+    }else if(sample.method=='sample.bigz')
 	{   #sample from all permutations using factoradic number. Ideally, a sample from 1:SP should work, but how to do this without enumerating all SP possibilities using setparts?
 
 		facN = factorialZ(N)
@@ -105,7 +109,16 @@ function(trt, B=100L, idxOnly = FALSE, sample.method=c('sample','permute')) ## m
 		perms = sapply(decfrCC, dec2permvec, N=N)
 			if(length(idx1)>0L) perms[,idx1]=perms[,1L]
 			perms[,1L] = seq_len(N)
-    }else if(sample.method=='permute'){
+			
+		ans = split.data.frame(perms, trt)
+		for(i in seq_len(ntrts)) ans[[i]] = .Call(radixSort1PassByCol, ans[[i]], N)
+	   
+		attr(ans, 'idx') = NA_character_
+		class(ans)='permutedTrt'
+		
+		ans
+    }else if(sample.method=='permute')
+	{
 		if(FALSE){ #implementation based on the hashing of environemnts
 			perm.env=new.env(hash=TRUE, parent=globalenv(),size=B)
 			nperm.found=0L
@@ -131,7 +144,7 @@ function(trt, B=100L, idxOnly = FALSE, sample.method=c('sample','permute')) ## m
 			}
 			
 		}
-		if(TRUE){ #implementation based on hashing of uniqueAtomMat
+		if(FALSE){ #implementation based on hashing of uniqueAtomMat, original
 			tabn=table(n)
 			eqv.trts=eqv.trt(trt)
 			neqv.trts=NCOL(eqv.trts)
@@ -139,32 +152,160 @@ function(trt, B=100L, idxOnly = FALSE, sample.method=c('sample','permute')) ## m
 			tmp.idx=2:B
 			n.idx=B-1L
 			dim.bak=c(N,B)
-			ans=array(NA_integer_, dim=dim.bak)
-			ans[,1L]=seq_len(N)
+			perms=array(NA_integer_, dim=dim.bak)
+			perms[,1L]=seq_len(N)
 			repeat{
-				ans[,tmp.idx]=replicate(n.idx, sample.int(N))
-				dim(ans)=NULL
-				tmp=eqv.trts[ans,]
+				if(verbose)cat("sample", n.idx,"permutations\n")
+				perms[,tmp.idx]=replicate(n.idx, sample.int(N))
+				dim(perms)=NULL
+				tmp=eqv.trts[perms,]
 				dim(tmp)=c(N, neqv.trts*B)
 				tmp.idx=which(uniqueAtomMat::duplicated.matrix(tmp,MARGIN=2L))
-				dim(ans)=dim.bak
-				tmp.idx=unique(tmp.idx%%B+1L)
+				dim(perms)=dim.bak
+				tmp.idx=unique((tmp.idx-1L)%%B+1L)
 				tmp.idx=tmp.idx[tmp.idx!=1L]
 				if(length(tmp.idx)==0) break
 				n.idx=length(tmp.idx)
+			}
+			
+			{# except for the 1st line, the following block was copied from the B>=SP case
+				sp=tmp[,seq_len(B),drop=FALSE]
+				levs=levels(trt)
+				levs[sp[sapply(part0,'[[',1L),1L]]=levs
+				class(sp)='factor'; attr(sp,'levels')=levs
+				ans=split(rep.int(1:N,B),sp);  
+				for(i in seq_len(ntrts)) dim(ans[[i]])=c(length(ans[[i]])%/%B,B)
+				stopifnot(identical(part0, lapply(ans,'[',,1L)))
+				if(isTRUE(idxOnly)){
+					warning("'idxOnly=TRUE' has not been implemented yet when B is no larger than nparts(table(trt)). Full permutation vectors are returned.")		
+				}
+				attr(ans, 'idx') = NA_character_
+				class(ans)='permutedTrt'
+				return(ans)
+			}
+		}
+		if(TRUE){ #implementation based on hashing of uniqueAtomMat, new
+			tabn=table(n)
+			eqv.trts=eqv.trt(trt) # ordered factor
+			eqv.trts=unclass(eqv.trts)
+			neqv.trts=NCOL(eqv.trts)
+			
+			perm.trts=array(NA_integer_, dim=c(N,B*neqv.trts))
+#			attr(perm.trts, 'levels')=levels(trt)
+#			class(perm.trts)='ordered'
+			perm.trts[,seq_len(neqv.trts)]=eqv.trts
+			tmp.idx=safeseq(from=neqv.trts+1L, to=NCOL(perm.trts), by=1L)
+			repeat{
+				n.idx=length(tmp.idx)/neqv.trts
+				if(n.idx==0) break
+				#if(verbose)cat('sample', n.idx, 'permutations in iteration', iter<<-iter+1L,'\n')
+				perm.trts[,tmp.idx]=replicate(n.idx, eqv.trts[sample.int(N),])
+				tmp.idx=which(duplicated.matrix(perm.trts,MARGIN=2L,fromLast=FALSE))
+			}
+			
+			{	dim(perm.trts)=c(N*neqv.trts, B)
+				sp=perm.trts[seq_len(N),,drop=FALSE]; rm(perm.trts)
+			# the following block was copied from the B>=SP case
+				levs=levels(trt)
+				levs[sp[sapply(part0,'[[',1L),1L]]=levs
+				class(sp)='factor'; attr(sp,'levels')=levs
+				ans=split(rep.int(1:N,B),sp);  
+				for(i in seq_len(ntrts)) dim(ans[[i]])=c(length(ans[[i]])%/%B,B)
+				stopifnot(identical(part0, lapply(ans,'[',,1L)))
+				if(isTRUE(idxOnly)){
+					warning("'idxOnly=TRUE' has not been implemented yet when B is no larger than nparts(table(trt)). Full permutation vectors are returned.")		
+				}
+				attr(ans, 'idx') = NA_character_
+				class(ans)='permutedTrt'
+				return(ans)
 			}
 		}
 		
 	}else stop('unknown "sample.method"')
 
-	ans = split.data.frame(perms, trt)
-   for(i in seq_len(ntrts)) ans[[i]] = .Call(radixSort1PassByCol, ans[[i]], N)
-   
+
+}
+}
+
+# simplified release version
+permuteTrt <-
+function(trt, B=100L, idxOnly = FALSE)
+## matrices of permutation vectors for one way design
+{
+#	sample.method=match.arg(sample.method)
+	if(!is.factor(trt)) trt=as.factor(trt)
+    n=table(trt)
+    cn=cumsum(n)
+    ntrts=length(n)
+    N=cn[ntrts]
+    ordn=order(-n, names(n), decreasing=FALSE)
+	trt=ordered(trt, levels=names(n)[ordn])
+	trtc=as.character(trt)
+	n=n[ordn]
+
+    SP=nparts(n)  
+    part0=split(seq_len(N),trt); 
+    
+	if(B>=SP) B=SP
+	if(B>=SP){ # try to list all partitions
+		sp=try(setparts(n)) # values are treatment indices
+		if(class(sp)=='try-error'){
+			B=.Machine$integer.max%/%N
+			warning(sprintf("'B' is too large for the current implementation of partitions::setparts(). Reduced 'B' to %d.", B))
+		}else B=ncol(sp)
+	}
+    if(B>=SP){ 
+		## locating/swapping the original treatment assignment
+		b=seq_len(B)
+		for(i in seq_along(n)){ ## pretty fast as the size of b is keeping shrinking
+			if(n[i]<=1L)break;
+			j0=part0[[i]][1]
+			for(j in part0[[i]][-1L])
+				b=b[which(sp[j0,b]==sp[j,b])]
+		}
+		stopifnot(length(b)==1L)
+		tmp=sp[,b]; sp[,b]=sp[,1L]; sp[,1L]=tmp
+	}else{
+		tabn=table(n)
+		eqv.trts=eqv.trt(trt) # ordered factor
+		eqv.trts=unclass(eqv.trts)
+		neqv.trts=NCOL(eqv.trts)
+		
+		perm.trts=array(NA_integer_, dim=c(N,B*neqv.trts))
+#			attr(perm.trts, 'levels')=levels(trt)
+#			class(perm.trts)='ordered'
+		perm.trts[,seq_len(neqv.trts)]=eqv.trts
+		tmp.idx=safeseq(from=neqv.trts+1L, to=NCOL(perm.trts), by=1L)
+		repeat{
+			n.idx=length(tmp.idx)/neqv.trts
+			if(n.idx==0) break
+			#if(verbose)cat('sample', n.idx, 'permutations in iteration', iter<<-iter+1L,'\n')
+			perm.trts[,tmp.idx]=replicate(n.idx, eqv.trts[sample.int(N),])
+			tmp.idx=which(duplicated.matrix(perm.trts,MARGIN=2L,fromLast=FALSE))
+		}
+		
+		dim(perm.trts)=c(N*neqv.trts, B)
+		sp=perm.trts[seq_len(N),,drop=FALSE]; rm(perm.trts)
+	}
+	## matching sp treatment indices with treatment labels
+	levs=levels(trt)
+	levs[sp[sapply(part0,'[[',1L),1L]]=levs
+	class(sp)='factor'; attr(sp,'levels')=levs
+	ans=split(rep.int(1:N,B),sp);  
+	## the previous block was originally implemented as ans=split(row(sp),sp) 
+	for(i in seq_len(ntrts)) dim(ans[[i]])=c(length(ans[[i]])%/%B,B)   ## "/" returns double but %/% returns integer
+	## the previous block was initially implemented as for(i in seq(ntrts))  ans[[i]]=matrix( apply(sp==i,2L,function(xx)sort(which(xx)) ), ncol=B)
+	
+	ans = ans[levels(trt)]
+	stopifnot(identical(part0, lapply(ans,'[',,1L)))
+		
+	if(isTRUE(idxOnly)).NotYetImplemented()
 	attr(ans, 'idx') = NA_character_
 	class(ans)='permutedTrt'
-	
-    ans
+	return(ans)
+        #}
 }
+
 
 nperms.permutedTrt=function(permutedTrt)
 {

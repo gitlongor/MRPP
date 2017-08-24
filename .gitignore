@@ -7,3 +7,4 @@ ToDoList.txt
 src/*.o
 src/*.dll
 src/*.so
+Rprof.out

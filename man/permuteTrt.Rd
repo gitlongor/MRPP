@@ -11,7 +11,7 @@ Compute permutations of treatment assignments in a one-way design.
 \description{
 Enumerate or sample permutations of treatment assignments in a one-way design. 
 
-\code{permuteTrt} computes (a sample of) permutations given a vector of treatment labels, represented as a \code{permutedTrt} object. 
+\code{permuteTrt} computes (a sample of) permutations of given a vector of treatment labels, represented as a \code{permutedTrt} object. 
 
 \code{nparts} computes the total number of non-equivalent permutations of treatment labels. 
 
@@ -38,13 +38,13 @@ trt.permutedTrt(permutedTrt)
   
   \item{n}{An integer vector of the sample sizes in each treatment group.}
   
-  \item{permutedTrt}{A \code{"permutedTrt"} object from \code{permutedTrt} call.}
+  \item{permutedTrt}{A \code{"permutedTrt"} object returned from a \code{permutedTrt} call.}
 }
 \details{
 The \code{nparts} functions computes the total number of partitions, with sizes being specified by \code{n}. 
 
 Denote the totality by \code{N}, i.e., \code{length(trt)} or \code{sum(n)}. When \code{B} is no smaller than \code{nparts(table(trt))}, all partitions are returned by \code{permuteTrt} and \code{B} is set to \code{nparts(table(trt))}. 
-Otherwise, a sample \code{B} random permutations will be selection from a total of \code{N!} possible permutations (without replacement). 
+Otherwise, a sample \code{B} random permutations will be selected from a total of \code{nparts(table(trt))} possible non-equivalent permutations without replacement. 
 }
 \value{
 For \code{permuteTrt}, it returns an S3 object of class \code{"permutedTrt"}, which is a named list \code{ANS} of \code{length(unique(trt))} treatment assignment matrices. The names of the list correspond to the levels of \code{trt}. The ordering of the treatment is first determined by the sample size in each treatment (in \emph{decreasing} order) and then by lexical order of the treatment labels ( in \emph{increasing} order). 
@@ -58,9 +58,9 @@ When \code{idxOnly} is \code{TRUE}, each matrix has only one column, correspondi
 \code{ntrt.permutedTrt} returns a named vector of sample sizes. 
 \code{trt.permutedTrt} returns a vector of treatment labels that is equivalent  to (i.e., might be a permutation of) the one passed to \code{permuteTrt}.
 }
-\note{
-When \code{B} is less than \code{nparts(table(trt))}, ideally one could randomly sample \code{B} partitions from a total of \code{nparts(table(trt))} without replacement, subject to the first partition being equivalent to the original treatment assignment. For the sake of simplicity, this is \emph{not} implemented here. The random sample of size \code{B} is generated from a total of \code{N!} permutations without replacement. Therefore, it is possible for some of the permutations sampled corresponding to equivalent partitions. However, for the purpose of permutation tests, the type I error rate is still under control. 
-}
+%\note{
+%When \code{B} is less than \code{nparts(table(trt))}, ideally one could randomly sample \code{B} partitions from a total of \code{nparts(table(trt))} without replacement, subject to the first partition being equivalent to the original treatment assignment. For the sake of simplicity, this is \emph{not} implemented here. The random sample of size \code{B} is generated from a total of \code{N!} permutations without replacement. Therefore, it is possible for some of the permutations sampled corresponding to equivalent partitions. However, for the purpose of permutation tests, the type I error rate is still under control. 
+%}
 \author{
 Long Qu
 }
@@ -71,7 +71,6 @@ Long Qu
 set.seed(2340)
 trt=sample(gl(2,10))[-1] ## two-group comparison with slight imbalance
 nparts(table(trt))		## 92378 partitions =  choose(19,10)
-urand.bigz(0,seed=1032940L) # init seed
 pmat=permuteTrt(trt, 1e3L)		## use 1000 random permutations
 ntrt.permutedTrt(pmat)  ## 2 treatments
 nperms.permutedTrt(pmat) ## 1e3L permutations
