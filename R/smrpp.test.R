@@ -418,12 +418,12 @@ function(y, trt, B=nparts(table(trt)), permutedTrt, weight.trt="df",  outerStat=
 
     get.wdisco.invF=function() ## depends on wdist, b, permutedTrt1, wtmethod, ntrt, N
     {
-        permutedTrt1=if(is.na(attr(permutedTrt, 'idx')[1L])) {
+        permutedTrt1=#if(is.na(attr(permutedTrt, 'idx')[1L])) {
 			lapply(permutedTrt, '[', , b, drop=FALSE)
-		}else{
-			attr(permutedTrt, 'idx') = attr(permutedTrt, 'idx')[b]	## LHS is local assignment
-			permutedTrt
-		}
+#		}else{
+#			attr(permutedTrt, 'idx') = attr(permutedTrt, 'idx')[b]	## LHS is local assignment
+#			permutedTrt
+#		}
         W =.Call(mrppstats,wdist, permutedTrt1, wtmethod, PACKAGE='MRPP') * .5
         S = sum(wdist) / N  - W
         F = S / (ntrt - 1) / W * (N - ntrt) 

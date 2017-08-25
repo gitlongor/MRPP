@@ -1,3 +1,5 @@
+library(MRPP)
+
 ar1mat=function(n=5, rho=.5)
 {
 	ans=diag(n)
@@ -65,20 +67,20 @@ mu0=function(rho0, mu0.rho0.ratio=1)
 pvals0=replicate(1e3, {tmp=mu0(.9, 5); mrpp.test(xdat(mu0=tmp, rho0=attr(tmp, 'rho0')))$p.value})
 
 
-pvals1=replicate(1e3,{dat=rbind(mvrnorm(10,c(0,0),ar1mat(2,.9)),mvrnorm(10,c(0,0),ar1mat(2,-.9))); mrpp.test(dat~trt)$p.value})
+pvals1=replicate(1e3,{dat=rbind(mvrnorm(10,c(0,0),ar1mat(2,.9)),mvrnorm(10,c(0,0),ar1mat(2,-.9))); mrpp.test(dat~gl(2,10))$p.value})
 
 
 ks.test(pvals0, pvals1, alternative='greater')
 
 
 dat=xdat(n1=10, mu0=3, rho0=.5); trt=attr(dat, 'trt')
-plot(dat, col=rep(1:2, each=nrow(dat)/2))
+if(interactive())plot(dat, col=rep(1:2, each=nrow(dat)/2))
 anova(lm(dat~trt))
 mrpp.test(dat~trt)
 
 
 dat=xdat(n1=50, mu0=3, rho0=.8); trt=attr(dat, 'trt'); pmtrt=permuteTrt(trt)
-plot(dat, col=rep(1:2, each=nrow(dat)/2))
+if(interactive())plot(dat, col=rep(1:2, each=nrow(dat)/2))
 anova(lm(dat~trt))
 mrpp.test(dat~trt)
 (imps=grad.smoothp(dat, pmtrt, adjust='log scale'))

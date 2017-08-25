@@ -227,11 +227,11 @@ function(trt, B=100L, idxOnly = FALSE, sample.method=c('permute','sample.bigz'))
 }
 }
 
-# simplified release version
+# simplified release version 
 permuteTrt <-
-function(trt, B=100L, idxOnly = FALSE)
+function(trt, B=100L)
 ## matrices of permutation vectors for one way design
-{
+{ #idxOnly = FALSE
 #	sample.method=match.arg(sample.method)
 	if(!is.factor(trt)) trt=as.factor(trt)
     n=table(trt)
@@ -299,8 +299,8 @@ function(trt, B=100L, idxOnly = FALSE)
 	ans = ans[levels(trt)]
 	stopifnot(identical(part0, lapply(ans,'[',,1L)))
 		
-	if(isTRUE(idxOnly)).NotYetImplemented()
-	attr(ans, 'idx') = NA_character_
+	#if(isTRUE(idxOnly)).NotYetImplemented()
+	#attr(ans, 'idx') = NA_character_
 	class(ans)='permutedTrt'
 	return(ans)
         #}
@@ -309,9 +309,9 @@ function(trt, B=100L, idxOnly = FALSE)
 
 nperms.permutedTrt=function(permutedTrt)
 {
-	if(is.na(attr(permutedTrt, 'idx')[1L])) {
+#	if(is.na(attr(permutedTrt, 'idx')[1L])) {
 			ncol(permutedTrt[[1L]])
-	}else   length(attr(permutedTrt, 'idx'))
+#	}else   length(attr(permutedTrt, 'idx'))
 }
 
 ntrt.permutedTrt=function(permutedTrt)

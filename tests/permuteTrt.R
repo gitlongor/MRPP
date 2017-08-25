@@ -14,11 +14,11 @@ if(!R_CHECK_TIMINGS_){
 
 
 	urand.bigz(0,seed=1032940L) # init seed
-	pmat.ind=permuteTrt(trt, 1e3L, idxOnly=TRUE)		## use 1000 random permutations
+	pmat.ind=permuteTrt(trt, 1e3L)		## use 1000 random permutations
 
-	stopifnot(ncol(pmat[[1L]]) == length(attr(pmat.ind, 'idx')) )
+	#stopifnot(ncol(pmat[[1L]]) == length(attr(pmat.ind, 'idx')) )
 
-	allmats = sapply(attr(pmat.ind, 'idx'), function(x)dec2permvec(as.bigz(x), N=length(trt)))
+	#allmats = sapply(attr(pmat.ind, 'idx'), function(x)dec2permvec(as.bigz(x), N=length(trt)))
 	allmats = apply(allmats, 2L, function(x)unlist(by(x, trt, sort)))
 
 	stopifnot(all(allmats == do.call('rbind', pmat)))

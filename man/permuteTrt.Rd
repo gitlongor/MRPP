@@ -22,7 +22,7 @@ Enumerate or sample permutations of treatment assignments in a one-way design.
 \code{trt.permutedTrt} returns the treatment label vector of a \code{permutedTrt} object. 
 }
 \usage{
-permuteTrt(trt, B = 100, idxOnly = FALSE)
+permuteTrt(trt, B = 100)
 nparts(n)
 nperms.permutedTrt(permutedTrt)
 ntrt.permutedTrt(permutedTrt)
@@ -34,7 +34,7 @@ trt.permutedTrt(permutedTrt)
 }
   \item{B}{A positive integer of the number of permutations requested. Currently, a \code{bigz} object is not accepted. 
 }
-  \item{idxOnly}{A logical scalar, indicating whether only factoradic indices are computed. This has no effect when \code{B} is not smaller than \code{nparts(table(trt))}. See the Value section for details.}
+%  \item{idxOnly}{A logical scalar, indicating whether only factoradic indices are computed. This has no effect when \code{B} is not smaller than \code{nparts(table(trt))}. See the Value section for details.}
   
   \item{n}{An integer vector of the sample sizes in each treatment group.}
   
@@ -49,9 +49,10 @@ Otherwise, a sample \code{B} random permutations will be selected from a total o
 \value{
 For \code{permuteTrt}, it returns an S3 object of class \code{"permutedTrt"}, which is a named list \code{ANS} of \code{length(unique(trt))} treatment assignment matrices. The names of the list correspond to the levels of \code{trt}. The ordering of the treatment is first determined by the sample size in each treatment (in \emph{decreasing} order) and then by lexical order of the treatment labels ( in \emph{increasing} order). 
 
-When \code{idxOnly} is \code{FALSE}, each matrix has \code{B} columns, where \code{B} may be smaller than requested, such that \code{ANS[[i]][,b]} contains sorted individual indices that are allocated to treatment \code{i} under the \code{b}th random permutation. Note that, here \code{b} should not be interpreted as the factoradic number. That is, the column locations of the matrices have no special meaning. However, an exception is that the first column (i.e., the first permutation) is always equivalent to the original treatment assignment. In other words, it is guaranteed that \code{setequal( split(seq(length(trt)),trt), lapply(ANS, "[", , 1L))} should always be \code{TRUE}. In addition, the \code{"idx"} attribute of the result is set to \code{NA_character_}. 
+%When \code{idxOnly} is \code{FALSE}, 
+Each matrix has \code{B} columns, where \code{B} may be smaller than requested, such that \code{ANS[[i]][,b]} contains sorted individual indices that are allocated to treatment \code{i} under the \code{b}th random permutation. Note that, here \code{b} should not be interpreted as the factoradic number. That is, the column locations of the matrices have no special meaning. However, an exception is that the first column (i.e., the first permutation) is always equivalent to the original treatment assignment. In other words, it is guaranteed that \code{setequal( split(seq(length(trt)),trt), lapply(ANS, "[", , 1L))} should always be \code{TRUE}. %In addition, the \code{"idx"} attribute of the result is set to \code{NA_character_}. 
 
-When \code{idxOnly} is \code{TRUE}, each matrix has only one column, corresponding to the original treatment assignment. The permutations being sampled are represented by the correspoding decimal factoradic numbers (stored as character) returned in the \code{"idx"} attribute. In this case, the length of the \code{"idx"} attribute is \code{B} and the first element is always \code{"0"}, corresponding to no permutations.
+%When \code{idxOnly} is \code{TRUE}, each matrix has only one column, corresponding to the original treatment assignment. The permutations being sampled are represented by the correspoding decimal factoradic numbers (stored as character) returned in the \code{"idx"} attribute. In this case, the length of the \code{"idx"} attribute is \code{B} and the first element is always \code{"0"}, corresponding to no permutations.
 
 \code{nparts} returns a \code{"\link{bigz}"} object which is the total number of non-equivalent treatment assignments. 
 \code{nperms.permutedTrt} returns the total number of permutations. 

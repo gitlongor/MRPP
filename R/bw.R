@@ -189,7 +189,7 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 	if(n.bw==0L) stop('bandwidth range is not suitable')
 	
 	if(method=='match.pear3' || method=='match.pear3gca') {
-		cums=cumulant(mrpp(y[,r,drop=FALSE], permutedTrt=permutedTrt, weight.trt=weight.trt, distFunc=distFunc,idxOnly=TRUE),order=1:4); cums[2L]=sqrt(cums[2L]); cums[3L]=cums[3L]/cums[2L]^3; cums[4L]=cums[4L]/cums[2L]^4
+		cums=cumulant(mrpp(y[,r,drop=FALSE], permutedTrt=permutedTrt, weight.trt=weight.trt, distFunc=distFunc),order=1:4); cums[2L]=sqrt(cums[2L]); cums[3L]=cums[3L]/cums[2L]^3; cums[4L]=cums[4L]/cums[2L]^4
 		pdf0x = if(method=='match.pear3') dpearson3(mrpp$all.statistics, cums[1L], cums[2L], cums[3L]) else 
 		dpearson3gca(mrpp$all.statistics, cums[1L], cums[2L], cums[3L], cums[4L]) 
 		ans=bw.matchpdf(mrpp$all.statistics, kernel=kernel, pdf=pdf0x, bw=bw, verbose=verbose, title=switch(method, match.pear3="Match Pearson III Dist'n", match.pear3gca="Match GCA Adjust. of Pearson III Dist'n"))

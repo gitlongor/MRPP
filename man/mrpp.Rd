@@ -11,10 +11,10 @@ MRPP Object
 The \code{"mrpp"} object is a setup that allows the multiresponse permutation procedure (MRPP) method. 
 }
 \usage{
-mrpp(y, trt, B=as.integer(min(nparts(table(trt)), 1e4L)), permutedTrt, weight.trt='df', idxOnly=FALSE,...)
+mrpp(y, trt, B, permutedTrt, weight.trt='df',...)
 
-\method{mrpp}{matrix}(y, trt, B=as.integer(min(nparts(table(trt)), 1e4L)), permutedTrt, weight.trt='df', idxOnly=FALSE, distFunc=dist,...)
-\method{mrpp}{dist}(y, trt, B=as.integer(min(nparts(table(trt)), 1e4L)), permutedTrt, weight.trt='df', idxOnly=FALSE, distFunc=dist, R, ...)
+\method{mrpp}{matrix}(y, trt, B, permutedTrt, weight.trt='df', distFunc=dist,...)
+\method{mrpp}{dist}(y, trt, B, permutedTrt, weight.trt='df', distFunc=dist, R, ...)
 }
 %- maybe also "usage" for other objects documented here.
 \arguments{
@@ -30,8 +30,8 @@ mrpp(y, trt, B=as.integer(min(nparts(table(trt)), 1e4L)), permutedTrt, weight.tr
 }
   \item{distFunc}{A function that computes a \code{\link{dist}} object given data \code{y}.
 }
-  \item{idxOnly}{As in \code{\link{permuteTrt}}.
-}
+%  \item{idxOnly}{As in \code{\link{permuteTrt}}.
+%}
   \item{R}{A positive integer, equal to the number of response variables.
 }
   \item{\dots}{Additional arguments to be passed on. 
@@ -68,8 +68,8 @@ For the \code{weight.trt} argument, suppose that \code{n} denote the vector samp
 }
 \item{permutedTrt.env}{An environment that contains two objects, \code{"B"} and \code{"permutedTrt"}. If the \code{permutedTrt} argument is missing, then both objects \code{permutedTrt.env} environment are assigned as \emph{promises} initially. There is no guarantee that they will be eventually evaluated, e.g., when moment-matching approximations are used to obtain approximate p-values in \code{mrpp.test}. 
 }
-\item{idxOnly}{A logical scalar, as in \code{\link{permuteTrt}}. 
-}
+%\item{idxOnly}{A logical scalar, as in \code{\link{permuteTrt}}. 
+%}
 \item{weight.trt}{A numeric vector of the treatment group weights, with the \code{"method"} attribute being the name of the treatment group weighting method as the \code{weight.trt} argument. 
 }
 \item{distFun}{The same as the \code{distFunc} argument. 

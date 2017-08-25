@@ -202,7 +202,7 @@ static R_INLINE SEXP mrppstats_listOfMatrix(double * ptrY, SEXP permMats, double
 }
 
 static R_INLINE SEXP mrppstats_string(double * ptrY, SEXP permString, SEXP perm0, double * wt, R_len_t N)
-{
+{	/* this function is no longer used, as "idxOnly" option is removed. */
 	/* ptrY is the REAL pointer to the vector of a 'dist' object with each element being double */
 	/* permString is a character vector of factoradic numbers. */
 	/* perm0 is a 'list', of n * 1 permutation indices; see permuteTrt. */
@@ -313,12 +313,12 @@ SEXP mrppstats(SEXP y, SEXP Perms, SEXP grpWts)
     N = LENGTH(y);  // length of 'dist' obj
     N = ( 1 + (int)(0.5 + sqrt(1.0 + 8.0 * N)) ) >> 1;
 
-	permString = getAttrib(Perms, install("idx")) ;
-	if (R_NaString == STRING_ELT(permString, 0) ) {
+//	permString = getAttrib(Perms, install("idx")) ;
+//	if (R_NaString == STRING_ELT(permString, 0) ) {
 		return mrppstats_listOfMatrix(ptrY, Perms, wt, N);
-	}else {	
-		return mrppstats_string(ptrY, permString, Perms, wt, N);
-	}
+//	}else {	
+//		return mrppstats_string(ptrY, permString, Perms, wt, N);
+//	}
 }
 
 SEXP sumThresh0(SEXP x)

@@ -12,10 +12,10 @@
 	}
 	permutedTrt.env=new.env(hash=FALSE, parent=constEnv)
     if(missing(permutedTrt)) {
-		delayedAssign('permutedTrt', permuteTrt(trt,B, idxOnly), eval.env=environment(), assign.env=permutedTrt.env)
+		delayedAssign('permutedTrt', permuteTrt(trt,B), eval.env=environment(), assign.env=permutedTrt.env)
 	}else{
 		permutedTrt.env$permutedTrt = permutedTrt
-		idxOnly = !is.na(attr(permutedTrt, 'idx')[1L])
+		#idxOnly = !is.na(attr(permutedTrt, 'idx')[1L])
 	}
 	delayedAssign('B', nperms.permutedTrt(permutedTrt), eval.env=permutedTrt.env, assign.env=permutedTrt.env)
 		n=table(trt)
@@ -30,9 +30,9 @@
 	wtmethod=tmp$wtmethod; weight.trt=tmp$weight.trt[trtc]
 })
 
-mrpp <- function(y, trt, B, permutedTrt, weight.trt='df', idxOnly=FALSE,...) UseMethod('mrpp')
+mrpp <- function(y, trt, B, permutedTrt, weight.trt='df',...) UseMethod('mrpp')
 
-mrpp.matrix <- eval(bquote(function(y, trt, B, permutedTrt, weight.trt='df', idxOnly=FALSE, distFunc=dist,...)
+mrpp.matrix <- eval(bquote(function(y, trt, B, permutedTrt, weight.trt='df', distFunc=dist,...)
 {	stopifnot(is.numeric(y))
 	.(.mrpp.expr)
 	if(N != NROW(y)) stop('NROW(y) != length(trt)')
@@ -46,7 +46,7 @@ mrpp.matrix <- eval(bquote(function(y, trt, B, permutedTrt, weight.trt='df', idx
 					B.requested=B, 
 					trt=trt,
 					permutedTrt.env=permutedTrt.env, 
-					idxOnly = idxOnly,
+					#idxOnly = idxOnly,
 					weight.trt=structure(weight.trt, 'method'=wtmethod), 
 					distFunc = distFunc
 			  ),
@@ -56,7 +56,7 @@ mrpp.matrix <- eval(bquote(function(y, trt, B, permutedTrt, weight.trt='df', idx
 ) # of bquote
 ) # of eval 
 
-mrpp.dist=eval(bquote(function(y, trt, B, permutedTrt, weight.trt='df', idxOnly=FALSE, distFunc=dist, R, ...)
+mrpp.dist=eval(bquote(function(y, trt, B, permutedTrt, weight.trt='df', distFunc=dist, R, ...)
 {
 	.(.mrpp.expr)
 	if(N != attr(y,'Size')) stop('attr(y,"Size") != length(trt)')
@@ -70,7 +70,7 @@ mrpp.dist=eval(bquote(function(y, trt, B, permutedTrt, weight.trt='df', idxOnly=
 					B.requested=B, 
 					trt=trt,
 					permutedTrt.env=permutedTrt.env, 
-					idxOnly = idxOnly,
+					#idxOnly = idxOnly,
 					weight.trt=structure(weight.trt, 'method'=wtmethod), 
 					distFunc = distFunc
 			  ),
