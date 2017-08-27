@@ -22,7 +22,13 @@ mrpp.weight.trt=function(weight.trt, trt)
 mrpp.test.mrpp = function(y, method='pearson3gca', eps=1e-8, ... )
 {
 	if(!missing(...)).NotYetUsed(..., error=FALSE)
-	dname = paste('"mrpp" object',dQuote(substr(as.character(match.call()[['y']]), 1L, 20L)))
+	dname.env=new.env(hash=FALSE, parent=globalenv())
+	dname = delayedAssign('data.name', 
+		paste('"mrpp" object',dQuote({
+			tmp=deparse(substitute(y),width.cutoff=20L)
+			if(length(tmp)>1L) paste(tmp[1L], '...')  else tmp[1L]
+		}))
+		,assign.env=dname.env)
 	
 	methods=unlist(strsplit(method[1L], ".", fixed=TRUE))
 	if(length(methods)>2L) stop('unknown method')
@@ -94,33 +100,46 @@ mrpp.test.mrpp = function(y, method='pearson3gca', eps=1e-8, ... )
 				weight.trt=y$weight.trt, 
 				pdfmethod=pdfmethod, kernel=as.character(kernel), exact= B==y$nparts && pdfmethod=="permutation"
 			 ),
-             data.name=dname, 
+             data.name=dname.env, 
              method=pval.method.string
 	)
     class(ans)=c('mrpp.test','htest')
     ans	
 }
 
-.fix.mrpp.test.data.name=expression({
-	this.call=match.call()
+`$.mrpp.test`=function(x, name)
+{# proper extraction of data.name component
+	x=unclass(x)
+	ans=getElement(x, substitute(name))
+	if(is.environment(ans)) ans$data.name else ans
+}
+
+.fix.mrpp.test.data.name=quote({
+	#this.call=match.call()
 	if(!is.null(this.call$trt)) {
-		dname=paste(dname, 'and treatment factor', deparse(this.call$trt))
+		paste(tmpdname, 'and treatment factor', deparse(this.call$trt))
 	}else if(!is.null(this.call$permutedTrt)){
-		dname=paste(dname, 'and permuted treatment', deparse(this.call$permutedTrt))
+		paste(tmpdname, 'and permuted treatment', deparse(this.call$permutedTrt))
 	}
 })
-mrpp.test.default <-
+mrpp.test.default <- eval(bquote(
 function(y, ...) {
-    dname=paste("Response data", deparse(substitute(y)))
-	eval(.fix.mrpp.test.data.name)
+	this.call=match.call()
+	
 	ddd=list(...)
 	ddd$y=y
 	idx=names(ddd)%in%names(formals(mrpp))
-	y=do.call('mrpp', ddd[idx])
-	ans=do.call('mrpp.test.mrpp', c(list(y=y), ddd[!idx]))
-	ans$data.name = dname
+	mrpp.obj=do.call('mrpp', ddd[idx])
+	ans=do.call('mrpp.test.mrpp', c(list(y=mrpp.obj), ddd[!idx]))
+	delayedAssign('data.name', {
+			tmpdp=deparse(substitute(y), width.cutoff=20L)
+			tmpdname=paste("Response data", if(length(tmpdp)>1L) paste(tmpdp[1L],'...') else tmpdp)
+			.(.fix.mrpp.test.data.name)
+		}
+		,assign.env=ans[['data.name']])
     ans
-}
+}))
+attr(mrpp.test.default, 'srcref')=NULL
 
 mrpp.test.formula <-
 function(y, ...) 
@@ -139,21 +158,41 @@ function(y, ...)
 	mrpp.list$trt=mf[[ -resp.col ]]
 
     ans=do.call('mrpp.test', mrpp.list)
-    ans$data.name=paste("'formula'", deparse(y))
-    if(!is.null(this.call$data)) ans$data.name = paste(ans$data.name, "for dataset", sQuote(deparse(this.call$data)))
+	delayedAssign('data.name', {
+		tmpdname=paste("'formula'", deparse(y))
+		if(!is.null(this.call$data)) {
+			paste(tmpdname, "for dataset", sQuote({
+				tmpdp=deparse(this.call$data, width.cutoff=20L)
+				if(length(tmpdp)>1L) paste(tmpdp[1L],'...') else tmpdp})
+			)
+		}else tmpdname
+	},assign.env=ans[['data.name']])
     ans
 }
 
-mrpp.test.dist <- function(y, ...) 
+mrpp.test.dist <- eval(bquote(function(y, ...) 
 {
-	dname=paste("'dist' object", deparse(substitute(y)))
-	eval(.fix.mrpp.test.data.name)
-	resp=suppressWarnings(cmdscale(y, attr(y, 'Size')-1L))
-	ddd=list(...); ddd$y=resp
-	ans=do.call('mrpp.test.default', ddd)
-	ans$data.name=dname
-    ans
-}
+#	dname=paste("'dist' object", deparse(substitute(y)))
+#	eval(.fix.mrpp.test.data.name)
+#	resp=suppressWarnings(cmdscale(y, attr(y, 'Size')-1L))
+#	ddd=list(...); ddd$y=resp
+#	ans=do.call('mrpp.test.mrpp', ddd)
+#	ans$data.name=dname
+#   ans
+	this.call=match.call()
+	this.call[[1L]]=as.symbol('mrpp')
+	idx = c(1L, which(names(this.call)[-1L]%in%names(formals(mrpp.dist)))+1L)
+	mrpp.obj=eval.parent(this.call[idx])
+	ddd=list(...); ddd$y=mrpp.obj
+	idx=names(ddd)%in%names(formals(mrpp.test.mrpp))
+	ans=do.call('mrpp.test.mrpp', ddd[idx])
+	delayedAssign('data.name',{
+			tmpdname = paste("'dist' object", deparse(substitute(y)))
+			.(.fix.mrpp.test.data.name)
+		}, assign.env=ans[['data.name']])
+	ans
+}))
+attr(mrpp.test.dist, 'srcref')=NULL
 
 mrpp.test <-
 function(y,...) UseMethod("mrpp.test")

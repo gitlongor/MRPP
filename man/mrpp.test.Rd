@@ -7,6 +7,7 @@
 \alias{mrpp.test}
 \alias{p.value}
 \alias{p.value.mrpp.test}
+\alias{$.mrpp.test}
 %- Also NEED an "\alias" for EACH other topic documented here.
 \title{
 MRPP Test for One-way Design
@@ -23,6 +24,7 @@ mrpp.test(y, \dots)
 \method{mrpp.test}{dist}(y, \dots)
 
 \method{p.value}{mrpp.test}(x, type=c("raw","midp"), \dots)
+\method{$}{mrpp.test}(x, name)
 }
 %- maybe also "usage" for other objects documented here.
 \arguments{
@@ -37,6 +39,8 @@ mrpp.test(y, \dots)
   \item{x}{An object of class \code{"mrpp.test"}.
 }
   \item{type}{A character scalar being one of \code{c("raw","midp")}, specifying the type of the p-value to be extracted from \code{x}.
+}
+  \item{name}{A symbol or character, name components to be extracted using \code{"$"}.
 }
 }
 \details{
@@ -66,7 +70,7 @@ The \code{mrpp.test.mrpp} method is the actual workhorse, and other methods are 
 \item{all.statistics }{All permuted test statistics that have actually been used. If permutations have not been performed, this will be the same as the observed test statistic. }
 \item{p.value }{The p-value. When \code{method="permutation"}, the \code{"midp"} attribute is set to the mid-p-value; when \code{method="permutation.midp"}, the \code{"raw"} attributes is set to the raw permutation p-value; in all other cases, no attributes are set.}
 \item{parameter }{The number of permutations performed. The \code{"weight.trt"} attribute is set to a numeric vector of treatment group weights being used. The \code{"pdfmethod"} attribute is set to the "primiary" part of the \code{method} argument. TheA vector of the number of permutations and the weighting method. The latter is coded as an integer, with levels given in the \code{"weight methods"} attribute. The \code{"kernel"} attribute is set to the "adjustment" part of the \code{method} argument when appropriate, or \code{character(0)} otherwise. The \code{"exact"} attribute is \code{TRUE} is the p-value is the so-called exact p-value, namely the raw permutation p-value when \emph{all} non-equivalent permutatinos are enumerated. }
-\item{data.name }{The character name of the data.}
+\item{data.name }{An environment, with a single object \code{"data.name"} in it, which is the character name of the data. This is initially assigned as a promise. }
 %\item{.Random.seed }{ The random number seed for reproducibility.} 
 \item{method }{A string describing the test method.}
 }
@@ -83,13 +87,12 @@ Long Qu
 }
 \examples{
 set.seed(2340)
-urand.bigz(0,seed=1032940L) # init seed
 x=matrix(rnorm(20*5),20)
 trt=gl(2,10)
 nparts( table(trt))		## 92378 partitions =  choose(20,10)/2
 mrpp.obj=mrpp(x, trt, B=5e2L)	## use 500 random permutations
 \dontrun{
-mrpp.obj=mrpp(trt, B=Inf)		## use all partitions, as 1e6L >= 92378 
+mrpp.obj=mrpp(x, trt, B=Inf)		## use all partitions, as 1e6L >= 92378 
 }
 
 ### "mrpp" object interface
@@ -118,6 +121,14 @@ dat=data.frame(x, trt)
 (fmla=as.formula(sprintf("cbind(\%s)~trt",paste("X",1:5,sep="",collapse=","))))
 mrpp.test(fmla, data=dat, permutedTrt=pmat, weight.trt="df", method='permutation' )  
 
+### Extraction of components of a test result
+test.rslt$statistic
+str(test.rslt$all.statistics)
+test.rslt$p.value
+test.rslt$parameter
+test.rslt$data.name # character string
+test.rslt[['data.name']] # environment (containing a character string)
+test.rslt$method
 
 }
 % Add one or more standard keywords, see file "KEYWORDS" in the

@@ -57,6 +57,8 @@ S3method(mrpp.test, dist)
 S3method(mrpp.test, default)
 S3method(mrpp.test, mrpp)
 
+S3method(`$`, mrpp.test)
+
 S3method(smrpp.test, default)
 S3method(smrpp.test, formula)
 

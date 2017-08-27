@@ -1,6 +1,7 @@
 \name{permuteTrt}
 \Rdversion{1.1}
 \alias{permuteTrt}
+\alias{permutedTrt}
 \alias{nparts}
 \alias{nperms.permutedTrt}
 \alias{ntrt.permutedTrt}
