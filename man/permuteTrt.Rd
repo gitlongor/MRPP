@@ -30,7 +30,7 @@ nparts(n)
 nperms.permutedTrt(permutedTrt)
 ntrt.permutedTrt(permutedTrt)
 trt.permutedTrt(permutedTrt)
-\method{[}{permuteTrt}(x,i,j,\dots)
+\method{[}{permuteTrt}(x,i,j)
 }
 %- maybe also "usage" for other objects documented here.
 \arguments{
@@ -48,7 +48,7 @@ trt.permutedTrt(permutedTrt)
   
   \item{j}{An integer vector, specifying the columns of matrices in \code{x} to be extracted. }
   
-  \item{\dots}{Unused.}
+  %\item{\dots}{Unused.}
 }
 \details{
 The \code{nparts} functions computes the total number of partitions, with sizes being specified by \code{n}. 

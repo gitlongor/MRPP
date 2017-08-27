@@ -328,7 +328,7 @@ trt.permutedTrt=function(permutedTrt)
 	ans
 }
 
-`[.permutedTrt`=function(x, i, j,...)
+`[.permutedTrt`=function(x, i, j)
 {
 	structure(
 		if(!missing(i)){
