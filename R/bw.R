@@ -542,33 +542,26 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 
 	mrpp.obj1=mrpp.obj
 	if(method%in%c('drop1','sym1','dropadd1', 'dropaddsym1')){
+		mrpp.obj1$R=mrpp.obj$R-1L
 		drop1p = function(r.i){
-			#lst$y=distFunc(y[,r[-r.i],drop=FALSE])
-			#p.value(do.call('mrpp.test.dist', lst),type="midp")
 			mrpp.obj1$distObj=distFunc(y[,r[-r.i],drop=FALSE])
-			mrpp.obj1$R=mrpp.obj$R-1L
-			p.value(mrpp.test(mrpp.obj1), type='midp')
+			mrpp.test.mrpp(mrpp.obj1, method='pearson3')$p.value
 		} # still time consuming
 		drop1pval= sapply(seq_along(r), drop1p)
 	}
 	if(method%in%c('add1','sym1','dropadd1','dropaddsym1')){
+		mrpp.obj1$R=mrpp.obj$R+1L
 		add1p = function(r.i){
-			#lst$y=distFunc(y[,c(r,r[r.i]),drop=FALSE])
-			#p.value(do.call('mrpp.test.dist', lst),type="midp")
 			mrpp.obj1$distObj=distFunc(y[,c(r,r[r.i]),drop=FALSE])
-			mrpp.obj1$R=mrpp.obj$R+1L
-			p.value(mrpp.test(mrpp.obj1), type='midp')
-			
+			mrpp.test.mrpp(mrpp.obj1,method='pearson3')$p.value
 		} # still time consuming
 		add1pval=sapply(seq_along(r), add1p)
 	}
 	if(method%in%c('keep1')){
+		mrpp.obj1$R=1L
 		keep1 = function(r.i){
-			#lst$y=distFunc(y[,r[r.i],drop=FALSE])
-			#p.value(do.call('mrpp.test.dist', lst),type="midp")
 			mrpp.obj1$distObj=distFunc(y[,r[r.i],drop=FALSE])
-			mrpp.obj1$R=1L
-			p.value(mrpp.test(mrpp.obj1), type='midp')
+			mrpp.test.mrpp(mrpp.obj1,method='pearson3')$p.value
 		}
 		keep1pval=sapply(seq_along(r), keep1)
 		#t(smps - gradEnv$ans%*%(1-diag(1, length(r), length(r))))
