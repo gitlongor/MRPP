@@ -5,10 +5,11 @@ function(y,permutedTrt,
 		 niter=Inf, verbose=FALSE, ...)
 ## y is a data matrix, with col's being variables and rows being observations
 {
+print(proc.time())
     if(!is.matrix(y))y=as.matrix(y)
     importance=match.arg(importance)
     if(is.null(inc.thresh)) inc.thresh=switch(importance,
-		grad.smoothp = , 
+		grad.smoothp = 1, 
 		grad.energy = 0, 
 		approx.keep1 = , 
 		p.grad.dist = 0.05)
@@ -22,6 +23,7 @@ function(y,permutedTrt,
 	ddd.mrpp$B=NULL
 	ddd.mrpp.idx=names(ddd.mrpp)%in%names(formals(mrpp.matrix))
 	mrpp.obj=do.call(mrpp, ddd.mrpp[ddd.mrpp.idx])
+	distFunc=mrpp.obj$distFunc
 
     ans=vector('list'); attr(ans, 'parameter')=list(importance=importance, inc.thresh=inc.thresh, exc.thresh=exc.thresh, size.inc=size.inc, stepwise=stepwise, niter=niter)
     R=NCOL(y)
@@ -37,10 +39,12 @@ function(y,permutedTrt,
 			  'Maximum number of iterations reached')
 	returnBVS=function(ret)structure(ret, class='mrppBVS')
 	
-	ddd.mrppt=list(...); ddd.mrppt$y=mrpp.obj; ddd.mrppt$method='permutation'
+	ddd.mrppt=list(...); ddd.mrppt$y=mrpp.obj; # ddd.mrppt$method='permutation'
 	ddd.mrppt.idx=names(ddd.mrppt)%in%names(formals(mrpp.test.mrpp))
 	ddd.mrppt=ddd.mrppt[ddd.mrppt.idx]
-	var.sign = var.rank = numeric(R)
+	ddd.mrppt.method = if('method'%in%names(ddd.mrppt)) ddd.mrppt$method else NULL
+	var.sign = integer(R)
+	var.rank = numeric(R)
 
 	ddd.grad=list(...); 
 	ddd.grad$y=matrix(NA_real_,0L,0L)
@@ -54,15 +58,14 @@ function(y,permutedTrt,
 	ddd.grad.idx=names(ddd.grad)%in%names(formals(grad.smoothp))
 	ddd.grad=ddd.grad[ddd.grad.idx]
 	
+print(proc.time())
     repeat{
         if(verbose && (i%%verbose==0L)) {cat('iteration',i-1L,'...')
                     time0=proc.time()[3L]}
-		var.sign[idx]=-1*(imptnc<=inc.thresh); var.sign[idx[imptnc==inc.thresh]]=0
-		var.rank[idx]=rank(imptnc, ties.method='average')
         idx=idx[imptnc<=imptnc.threshold]
 		
         if(length(idx)==0){
-            ans[[i]]=list(iter=i-1L,var.idx=integer(0L), influence=numeric(0L), 
+            ans[[i]]=list(iter=i-1L,`var.idx(sorted)`=integer(0L), `importance(sorted)`=numeric(0L), 
                         p.value=numeric(0L),deleted.p.value=ans[[1L]]$p.value, var.sign=var.sign, var.rank=var.rank)
             if(verbose){
 				cat('\b\b\b:\t','no variables left; mrpp.p = ; deleted.mrpp.p =',ans[[i]]$deleted.p.value,
@@ -72,11 +75,13 @@ function(y,permutedTrt,
 			attr(ans, 'status')=c(attr(ans, 'status'), ret.msg[3])
             return(returnBVS(ans))
         }
-        dist0=dist(y[,idx,drop=FALSE])
+        dist0=distFunc(y[,idx,drop=FALSE])
 		#mrpp.obj$distObj=dist0; mrpp.obj$R=length(idx)
-		ddd.mrppt$y$distObj=dist0; ddd.mrppt$y$R=length(idx)
+		ddd.mrppt$y$distObj=dist0; ddd.mrppt$y$R=length(idx); ddd.mrppt$method='permutation'
         mrpp.rslt=do.call(mrpp.test.mrpp, ddd.mrppt)
         mrpp.stats0=mrpp.rslt$all.statistics
+		ddd.mrppt$method=ddd.mrppt.method
+        mrpp.rslt=do.call(mrpp.test.mrpp, ddd.mrppt)
         imptnc=switch(importance,
 			grad.smoothp=, 
 			grad.energy=,
@@ -84,24 +89,35 @@ function(y,permutedTrt,
 				ddd.grad$y=y[,idx,drop=FALSE]
 				ddd.grad$distObj=dist0
 				ddd.grad$mrpp.stats=mrpp.stats0
-				do.call(grad.smoothp, ddd.grad)
+				do.call('grad.smoothp', ddd.grad)
 			},
             p.grad.dist =get.p.dd.dw(y[,idx,drop=FALSE],permutedTrt,...) # CHECKME
 		)
 		if(importance=='approx.keep1') imptnc=p.value(imptnc, type='keep1')
         var.ord=order(imptnc)
-        ans[[i]]=list(iter=i-1L, var.idx=idx[var.ord], influence=imptnc[var.ord],
+		
+		
+        ans[[i]]=list(iter=i-1L, `var.idx(sorted)`=idx[var.ord], `importance(sorted)`=imptnc[var.ord],
                       p.value=mrpp.rslt$p.value,
-                      deleted.p.value=next.deleted.p, var.sign=var.sign, var.rank=var.rank)
+                      deleted.p.value=next.deleted.p#, var.sign=var.sign, var.rank=var.rank
+					  )
         imptnc.threshold=if(stepwise) {tmp=max(imptnc); .5*(max(-Inf,imptnc[imptnc<tmp])+tmp)} else inc.thresh
 #        idx=idx[imptnc<max(imptnc)] else idx=idx[imptnc<inc.thresh]
         if(exc.thresh>=0) {
             xcl=c(xcl, idx[imptnc>imptnc.threshold])
-            dist.del=dist(y[,xcl,drop=FALSE])
+            dist.del=distFunc(y[,xcl,drop=FALSE])
             if(all(!is.na(dist.del)) && length(xcl)>0L)
 #                ans[[i]]$deleted.p.value=mrpp.test.dist(dist.del, permutedTrt=permutedTrt)$p.value
-                next.deleted.p=mrpp.test.dist(dist.del, permutedTrt=permutedTrt)$p.value
+                #next.deleted.p=mrpp.test.dist(dist.del, permutedTrt=permutedTrt)$p.value
+				ddd.mrppt$y$distObj=dist.del; ddd.mrppt$y$R=length(xcl)
+				next.deleted.p=do.call(mrpp.test.mrpp, ddd.mrppt)$p.value
         }
+		
+		var.sign[idx]=-2L*(imptnc<=inc.thresh)+1L; var.sign[idx[imptnc==inc.thresh]]=0L
+		var.rank[idx]=rank(imptnc, ties.method='average')
+		ans[[i]]$var.sign=var.sign
+		ans[[i]]$var.rank=var.rank
+		
         if(verbose && (i%%verbose==0L)) {
           cat('\b\b\b:\t',length(idx),'variable(s) left; mrpp.p =',ans[[i]]$p.value,';', 
                         'deleted.mrpp.p =',ans[[i]]$deleted.p.value,

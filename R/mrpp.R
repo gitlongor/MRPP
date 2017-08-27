@@ -28,6 +28,7 @@
 		tabtrt = n[ordn]
 	tmp=mrpp.weight.trt(weight.trt, as.factor(trt))
 	wtmethod=tmp$wtmethod; weight.trt=tmp$weight.trt[trtc]
+	data.env=new.env(hash=FALSE, parent=constEnv)
 })
 
 mrpp <- function(y, trt, B, permutedTrt, weight.trt='df',...) UseMethod('mrpp')
@@ -37,6 +38,7 @@ mrpp.matrix <- eval(bquote(function(y, trt, B, permutedTrt, weight.trt='df', dis
 	.(.mrpp.expr)
 	if(N != NROW(y)) stop('NROW(y) != length(trt)')
 	R = NCOL(y)
+	delayedAssign('y', y, eval.env=environment(), assign.env=data.env)
 	structure(list(distObj=distFunc(y), 
 					n=tabtrt, 
 					ntrt=ntrt,
@@ -48,7 +50,8 @@ mrpp.matrix <- eval(bquote(function(y, trt, B, permutedTrt, weight.trt='df', dis
 					permutedTrt.env=permutedTrt.env, 
 					#idxOnly = idxOnly,
 					weight.trt=structure(weight.trt, 'method'=wtmethod), 
-					distFunc = distFunc
+					distFunc = distFunc, 
+					data.env=data.env
 			  ),
 			  class='mrpp'
 	)
@@ -72,7 +75,8 @@ mrpp.dist=eval(bquote(function(y, trt, B, permutedTrt, weight.trt='df', distFunc
 					permutedTrt.env=permutedTrt.env, 
 					#idxOnly = idxOnly,
 					weight.trt=structure(weight.trt, 'method'=wtmethod), 
-					distFunc = distFunc
+					distFunc = distFunc, 
+					data.env=data.env
 			  ),
 			  class='mrpp'
 	)

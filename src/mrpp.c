@@ -299,7 +299,7 @@ SEXP mrppstats(SEXP y, SEXP Perms, SEXP grpWts)
 	/* grpWts is a scaler of 0 or 1 weighting method: 0=sample size-1; 1=sample size */
 	R_len_t N;
 	double  *wt, *ptrY;
-	SEXP wt_real, permString;
+	SEXP wt_real; // , permString;
 	
 	if(isReal(grpWts)) {
 		wt = REAL(grpWts);

@@ -45,6 +45,17 @@ function(y, permutedTrt, bw, r=seq_len(NCOL(y)), test=FALSE,
         kernel='triweight', weight.trt="df", adjust=NULL)
 ## y=N-by-p data matrix; b=permutation index for the 1st trt; r=dimension index; 
 {
+	if(missing(bw)) bw='sym1'
+	if(is.numeric(bw)&&is.infinite(bw)&&bw>0){
+		this.call=match.call()
+		this.call[[1L]]=as.symbol('grad.smoothp.Inf')
+		return(eval.parent(this.call))
+	}
+	if(!isTRUE(test)){
+		this.call=match.call()
+		this.call[[1L]]=as.symbol('grad.smoothp.notest')
+		return(eval.parent(this.call))
+	}
     ## min.wts=1e-8  ### this was handled by bw.safety()
 	if(is.null(mrpp.stats)) mrpp.stats=mrpp.test.dist(distObj,permutedTrt=permutedTrt,weight.trt=weight.trt, method='permutation')$all.statistics
 	pval0=midp.empirical(mrpp.stats)
@@ -55,6 +66,152 @@ function(y, permutedTrt, bw, r=seq_len(NCOL(y)), test=FALSE,
     ans=matrix(NA_real_, length(b), length(r))
     N=as.integer(nrow(y))
     #if(missing(cperm.mat)) cperm.mat=apply(permutedTrt,2,function(kk)(1:N)[-kk])
+
+	if(is.character(bw))
+		bw=bw.smoothp(y,permutedTrt=permutedTrt,r=r, kernel=kernel, weight.trt=weight.trt, method=bw, verbose=FALSE)
+
+	if(is.null(adjust[1L])) adjust='none'
+	if(is.numeric(bw) && is.infinite(bw)) adjust='weighted.mean'
+	adjust=match.arg(adjust, c('none','weighted.mean','scale', 'log scale'))
+
+	pars=list(kernel=kernel, weight.trt=weight.trt, adjust=adjust, bw=bw)
+	adjust0=adjust; if(adjust=='log scale') adjust='none'
+#    weight=matrix(NA_real_, B, length(b))   ## this may require large memory when test=TRUE
+#    for(b.i in 1:length(b))
+#      weight[,b.i]=pmax(min.wts,dnorm((mrpp.stats[b[b.i]]-mrpp.stats),0,bw))
+	weight = dkernel(kernel)( (mrpp.stats-rep(mrpp.stats[b],each=B) )/ bw)
+	#dim(weight)=c(B, length(b))
+	w.idx=which(weight>0)
+	if(adjust=='none'){
+		  weight=weight/bw/B
+	}else weight=weight/rep(.colSums(weight, B, length(b)), each=B)
+	
+#    contrast.mat=matrix(0,choose(N,2),N); k=1
+#    for(i in 1:(N-1))for(j in (i+1):N){contrast.mat[k,i]=1;contrast.mat[k,j]=-1;k=k+1}
+#    #all.ddelta.dw=abs(contrast.mat%*%y)^2/pmax(1e-8,distObj)/2 ## avoiding division by zero
+#    all.ddelta.dw=(contrast.mat%*%y)^2/distObj/2 ## when denom is zero, the numerator is also zero. 
+#        all.ddelta.dw[is.nan(all.ddelta.dw)]=0
+    all.ddelta.dw=apply(y[,r,drop=FALSE],2L,dist)^2/distObj*0.5   ## these 2 lines replace the above 5 lines
+        all.ddelta.dw[is.nan(all.ddelta.dw)]=0
+	
+	if(adjust=='scale'){
+			w2s=sqrt(.colSums(weight^2, B, length(b)))
+			expr = expression(ans[, r.i] <- .colSums(weight * (rep(dz.dw[b], each=B)-dz.dw), B, length(b))/sd(dz.dw)/w2s)
+	}else	expr = expression(ans[, r.i] <- .colSums(weight * (rep(dz.dw[b], each=B)-dz.dw), B, length(b)))
+#times=matrix(NA_real_, length(r)+1L,5L)
+#times[1L,]	=proc.time()
+	for(r.i in seq_along(r)){
+		#dz.dw=.C('mrppstats',all.ddelta.dw[,r.i],permutedTrt,cperm.mat,nrow(permutedTrt),B,N,as.integer(weight.trt),ans=double(B),PACKAGE='MRPP',DUP=FALSE)$ans
+		dz.dw=.Call(mrppstats, all.ddelta.dw[,r.i], permutedTrt, weight.trt, PACKAGE='MRPP')
+#        for(b.i in 1:length(b)){
+#            dd.dw=dz.dw[b[b.i]]-dz.dw
+#            ans[r.i, b[b.i]]=sum(weight[,b.i]*dd.dw)/B  #length(b)
+#        }
+		eval(expr)    ## this lines replace the above 3 lines
+#times[r.i+1L,]		=proc.time()
+	}
+#print(times)
+	if(adjust0=='log scale') ans=exp(ans/pval0)
+    structure(drop(ans), parameters=pars, midp=pval0, class='grad.smoothp')
+}
+
+grad.smoothp.notest <-
+function(y, permutedTrt, bw, r=seq_len(NCOL(y)), test=FALSE, 
+        distObj=dist(y), mrpp.stats=NULL, 
+        kernel='triweight', weight.trt="df", adjust=NULL)
+## y=N-by-p data matrix; b=permutation index for the 1st trt; r=dimension index; 
+{	test=FALSE
+	if(missing(bw)) bw='sym1'
+	if(is.null(mrpp.stats)) mrpp.stats=mrpp.test.dist(distObj,permutedTrt=permutedTrt,weight.trt=weight.trt, method='permutation')$all.statistics
+	pval0=midp.empirical(mrpp.stats)
+	weight.trt = mrpp.weight.trt(weight.trt, trt.permutedTrt(permutedTrt))$weight.trt[names(permutedTrt)]
+    B=length(mrpp.stats)
+    if(!is.matrix(y) && !is.data.frame(y)) y = as.matrix(y)
+    ans=matrix(NA_real_, 1L, length(r))
+    N=as.integer(nrow(y))
+
+	if(is.character(bw)) # this slow when B is large
+		bw=bw.smoothp(y,permutedTrt=permutedTrt,r=r, kernel=kernel, weight.trt=weight.trt, method=bw, verbose=FALSE)
+
+	if(is.null(adjust[1L])) adjust='none'
+	if(is.numeric(bw) && is.infinite(bw)) adjust='weighted.mean'
+	adjust=match.arg(adjust, c('none','weighted.mean','scale', 'log scale'))
+
+	pars=list(kernel=kernel, weight.trt=weight.trt, adjust=adjust, bw=bw)
+	adjust0=adjust; if(adjust=='log scale') adjust='none'
+	weight = dkernel(kernel)( (mrpp.stats-mrpp.stats[1L] )/ bw)
+	w.idx=which(weight>0)
+	w.pos=weight[w.idx]
+	if(adjust=='none'){
+		  w.pos=w.pos/bw/B
+	}else w.pos=w.pos/sum(w.pos)
+	
+    all.ddelta.dw=apply(y[,r,drop=FALSE],2L,dist)^2/distObj*0.5   
+        all.ddelta.dw[is.nan(all.ddelta.dw)]=0
+	
+	if(adjust=='scale'){
+			w2s=sqrt(sum(w.pos^2))
+			expr = expression(ans[, r.i] <- sum(w.pos * (dz.dw[1L]-dz.dw) )/sd(dz.dw)/w2s)
+	}else	expr = expression(ans[, r.i] <- sum(w.pos * (dz.dw[1L]-dz.dw) ) )
+#times=matrix(NA_real_, length(r)+1L,5L)
+#times[1L,]	=proc.time()
+	permutedTrt1=lapply(permutedTrt,'[',,w.idx,drop=FALSE)
+	#the loop below is sufficiently fast, when compact kernel is used (i.e., w.idx is short)
+	for(r.i in seq_along(r)){
+		dz.dw=.Call(mrppstats, all.ddelta.dw[,r.i], permutedTrt1, weight.trt, PACKAGE='MRPP')
+		eval(expr)    
+#times[r.i+1L,]		=proc.time()
+	}
+#print(times)
+	if(adjust0=='log scale') ans=exp(ans/pval0)
+    structure(drop(ans), parameters=pars, midp=pval0, class='grad.smoothp')
+}
+
+## Liuhua's very fast version with bw=Inf, because no permutations are needed: 
+grad.smoothp.Inf <-
+function(y, permutedTrt, bw, r=seq_len(NCOL(y)), test=FALSE, 
+        distObj=dist(y), mrpp.stats=NULL, 
+        kernel='triweight', weight.trt="df", adjust=NULL)
+## y=N-by-p data matrix; b=permutation index for the 1st trt; r=dimension index; 
+{	bw=Inf; adjust='weighted.mean'; kernel=NULL
+
+	if(is.null(mrpp.stats)) mrpp.stats=mrpp.test.dist(distObj,permutedTrt=permutedTrt,weight.trt=weight.trt, method='permutation')$all.statistics
+	pval0=midp.empirical(mrpp.stats)
+	weight.trt = mrpp.weight.trt(weight.trt, trt.permutedTrt(permutedTrt))$weight.trt[names(permutedTrt)]
+    B=length(mrpp.stats)
+    b=if(isTRUE(test)) 1:B else 1L
+    if(!is.matrix(y) && !is.data.frame(y)) y = as.matrix(y)
+    ans=matrix(NA_real_, length(b), length(r))
+    N=as.integer(nrow(y))
+
+	pars=list(kernel=kernel, weight.trt=weight.trt, adjust=adjust, bw=bw)
+	
+	all.ddelta.dw=apply(y[,r,drop=FALSE],2L,dist)^2/distObj*0.5
+        all.ddelta.dw[is.nan(all.ddelta.dw)]=0
+	
+	permutedTrt1=lapply(permutedTrt, '[',,1L,drop=FALSE)
+	attributes(permutedTrt1)=attributes(permutedTrt)
+	for(r.i in seq_along(r)){
+		ans[, r.i]=.Call(mrppstats, all.ddelta.dw[,r.i], permutedTrt1, weight.trt, PACKAGE='MRPP') - mean(all.ddelta.dw[,r.i])
+	}
+	
+    structure(drop(ans), parameters=pars, midp=pval0, class='grad.smoothp')
+}
+
+grad.smoothp.mrpp <-
+function(y,  bw, r=seq_len(y$R), test=FALSE, 
+         mrpp.stats=NULL, 
+        kernel='triweight', adjust=NULL)
+## y=N-by-p data matrix; b=permutation index for the 1st trt; r=dimension index; 
+{
+	mrppt=mrpp.test(y); 
+	if(is.null(mrpp.stats)) mrpp.stats=mrppt$all.statistics
+	pval0=p.value(mrppt, 'midp')
+	weight.trt = y$weight.trt
+    B=length(mrpp.stats)
+    b=if(isTRUE(test)) 1:B else 1L
+    ans=matrix(NA_real_, length(b), length(r))
+    N=y$nobs
 
 	if(missing(bw)) bw='sym1'
 	if(is.character(bw))
@@ -96,6 +253,7 @@ function(y, permutedTrt, bw, r=seq_len(NCOL(y)), test=FALSE,
 #        }
 		eval(expr)    ## this lines replace the above 3 lines
 	}
+print(times)
 	if(adjust0=='log scale') ans=exp(ans/pval0)
     structure(drop(ans), parameters=pars, midp=pval0, class='grad.smoothp')
 }
@@ -125,7 +283,6 @@ grad.smoothp.bw <-
 expression( ## simplified from grad.smoothp; allowing a vector of bw's; only used in bw.smoothp
 {
     B=length(mrpp.stats)
-    b=1L
 	n.bw=length(bw)
     ans=matrix(NA_real_, n.bw, length(r))
     N=as.integer(nrow(y))
@@ -134,11 +291,11 @@ expression( ## simplified from grad.smoothp; allowing a vector of bw's; only use
 	all.ddelta.dw[is.nan(all.ddelta.dw)]=0
 	
 	bw0=rep(bw, each=B)
-	weights=dkernel(kernel)((mrpp.stats-mrpp.stats[b])/bw0)/bw0
+	weights=dkernel(kernel)((mrpp.stats-mrpp.stats[1L])/bw0)/bw0
 	dim(weights) = c(B, n.bw)
 	for(r.i in seq_along(r)){
-		dz.dw=.Call(mrppstats, all.ddelta.dw[,r.i], permutedTrt, as.numeric(weight.trt), PACKAGE='MRPP')  ## character weight.trt not allowed
-		ans[, r.i] = scale/B* .colSums(weights* (dz.dw[b]-dz.dw), B, n.bw)
+		dz.dw=.Call(mrppstats, all.ddelta.dw[,r.i], permutedTrt, as.numeric(weight.trt), PACKAGE='MRPP')
+		ans[, r.i] = scale/B* .colSums(weights* (dz.dw[1L]-dz.dw), B, n.bw)
 	}
 })
 

@@ -327,3 +327,11 @@ trt.permutedTrt=function(permutedTrt)
 	attr(ans, 'levels')=names(permutedTrt)
 	ans
 }
+
+`[.permutedTrt`=function(x, i, j,...,drop=FALSE)
+{
+	if(!missing(i) || missing(j)) NextMethod('[')
+	ans=lapply(x, '[', , j, drop=FALSE)
+	attributes(ans)=attributes(x)
+	ans
+}

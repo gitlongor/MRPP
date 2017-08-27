@@ -15,7 +15,7 @@ mrppBVS(y,permutedTrt,
          inc.thresh=NULL, exc.thresh=0, size.inc=0L, stepwise=FALSE,
 		 niter=Inf, verbose=FALSE, ...)
 mrppBVS.test(y,permutedTrt, Bperm=nperms.permutedTrt(permutedTrt), 
-         importance=c('approx.keep1', 'grad.smoothp','p.grad.dist'),
+         importance==c('grad.smoothp','grad.energy','p.grad.dist','approx.keep1'),
          inc.thresh=NULL, exc.thresh=0, size.inc=1L, stepwise=FALSE,
 		 niter=Inf, verbose=FALSE,  ...)
 }

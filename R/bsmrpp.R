@@ -1,6 +1,6 @@
 mrppBVS.test<-
 function(y,permutedTrt, Bperm=nperms.permutedTrt(permutedTrt), 
-         importance=c('approx.keep1', 'grad.smoothp','p.grad.dist'),
+         importance=c('grad.smoothp','grad.energy','p.grad.dist','approx.keep1'),
          inc.thresh=NULL, exc.thresh=0, size.inc=1L, stepwise=FALSE, 
 		 niter=Inf, verbose=FALSE, ...)
 {
@@ -33,17 +33,17 @@ function(y,permutedTrt, Bperm=nperms.permutedTrt(permutedTrt),
 #        permutedTrt[,b-1L]=lastperm; cperm.mat[,b-1]=lastcperm
 #        lastperm=permutedTrt[,1]=permutedTrt[,b]; lastcperm=cperm.mat[,1]=cperm.mat[,b]
 #        permutedTrt[,b]=perm1;  cperm.mat[,b]=cperm1
-        if(is.na(attr(permutedTrt, 'idx')[1L])) {
+#        if(is.na(attr(permutedTrt, 'idx')[1L])) {
             for(tt in seq_len(ntrt)) {
                 permutedTrt[[tt]][,1L] -> tmp
                 permutedTrt[[tt]][,1L] <- permutedTrt[[tt]][,bseqs[b.i]]
                 tmp                    -> permutedTrt[[tt]][,bseqs[b.i]]
             }
-        }else {
-                attr(permutedTrt, 'idx')[1L] -> tmp
-                attr(permutedTrt, 'idx')[1L] <- attr(permutedTrt, 'idx')[bseqs[b.i]]
-                tmp                          -> attr(permutedTrt, 'idx')[bseqs[b.i]]
-        }
+#        }else {
+#                attr(permutedTrt, 'idx')[1L] -> tmp
+#                attr(permutedTrt, 'idx')[1L] <- attr(permutedTrt, 'idx')[bseqs[b.i]]
+#                tmp                          -> attr(permutedTrt, 'idx')[bseqs[b.i]]
+#        }
 
         selected.pvals[b.i+1L]={tmp=tail(mrppBVS(y=y,permutedTrt=permutedTrt, verbose=FALSE, niter=niter, 
                         importance=importance, inc.thresh=inc.thresh, exc.thresh=exc.thresh, 

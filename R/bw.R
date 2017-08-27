@@ -96,7 +96,7 @@ bw.mse.pdf.asym=function(x, kernel='triweight', verbose=FALSE)
 	bw
 }
 
-bw.range=function(x, length=200, lower=.05, upper=.95, safety=100)
+bw.range=function(x, length=50L, lower=.05, upper=.95, safety=2)
 {
 	uniqstat=sort(unique(x))
 	lo = quantile(diff(uniqstat), lower)
@@ -106,7 +106,7 @@ bw.range=function(x, length=200, lower=.05, upper=.95, safety=100)
 }
 
 bw.safety=function(x, kernel, nNonzero=3L, pdf.cut=1e-3)
-{
+{# avoiding bw that is too small to be useful
 	supp=skernel(kernel, pdf.cut)[2L]
 	
 	diffs=x[1L]-x
@@ -117,10 +117,10 @@ bw.safety=function(x, kernel, nNonzero=3L, pdf.cut=1e-3)
 	ans0 / supp
 }
 
-bw.smoothp <-
+bw.smoothp.grid <-
 function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL, 
 	distFunc=dist,  kernel='triweight', 
-	method='sym1', verbose=TRUE, subset, adjust='log scale',...)
+	method='sym1', verbose=TRUE, subset, adjust='none',...)
 ## y=N-by-p data matrix; b=permutation index for the 1st trt; r=dimension index; 
 {
 	method=match.arg(method, choices=c('sym1','drop1','add1','keep1','dropadd1','dropaddsym1','ss.gradp','kde.mse1','match.pear3','match.pear3gca'))
@@ -189,7 +189,8 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 	if(n.bw==0L) stop('bandwidth range is not suitable')
 	
 	if(method=='match.pear3' || method=='match.pear3gca') {
-		cums=cumulant(mrpp(y[,r,drop=FALSE], permutedTrt=permutedTrt, weight.trt=weight.trt, distFunc=distFunc),order=1:4); cums[2L]=sqrt(cums[2L]); cums[3L]=cums[3L]/cums[2L]^3; cums[4L]=cums[4L]/cums[2L]^4
+		cums=cumulant(mrpp(y[,r,drop=FALSE], permutedTrt=permutedTrt, weight.trt=weight.trt, distFunc=distFunc),order=1:4); 
+		cums[2L]=sqrt(cums[2L]); cums[3L]=cums[3L]/cums[2L]^3; cums[4L]=cums[4L]/cums[2L]^4
 		pdf0x = if(method=='match.pear3') dpearson3(mrpp$all.statistics, cums[1L], cums[2L], cums[3L]) else 
 		dpearson3gca(mrpp$all.statistics, cums[1L], cums[2L], cums[3L], cums[4L]) 
 		ans=bw.matchpdf(mrpp$all.statistics, kernel=kernel, pdf=pdf0x, bw=bw, verbose=verbose, title=switch(method, match.pear3="Match Pearson III Dist'n", match.pear3gca="Match GCA Adjust. of Pearson III Dist'n"))
@@ -214,10 +215,12 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 				this.call$method=
 				this.call$verbose=
 				this.call$subset=
+				this.call$kernel=
 				this.call$adjust=NULL
 				this.call$bw=Inf
+				this.call$permutedTrt=lapply(permutedTrt, '[',,1L,drop=FALSE)
 				imp.idx=names(this.call)%in%names(formals(grad.smoothp))
-				imp0=do.call('grad.smoothp', this.call[imp.idx], envir=parent.frame())
+				imp0=do.call('grad.smoothp.Inf', this.call[imp.idx], envir=parent.frame())
 				ord0=order(imp0)
 				subset=ord0[round(seq.int(from=1L, to=length(r), length.out=n.subset))]
 			}
@@ -240,10 +243,12 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 			dev.new(width=10, height=5, noRStudioGD=TRUE); par(mfrow=1:2)
 			plot(log10(bw), (ss), xlab='bandwidth', ylab='SS of p-value gradients', type='o', axes=FALSE, main='\nMethod: Max SS of Derivative of Density' )
 			axis(2)
-			axis(1, at = log10(ans), labels=sprintf('%.3g',ans), col='blue',col.ticks='blue', col.axis='blue')
+			axis(1, at = log10(ans), labels=sprintf('%.3g',ans), col='blue',col.ticks='blue', col.axis='blue', line=1)
+			axis(2, at = ss[idx], labels=sprintf('%.3g',ss[idx]), col='red',col.ticks='red', col.axis='red', line=1)
 			ats=axTicks(1)
-			axis(1, at=ats, labels=parse(text=paste0('10^',ats))  ,line=1)
-			abline(v=log10(ans), h=(ss[idx]), col='blue', lty=3)
+			axis(1, at=ats, labels=parse(text=paste0('10^',ats))  )
+			abline(v=log10(ans), col='blue', lty=3)
+			abline(h=(ss[idx]), col='red', lty=3)
 			box()
 			
 			eval(plot.expr)
@@ -335,13 +340,14 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 
 		plot(log10(bw), sses, xlab='bandwidth', ylab='SS of approx errors', type='o', main='', axes=FALSE)
 		title(main=paste0('\nMethod: ',switch(method, drop1='Backward Difference', add1='Forward Difference', keep1='Keep 1 Variable', sym1='Central Difference', dropadd1='Backward + Forward Difference', dropaddsym1='Backward + Forward + Central Difference')))
-		axis(3, at = log10(ans), labels=sprintf('%.3g',ans), col='red',col.ticks='red',col.axis='red')
+		#axis(3, at = log10(ans), labels=sprintf('%.3g',ans), col='red',col.ticks='red',col.axis='red')
 		axis(2)
 		ats=axTicks(1)
 		axis(1, at=ats, labels=parse(text=paste0('10^',ats))  )
 		abline(h=min.sse, col='red', lty=3); box()
 		
 		axis(1, at = log10(ans), labels=sprintf('%.3g',ans), col='blue',col.ticks='blue', col.axis='blue', line=1)
+		axis(2, at = min.sse, labels=sprintf('%.3g',min.sse), col='red',col.ticks='red', col.axis='red', line=1)
 		abline(v=log10(ans), col='blue', lty=3)
 
 		eval(plot.expr)
@@ -350,6 +356,297 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 	ans
 	
 }
+
+bw.smoothp.optim <-
+function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL, 
+	distFunc=dist,  kernel='triweight', 
+	method='sym1', verbose=TRUE, subset, adjust='none',...)
+## y=N-by-p data matrix; b=permutation index for the 1st trt; r=dimension index; 
+{
+	method=match.arg(method, choices=c('sym1','drop1','add1','keep1','dropadd1','dropaddsym1','ss.gradp','kde.mse1','match.pear3','match.pear3gca'))
+	adjust=match.arg(adjust, choices=c('none','log scale'))
+    if(!is.matrix(y) && !is.data.frame(y)) y = as.matrix(y)
+	R=NCOL(y)
+	if(R==1L ) method='ss.gradp'
+
+	lst=list(...)
+	lst$y=y[,r,drop=FALSE]
+	lst$permutedTrt=permutedTrt
+	lst$distFunc=distFunc 
+	nms = setdiff(names(formals(mrpp)), '...')
+	idx=names(lst)%in%nms
+	mrpp.obj = do.call('mrpp', lst[idx])
+	mrpp=mrpp.test(mrpp.obj, method='permutation')
+	distObj=mrpp.obj$distObj
+	
+	
+	lower.bound = bw.safety(mrpp$all.statistics, kernel)
+	
+	plot.expr=expression({
+		hist(mrpp$all.statistics, breaks='FD', freq=FALSE, main='Density of MRPP statistics', ylab='Density', xlab='MRPP z-statistics')
+		pdf.final=dkde(mrpp$all.statistics, ans, kernel)
+		marg = diff(range(mrpp$all.statistics))/5
+		curve(pdf.final(x), min(mrpp$all.statistics)-marg, max(mrpp$all.statistics)+marg, add=TRUE)
+		rug(mrpp$all.statistics)
+		abline(v=mrpp$all.statistics[1L], col='blue', lty=3L)
+		axis(1L, at=mrpp$all.statistics[1L], labels=expression(z[1L]), col='blue', line=1, col.ticks='blue', col.axis='blue')
+		box()
+		title(sub=sprintf('bandwidth = %.3g', ans))
+	})
+	if(method=='kde.mse1'){
+		lst=list(...)
+		lst$x=mrpp$all.statistics
+		#lst$mrpp=mrpp.obj
+		lst$kernel=kernel
+		#lst$verbose=verbose
+		nms=names(lst)
+		idx= nms=='' | nms%in%names(formals(bw.mse.pdf.asym))
+		ans = do.call('bw.mse.pdf.asym', lst[idx])
+		if(ans<lower.bound){
+			ans=lower.bound
+			if(verbose)warning('bandwidth selected is too small; replaced by a safer lower bound.')
+		}
+		if(verbose) {
+			dev.new(noRStudioGD=TRUE)
+			eval(plot.expr)
+			title(main='\nMethod: KDE MSE formula')
+		}
+		return(ans)
+	}
+
+	weight.trt = attr(mrpp$parameter, 'weight.trt')
+
+
+	if(method=='match.pear3' || method=='match.pear3gca') {
+		cums=cumulant(mrpp(y[,r,drop=FALSE], permutedTrt=permutedTrt, weight.trt=weight.trt, distFunc=distFunc),order=1:4); 
+		cums[2L]=sqrt(cums[2L]); cums[3L]=cums[3L]/cums[2L]^3; cums[4L]=cums[4L]/cums[2L]^4
+		pdf0x = if(method=='match.pear3') dpearson3(mrpp$all.statistics, cums[1L], cums[2L], cums[3L]) else 
+		dpearson3gca(mrpp$all.statistics, cums[1L], cums[2L], cums[3L], cums[4L]) 
+		ans=bw.matchpdf(mrpp$all.statistics, kernel=kernel, pdf=pdf0x, bw=bw, verbose=verbose, title=switch(method, match.pear3="Match Pearson III Dist'n", match.pear3gca="Match GCA Adjust. of Pearson III Dist'n"))
+		if(ans<lower.bound){
+			ans=lower.bound
+			if(verbose) warning('bandwidth selected is too small; replaced by a safer lower bound.')
+		}
+		return(ans)
+
+	}
+	
+	r.bak=r
+	if(method%in%c('sym1','drop1','add1','keep1','dropadd1','dropaddsym1','ss.gradp')) {
+		if(missing(subset)){
+			n.subset=round(100+.2*(length(r)-100))
+			if(length(r)<=100L) {
+				subset=seq_along(r)
+			}else{
+				this.call=as.list(match.call())
+				this.call[[1L]]=
+				this.call$method=
+				this.call$verbose=
+				this.call$subset=
+				this.call$kernel=
+				this.call$adjust=NULL
+				this.call$bw=Inf
+				this.call$permutedTrt=lapply(permutedTrt, '[',,1L,drop=FALSE)
+				imp.idx=names(this.call)%in%names(formals(grad.smoothp))
+				imp0=do.call('grad.smoothp.Inf', this.call[imp.idx])
+				ord0=order(imp0)
+				subset=unique(sort(ord0[round(seq.int(from=1L, to=length(r), length.out=n.subset))]))
+			}
+		}else if(is.null(subset)){
+			subset=seq_along(r)
+		}
+	    r=r[subset]
+	}
+	
+	gradEnv=new.env()
+	gradEnv$mrpp.stats=mrpp$all.statistics
+	gradEnv$scale=1
+	evalq({
+		B=length(mrpp.stats)
+		N=as.integer(nrow(y))
+
+		all.ddelta.dw=apply(y[,r,drop=FALSE],2L,dist)^2/distObj*0.5   
+		all.ddelta.dw[is.nan(all.ddelta.dw)]=0
+		
+		dz.dw=matrix(NA_real_, B, length(r))
+		worked.idx=rep(FALSE, B)
+	}, envir=gradEnv)
+	
+	thisEnv=environment()
+	locs=numeric(0L)
+	niter=0L
+	mrpp.stats.diff1=mrpp$all.statistics-mrpp$all.statistics[1L]
+	
+	this.call=match.call()
+	this.call[[1L]]=as.symbol('bw.smoothp')
+	this.call[['method']]='match.pear3gca'
+	this.call[['verbose']]=FALSE
+	start.bw=eval.parent(this.call)
+	
+	obj.common.expr=quote({
+		niter<<-niter+1L
+		thisEnv$locs[[niter]]=this.bw=exp(logbw)
+		weights=dkernel(kernel)(mrpp.stats.diff1/this.bw)
+		w.tf=weights>0; w.pos=weights[w.tf]
+		perm.idx=which(!gradEnv$worked.idx & w.tf)
+		if(length(perm.idx)>0L){
+			gradEnv$worked.idx[perm.idx]=TRUE
+			this.permtrt=lapply(permutedTrt, '[', , perm.idx, drop=FALSE)
+			for(r.i in seq_along(r))
+				gradEnv$dz.dw[perm.idx,r.i]=.Call(mrppstats, gradEnv$all.ddelta.dw[,r.i], this.permtrt, weight.trt, PACKAGE='MRPP')
+		}
+		
+		scale=1/this.bw
+		ans=1/this.bw/gradEnv$B*(sum(w.pos)*gradEnv$dz.dw[1,]-colSums(w.pos*gradEnv$dz.dw[w.tf,,drop=FALSE]))
+	})
+	if(method=='ss.gradp'){
+		objfunc=eval(bquote(function(logbw)
+		{
+			.(obj.common.expr)
+			ans=sum(ans^2)
+			thisEnv$ss[[niter]]=ans
+			-ans
+		}))
+		attr(objfunc, 'srcref')=NULL
+		opt.rslt=optim(log(start.bw), objfunc, method='Nelder-Mead')
+		ord=order(locs)
+		bw=locs[ord]
+		ss=ss[ord]
+		
+		idx = which.max(ss)
+		ans=bw[idx]
+		if(verbose){
+			dev.new(width=10, height=5, noRStudioGD=TRUE); par(mfrow=1:2)
+			plot(log10(bw), (ss), xlab='bandwidth', ylab='SS of p-value gradients', type='o', axes=FALSE, main='\nMethod: Max SS of Derivative of Density' )
+			axis(2)
+			axis(1, at = log10(ans), labels=sprintf('%.3g',ans), col='blue',col.ticks='blue', col.axis='blue', line=1)
+			axis(2, at = ss[idx], labels=sprintf('%.3g',ss[idx]), col='red',col.ticks='red', col.axis='red', line=1)
+			ats=axTicks(1)
+			axis(1, at=ats, labels=parse(text=paste0('10^',ats))  )
+			abline(v=log10(ans), col='blue', lty=3)
+			abline(h=(ss[idx]), col='red', lty=3)
+			box()
+			
+			eval(plot.expr)
+		}
+		if(idx==1L || idx==length(bw))warning('optimal bandwidth occurs at the boundary')
+		ans =  exp(mean(log(ans)))  
+		if(ans<lower.bound){
+			ans=lower.bound
+			if(verbose)warning('bandwidth selected is too small; replaced by a safer lower bound.')
+		}
+		return(ans)
+		
+	}
+
+
+	mrpp.obj1=mrpp.obj
+	if(method%in%c('drop1','sym1','dropadd1', 'dropaddsym1')){
+		drop1p = function(r.i){
+			#lst$y=distFunc(y[,r[-r.i],drop=FALSE])
+			#p.value(do.call('mrpp.test.dist', lst),type="midp")
+			mrpp.obj1$distObj=distFunc(y[,r[-r.i],drop=FALSE])
+			mrpp.obj1$R=mrpp.obj$R-1L
+			p.value(mrpp.test(mrpp.obj1), type='midp')
+		} # still time consuming
+		drop1pval= sapply(seq_along(r), drop1p)
+	}
+	if(method%in%c('add1','sym1','dropadd1','dropaddsym1')){
+		add1p = function(r.i){
+			#lst$y=distFunc(y[,c(r,r[r.i]),drop=FALSE])
+			#p.value(do.call('mrpp.test.dist', lst),type="midp")
+			mrpp.obj1$distObj=distFunc(y[,c(r,r[r.i]),drop=FALSE])
+			mrpp.obj1$R=mrpp.obj$R+1L
+			p.value(mrpp.test(mrpp.obj1), type='midp')
+			
+		} # still time consuming
+		add1pval=sapply(seq_along(r), add1p)
+	}
+	if(method%in%c('keep1')){
+		keep1 = function(r.i){
+			#lst$y=distFunc(y[,r[r.i],drop=FALSE])
+			#p.value(do.call('mrpp.test.dist', lst),type="midp")
+			mrpp.obj1$distObj=distFunc(y[,r[r.i],drop=FALSE])
+			mrpp.obj1$R=1L
+			p.value(mrpp.test(mrpp.obj1), type='midp')
+		}
+		keep1pval=sapply(seq_along(r), keep1)
+		#t(smps - gradEnv$ans%*%(1-diag(1, length(r), length(r))))
+	}
+	pval0=p.value(mrpp, type='midp')
+	if(adjust=='none'){
+		sses.expr=switch(method, 
+			drop1 = quote(sum((ans - (pval0 - drop1pval))^2)), 
+			add1  = quote(sum((ans - (add1pval - pval0))^2)), 
+			sym1  = quote(sum((ans - .5*(add1pval - drop1pval))^2)), 
+			keep1 = quote(sum((ans%*%(1-diag(1, length(r), length(r)))-keep1pval)^2)) , 
+			dropadd1 = quote(sum((ans - (pval0 - drop1pval))^2)+
+							 sum((ans - (add1pval - pval0))^2)), 
+			dropaddsym1 = quote(sum((ans - (pval0 - drop1pval))^2)+
+							    sum((ans - (add1pval - pval0))^2)+
+								sum((ans - .5*(add1pval - drop1pval))^2))
+		)
+		objfunc=eval(bquote(function(logbw){
+			.(obj.common.expr)
+			thisEnv$sses[[niter]]=.(sses.expr)
+		}))
+	}else if(adjust=='log scale'){
+		log.p0=log(pval0)
+		sses.expr=switch(method, 
+			drop1 = quote(sum((ans - (log.p0 - log(drop1pval)))^2)), 
+			add1  = quote(sum((ans - (log(add1pval) - log.p0))^2)), 
+			sym1  = quote(sum((ans - .5*(log(add1pval)- log(drop1pval)))^2)), 
+			keep1 = quote(sum((ans%*%(1-diag(1, length(r), length(r)))-log(keep1pval))^2)) , 
+			dropadd1 = quote(sum((ans - (log.p0 - log(drop1pval)))^2)+
+							 sum((ans - (log(add1pval) - log.p0))^2)), 
+			dropaddsym1 = quote(sum((ans - (log.p0 - log(drop1pval)))^2)+
+							    sum((ans - (log(add1pval) - log.p0))^2)+
+								sum((ans - .5*(log(add1pval)- log(drop1pval)))^2))
+		)
+		objfunc=eval(bquote(function(logbw){
+			.(obj.common.expr)
+			ans=ans/pval0
+			thisEnv$sses[[niter]]=.(sses.expr)
+		}))
+	}
+		attr(objfunc, 'srcref')=NULL
+		opt.rslt=optim(log(start.bw), objfunc, method='Nelder-Mead')
+		ord=order(locs)
+		bw=locs[ord]
+		sses=sses[ord]
+	idx=which.min(sses)
+	ans=bw[idx]
+	min.sse=sses[idx]
+
+	if(ans<lower.bound){
+		ans=lower.bound
+		if(verbose)warning('bandwidth selected is too small; replaced by a safer lower bound.')
+	}
+	
+	if(verbose){
+		dev.new(width=10, height=5, noRStudioGD=TRUE)
+		par(mfrow=1:2)
+
+		plot(log10(bw), sses, xlab='bandwidth', ylab='SS of approx errors', type='o', main='', axes=FALSE)
+		title(main=paste0('\nMethod: ',switch(method, drop1='Backward Difference', add1='Forward Difference', keep1='Keep 1 Variable', sym1='Central Difference', dropadd1='Backward + Forward Difference', dropaddsym1='Backward + Forward + Central Difference')))
+		#axis(3, at = log10(ans), labels=sprintf('%.3g',ans), col='red',col.ticks='red',col.axis='red')
+		axis(2)
+		ats=axTicks(1)
+		axis(1, at=ats, labels=parse(text=paste0('10^',ats))  )
+		abline(h=min.sse, col='red', lty=3); box()
+		
+		axis(1, at = log10(ans), labels=sprintf('%.3g',ans), col='blue',col.ticks='blue', col.axis='blue', line=1)
+		axis(2, at = min.sse, labels=sprintf('%.3g',min.sse), col='red',col.ticks='red', col.axis='red', line=1)
+		abline(v=log10(ans), col='blue', lty=3)
+
+		eval(plot.expr)
+	}
+	
+	ans
+	
+}
+
+bw.smoothp=bw.smoothp.optim
 
 bw.matchpdf=function(x, kernel=.kernels, pdf, bw = NULL, verbose=FALSE, title=NULL)
 {## TODO: Minimize Hellinger Distance
