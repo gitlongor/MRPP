@@ -59,11 +59,20 @@ mrpp.matrix <- eval(bquote(function(y, trt, B, permutedTrt, weight.trt='df', dis
 ) # of bquote
 ) # of eval 
 
-mrpp.dist=eval(bquote(function(y, trt, B, permutedTrt, weight.trt='df', distFunc=dist, R, ...)
+mrpp.dist=eval(bquote(function(y, trt, B, permutedTrt, weight.trt='df', distFunc=dist, R, data, ...)
 {
 	.(.mrpp.expr)
 	if(N != attr(y,'Size')) stop('attr(y,"Size") != length(trt)')
-	if(missing(R)) R = attr(y,'Size')-1L
+	if(missing(R)) 
+		R = if(missing(data)) attr(y,'Size')-1L else NCOL(data)
+	if(missing(data)) {
+			delayedAssign('y', {
+					tmp=suppressWarnings(cmdscale(y, attr(y, 'Size')-1L, eig=TRUE));
+					eigs=zapsmall(tmp$eig);
+					tmp$points[,seq_len(sum(eigs!=0)),drop=FALSE]
+				},
+				assign.env=data.env) 
+	}else	delayedAssign('y', data, assign.env=data.env) 
 	structure(list(distObj=y, 
 					n=tabtrt, 
 					ntrt=ntrt,

@@ -14,11 +14,11 @@ The \code{"mrpp"} object is a setup that allows the multiresponse permutation pr
 mrpp(y, trt, B, permutedTrt, weight.trt='df',...)
 
 \method{mrpp}{matrix}(y, trt, B, permutedTrt, weight.trt='df', distFunc=dist,...)
-\method{mrpp}{dist}(y, trt, B, permutedTrt, weight.trt='df', distFunc=dist, R, ...)
+\method{mrpp}{dist}(y, trt, B, permutedTrt, weight.trt='df', distFunc=dist, R, data, ...)
 }
 %- maybe also "usage" for other objects documented here.
 \arguments{
-  \item{y}{A numeric data matrix for \code{mrpp.matrix}, with rows being samples and columns being response variables. For \code{mrpp.dist}, this is a \code{dist} object containing the pairwise inter-sample distances. 
+  \item{y}{A numeric data matrix for \code{mrpp.matrix}, with rows being samples and columns being response variables. For \code{mrpp.dist}, this is a \code{\link{dist}} object containing the pairwise inter-sample distances. 
 }
   \item{trt}{A vector of treatment assignments. If missing, the first permutation in \code{permutedTrt} will be used as the original treatment assignment. As least one of \code{trt} or \code{permutedTrt} need to be given. 
 }
@@ -32,7 +32,9 @@ mrpp(y, trt, B, permutedTrt, weight.trt='df',...)
 }
 %  \item{idxOnly}{As in \code{\link{permuteTrt}}.
 %}
-  \item{R}{A positive integer, equal to the number of response variables.
+  \item{R}{A positive integer, equal to the number of response variables. When missing, it is determined from \code{data} (when available) or computed as \code{attr(y,'Size')-1L}.
+}
+ \item{data}{A numeric data matrix for \code{mrpp.matrix}, with rows being samples and columns being response variables. 
 }
   \item{\dots}{Additional arguments to be passed on. 
 }
@@ -60,7 +62,7 @@ For the \code{weight.trt} argument, suppose that \code{n} denote the vector samp
 }
 \item{nobs }{A positive integer of the total sample size. 
 }
-\item{R }{A positive integer of the number of dimensions of the response variable \code{y}. 
+\item{R }{A positive integer of the number of dimensions of the response variable. 
 }
 \item{B.requested }{The number of permutations requested. This may not be the actual number of permutations being used, e.g., when it is larger than \code{nparts}. 
 }
@@ -74,13 +76,15 @@ For the \code{weight.trt} argument, suppose that \code{n} denote the vector samp
 }
 \item{distFun}{The same as the \code{distFunc} argument. 
 }
+\item{data.env}{An environment containing one object \code{"y"}, being the raw data set. This is created as a promise. Some methods (e.g., \code{\link{mrpp.test}}) do not require this and it will not be evaluated. For \code{mrpp.dist}, if \code{data} is not given, then the result is only a \emph{possible} data set reconstructed by \code{\link{cmdscale}}.
+}
 }
 \note{
 Currently, the following S3 methods are available for the \code{"mrpp"} class: 
-\code{\link[MRPP:cumulant]{mean, sd, var, skewness, kurtosis,  moment, cumulant}} and \code{\link{mrpp.test}},  
+\code{\link[MRPP:cumulant]{mean, sd, var, skewness, kurtosis,  moment, cumulant}} and \code{\link{mrpp.test}}.
 }
 \section{Warning}{
-The \code{permutedTrt.env} component is an environemnt such that the duplication of a \code{"mrpp"} object will share the same environment. 
+The \code{permutedTrt.env} component and \code{data.env} are environemnts such that the duplication of a \code{"mrpp"} object will share the same environments. 
 }
 \references{
 Paul W. Mielke, Kenneth J. Berry. (2007) Permutation Methods: A Distance Function Approach. 2nd ed. Springer.
@@ -102,6 +106,15 @@ x=matrix(rnorm(n*5*2), ncol=5)
 mrpp.obj = mrpp(x, trt, B=Inf)
 cumulant(mrpp.obj)
 mrpp.test(mrpp.obj)
+identical(x, mrpp.obj$data.env$y)
+
+dist.x=dist(x)
+mrpp.obj2 = mrpp(dist.x, trt, B=Inf)
+cumulant(mrpp.obj2) # same as above
+mrpp.test(mrpp.obj2) # same as above
+mrpp.obj2$data.env$y # recovered data, typically not the same as x
+max(abs(dist(mrpp.obj2$data.env$y)-dist.x)) # max error of recovery of distances
+
 }
 % Add one or more standard keywords, see file "KEYWORDS" in the
 % R documentation directory.
