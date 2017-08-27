@@ -328,10 +328,14 @@ trt.permutedTrt=function(permutedTrt)
 	ans
 }
 
-`[.permutedTrt`=function(x, i, j,...,drop=FALSE)
+`[.permutedTrt`=function(x, i, j,...)
 {
-	if(!missing(i) || missing(j)) NextMethod('[')
-	ans=lapply(x, '[', , j, drop=FALSE)
-	attributes(ans)=attributes(x)
-	ans
+	structure(
+		if(!missing(i)){
+			attr(x,'class')=NULL
+			if(missing(j)) x[i] else lapply(x[i], '[', , j, drop=FALSE)
+		}else  if(missing(j)) x else lapply(x, '[', , j, drop=FALSE)
+		
+		,class='permutedTrt'
+	)
 }

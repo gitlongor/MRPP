@@ -68,6 +68,7 @@ S3method(p.value, mrpp.test)
 S3method(p.value, grad.smoothp)
 
 S3method(`[[`, dist)
+S3method(`[`, permutedTrt)
 
 S3method(mean, mrpp)
 S3method(var, mrpp)

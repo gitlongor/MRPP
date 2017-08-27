@@ -5,6 +5,7 @@
 \alias{nperms.permutedTrt}
 \alias{ntrt.permutedTrt}
 \alias{trt.permutedTrt}
+\alias{[.permutedTrt}
 \title{
 Compute permutations of treatment assignments in a one-way design. 
 }
@@ -20,6 +21,8 @@ Enumerate or sample permutations of treatment assignments in a one-way design.
 \code{ntrt.permutedTrt} returns the sample size in each treatment group of a \code{permutedTrt} object. 
 
 \code{trt.permutedTrt} returns the treatment label vector of a \code{permutedTrt} object. 
+
+\code{[.permutedTrt} returns a subset of the permutations of a \code{permutedTrt} object. 
 }
 \usage{
 permuteTrt(trt, B = 100)
@@ -27,6 +30,7 @@ nparts(n)
 nperms.permutedTrt(permutedTrt)
 ntrt.permutedTrt(permutedTrt)
 trt.permutedTrt(permutedTrt)
+\method{[}{permuteTrt}(x,i,j,\dots)
 }
 %- maybe also "usage" for other objects documented here.
 \arguments{
@@ -38,7 +42,13 @@ trt.permutedTrt(permutedTrt)
   
   \item{n}{An integer vector of the sample sizes in each treatment group.}
   
-  \item{permutedTrt}{A \code{"permutedTrt"} object returned from a \code{permutedTrt} call.}
+  \item{permutedTrt, x}{A \code{"permutedTrt"} object returned from a \code{permutedTrt} call.}
+  
+  \item{i}{An integer, character or logical vector of indices of the list to be subset. This is often unspecified. }
+  
+  \item{j}{An integer vector, specifying the columns of matrices in \code{x} to be extracted. }
+  
+  \item{\dots}{Unused.}
 }
 \details{
 The \code{nparts} functions computes the total number of partitions, with sizes being specified by \code{n}. 
@@ -58,6 +68,8 @@ Each matrix has \code{B} columns, where \code{B} may be smaller than requested, 
 \code{nperms.permutedTrt} returns the total number of permutations. 
 \code{ntrt.permutedTrt} returns a named vector of sample sizes. 
 \code{trt.permutedTrt} returns a vector of treatment labels that is equivalent  to (i.e., might be a permutation of) the one passed to \code{permuteTrt}.
+
+For \code{[.permutedTrt} the result is another \code{permutedTrt} object. If \code{i} is missing, the result only contains a subset of columns of \code{x} specified by \code{j}. If \code{i} is non-missing but \code{j} is missing, the result only contains a subset of treatments, equivalent to subsetting a usual \code{list}. If both \code{i} and \code{j} are specified, the result will subset both the treatments (determined by \code{i}) and the permutations (i.e., columns specified by \code{j}).
 }
 %\note{
 %When \code{B} is less than \code{nparts(table(trt))}, ideally one could randomly sample \code{B} partitions from a total of \code{nparts(table(trt))} without replacement, subject to the first partition being equivalent to the original treatment assignment. For the sake of simplicity, this is \emph{not} implemented here. The random sample of size \code{B} is generated from a total of \code{N!} permutations without replacement. Therefore, it is possible for some of the permutations sampled corresponding to equivalent partitions. However, for the purpose of permutation tests, the type I error rate is still under control. 
@@ -75,6 +87,12 @@ nparts(table(trt))		## 92378 partitions =  choose(19,10)
 pmat=permuteTrt(trt, 1e3L)		## use 1000 random permutations
 ntrt.permutedTrt(pmat)  ## 2 treatments
 nperms.permutedTrt(pmat) ## 1e3L permutations
+
+pmat[,1L] # extract the 1st permutation of all treatments, i.e., the original treatment assignment
+pmat['1', 1:10] # observations in treatment '1' under the first 10 permutations
+str(pmat['1']) # all permutations in treatment '1'
+stopifnot(identical(pmat, pmat[]))
+
 \dontrun{
 pmat=permuteTrt(trt, 1e6L)		## use all partitions, as 1e6L >= 92378 
 stopifnot(identical(
