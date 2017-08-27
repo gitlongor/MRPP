@@ -321,6 +321,89 @@ SEXP mrppstats(SEXP y, SEXP Perms, SEXP grpWts)
 //	}
 }
 
+static R_INLINE SEXP mrppstats_listOfMatrix_subset(double * ptrY, SEXP permMats, double * wt, R_len_t N, int * ss, R_len_t subB)
+{
+	/* ptrY is the REAL pointer to the vector of a 'dist' object with each element being double */
+	/* permMats is a 'list', of n * B permutation indices; see permuteTrt. */
+	/* wt is a double vector group weights (C_k in Mielke & Berry) */
+	/* N is the total sample size */
+	/* ss is an int vector of subsets of permutations (cols of Perms) */
+	/* subB is the length of ss */
+    SEXP ans;
+    R_len_t t, ntrt, b, n; //, B
+    double  * ptrAns, fact, dn;
+	int * ptrPerm;
+    
+    ntrt=LENGTH(permMats);
+    // B=Rf_ncols(VECTOR_ELT(permMats, 1));
+
+    PROTECT(ans = NEW_NUMERIC(subB));
+    ptrAns=REAL(ans);
+	for(b=0; b<subB; ++b) *(ptrAns++)=0.0;
+	ptrAns=REAL(ans);
+
+#ifdef DEBUG
+	Rprintf("ntrt=%d\tB=%d\tN=%d\twt=%f\n", ntrt, B, N, wt);
+#endif
+
+    for(t=ntrt-1; t>=0; --t){
+        n = Rf_nrows(VECTOR_ELT(permMats, t));
+		if (n<=1) continue;
+        dn = (double) n;		
+        fact = wt[t] / dn / (dn - 1.0) ;
+#ifdef DEBUG
+		Rprintf("t=%d\tn=%d\tdn=%f\tdenom=%f\n", t, n, dn, fact);
+#endif
+        ptrPerm = INTEGER(VECTOR_ELT(permMats, t)); 
+        for(b=0; b<subB; ++b){
+            ptrAns[b] += sumSubMatSorted(ptrY,  ptrPerm + (ss[b] * n) -n  , n, N) * fact;
+        }
+    }
+    UNPROTECT(1);
+    return(ans);
+}
+
+SEXP mrppstats_subset(SEXP y, SEXP Perms, SEXP grpWts, SEXP subset)
+{
+	/* y is the vector of a 'dist' object with each element being double */
+	/* Perms is a 'permutedTrt' object. See permutedTrt R function */
+	/* grpWts is a scaler of 0 or 1 weighting method: 0=sample size-1; 1=sample size */
+	/* subset is an integer vector, specifying the columns of matrices of Perms to be used */
+	R_len_t N, subB;
+	double  *wt, *ptrY;
+	int *ss; 
+	SEXP wt_real, ss_int; // , permString;
+	
+	
+	if(isReal(grpWts)) {
+		wt = REAL(grpWts);
+	}else{
+		PROTECT(wt_real = AS_NUMERIC(grpWts));
+		wt = (REAL(wt_real));
+		UNPROTECT(1);
+	}
+	if(isInteger(subset)){
+		ss = INTEGER(subset);
+	}else{
+		PROTECT(ss_int = AS_INTEGER(subset));
+		ss = INTEGER(ss_int);
+		UNPROTECT(1);
+	}
+
+	ptrY = REAL(y);
+    N = LENGTH(y);  // length of 'dist' obj
+    N = ( 1 + (int)(0.5 + sqrt(1.0 + 8.0 * N)) ) >> 1;
+	
+	subB = LENGTH(subset);
+
+//	permString = getAttrib(Perms, install("idx")) ;
+//	if (R_NaString == STRING_ELT(permString, 0) ) {
+		return mrppstats_listOfMatrix_subset(ptrY, Perms, wt, N, ss, subB);
+//	}else {	
+//		return mrppstats_string(ptrY, permString, Perms, wt, N);
+//	}
+}
+
 SEXP sumThresh0(SEXP x)
 // computing sum(pmax(x,0)) assuming x is a double vector;
 // For speed, no type check is conducted! 

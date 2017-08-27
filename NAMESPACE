@@ -85,4 +85,3 @@ S3method(cumulant, mrpp)
 S3method(cumulant, default)
 
 useDynLib(MRPP, .registration=TRUE)
-# mrppstats, radixSort_prealloc, C_FR2permvec are registered
