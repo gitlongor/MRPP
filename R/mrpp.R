@@ -92,3 +92,21 @@ mrpp.dist=eval(bquote(function(y, trt, B, permutedTrt, weight.trt='df', distFunc
 } # of function
 ) # of bquote
 ) # of eval
+
+
+`$.mrpp`=function(x, name)
+{# proper extraction of data.name component
+	x=unclass(x)
+	name.x=c(names(x), 'permutedTrt', 'y')
+	name.sym=substitute(name)
+	name.char=as.character(name.sym)
+	matched.name = name.x[pmatch(name.char, name.x)]
+	if (is.na(matched.name) ){
+		NULL
+	}else if (matched.name == 'y') {
+		x$data.env$y
+	}else if(matched.name=='permutedTrt') {
+		x[['permutedTrt.env']]$permutedTrt
+	}else x[[ name.char, exact=FALSE ]]
+}
+

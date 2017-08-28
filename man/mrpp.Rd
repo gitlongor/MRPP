@@ -15,6 +15,8 @@ mrpp(y, trt, B, permutedTrt, weight.trt='df',...)
 
 \method{mrpp}{matrix}(y, trt, B, permutedTrt, weight.trt='df', distFunc=dist,...)
 \method{mrpp}{dist}(y, trt, B, permutedTrt, weight.trt='df', distFunc=dist, R, data, ...)
+
+\method{$}{mrpp}(x,name)
 }
 %- maybe also "usage" for other objects documented here.
 \arguments{
@@ -37,6 +39,10 @@ mrpp(y, trt, B, permutedTrt, weight.trt='df',...)
  \item{data}{A numeric data matrix for \code{mrpp.matrix}, with rows being samples and columns being response variables. 
 }
   \item{\dots}{Additional arguments to be passed on. 
+}
+  \item{x}{An \code{mrpp} object.
+}
+  \item{name}{A symbol, specifying the name of the element to be extracted. 
 }
 }
 \details{
@@ -78,6 +84,10 @@ For the \code{weight.trt} argument, suppose that \code{n} denote the vector samp
 }
 \item{data.env}{An environment containing one object \code{"y"}, being the raw data set. This is created as a promise. Some methods (e.g., \code{\link{mrpp.test}}) do not require this and it will not be evaluated. For \code{mrpp.dist}, if \code{data} is not given, then the result is only a \emph{possible} data set reconstructed by \code{\link{cmdscale}}.
 }
+
+\code{x$name} returns the element named \code{
+"name"} of an \code{"mrpp"} object \code{x}, except that \code{x$permutedTrt} returns \code{x[['permutedTrt.env']][['permuteTrt']]} and that \code{x$y} returns \code{x$data.env$y}.
+
 }
 \note{
 Currently, the following S3 methods are available for the \code{"mrpp"} class: 
@@ -104,16 +114,20 @@ n=10
 trt=gl(2,n)
 x=matrix(rnorm(n*5*2), ncol=5)
 mrpp.obj = mrpp(x, trt, B=Inf)
+identical(x, mrpp.obj$y) # mrpp.obj$y extracts mrpp.obj$data.env$y
+
 cumulant(mrpp.obj)
-mrpp.test(mrpp.obj)
-identical(x, mrpp.obj$data.env$y)
+mrpp.test(mrpp.obj, method='pearson3gca') # fast approximation w/o permutation
+str(mrpp.obj$permutedTrt) #now takes time to force the promise
+ls(mrpp.obj$permutedTrt.env)
+mrpp.test(mrpp.obj, method='permutation') 
 
 dist.x=dist(x)
 mrpp.obj2 = mrpp(dist.x, trt, B=Inf)
 cumulant(mrpp.obj2) # same as above
 mrpp.test(mrpp.obj2) # same as above
-mrpp.obj2$data.env$y # recovered data, typically not the same as x
-max(abs(dist(mrpp.obj2$data.env$y)-dist.x)) # max error of recovery of distances
+mrpp.obj2$y # recovered data, typically not the same as x
+max(abs(dist(mrpp.obj2$y)-dist.x)) # max error of recovery of distances
 
 }
 % Add one or more standard keywords, see file "KEYWORDS" in the
