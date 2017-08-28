@@ -4,6 +4,8 @@
 
 #include "adaRad.h"
 
+#include <omp.h>
+
 #undef DEBUG
 
 #ifdef DEBUG
@@ -101,7 +103,7 @@ static R_INLINE double sumSubMatSorted( double const * const x,  int const * con
 //   This is about 3~5% faster than sumSubMat when N=30 and B=5000. 
 */
 {
-    double ans;
+    register double ans;
     register unsigned int j, i, N2=(N<<1);
     register int base;
 
@@ -110,7 +112,7 @@ static R_INLINE double sumSubMatSorted( double const * const x,  int const * con
         /*  base=((idx[j]*(N2-idx[j]-1))>>1)-N-1;   // part that does not involve row index */
         base = (((N2-idx[j])*(idx[j]-1))>>1) - idx[j] - 1 ;  /* this should replace the previous line  */
         for(i=j+1; i<n; ++i){  /* //  row index */
-              ans+= x [base + idx[i]];   // naive summation
+              ans+= x[base + idx[i]];   // naive summation
         }
     }
     return ans*2.0;
@@ -226,7 +228,8 @@ static R_INLINE SEXP mrppstats_listOfMatrix(double * ptrY, SEXP permMats, double
 		Rprintf("t=%d\tn=%d\tdn=%f\tdenom=%f\n", t, n, dn, fact);
 #endif
         ptrPerm = INTEGER(VECTOR_ELT(permMats, t)); 
-        for(b=0; b<B; ++b){
+ 		#pragma omp parallel for schedule(static)
+       for(b=0; b<B; ++b){
 			/* using inlined C code */
             ptrAns[b] += sumSubMatSorted(ptrY,  ptrPerm + (b * n)  , n, N) * fact;
 			
@@ -393,7 +396,8 @@ static R_INLINE SEXP mrppstats_listOfMatrix_subset(double * ptrY, SEXP permMats,
 		Rprintf("t=%d\tn=%d\tdn=%f\tdenom=%f\n", t, n, dn, fact);
 #endif
         ptrPerm = INTEGER(VECTOR_ELT(permMats, t)); 
-        for(b=0; b<subB; ++b){
+ 		#pragma omp parallel for schedule(static)
+         for(b=0; b<subB; ++b){
             ptrAns[b] += sumSubMatSorted(ptrY,  ptrPerm + (ss[b] * n) -n  , n, N) * fact;
         }
     }
