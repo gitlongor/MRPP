@@ -1,7 +1,6 @@
-if(FALSE){
-# starting from Scott's rule as prelim bw
+# starting from Scott's/SJ's rule as prelim bw
 # then using kernels with this bw to estimate f(x[x]) and f''(x[1]) 
-bw.mse.pdf.asym=function(x,iter.max=1L,eps=1e-6,start.bw, kernel='triweight', verbose=FALSE)
+bw.mse.pdf.asym.scott=function(x,iter.max=1L,eps=1e-6,start.bw, kernel='triweight', verbose=FALSE)
 {
 	if(missing(start.bw)) {
 		start.bw=bw.SJ(x)*sqrt(mkernel(kernel,2L,R=FALSE)) 
@@ -33,7 +32,7 @@ bw.mse.pdf.asym=function(x,iter.max=1L,eps=1e-6,start.bw, kernel='triweight', ve
 
 # starting from a bw that matches Pearson Type III dist'n
 # then using kernels with this bw to estimate f(x[x]) and f''(x[1]) 
-bw.mse.pdf.asym=function(x, mrpp,iter.max=1L,eps=1e-6,kernel='triweight', verbose=FALSE)
+bw.mse.pdf.asym.pear3=function(x, mrpp,iter.max=1L,eps=1e-6,kernel='triweight', verbose=FALSE)
 {
 	cums=cumulant(mrpp, order=1:4)
 	cums[2L]=sqrt(cums[2L])
@@ -66,11 +65,11 @@ bw.mse.pdf.asym=function(x, mrpp,iter.max=1L,eps=1e-6,kernel='triweight', verbos
         n.iter=n.iter+1
     }
 }
-}
+
 
 # Using unbiased CV to obtain bw for f() and for f''() separately, with a max of 500 data values
 # Then using kernels with such estimated bw's to obtain f(x[x]) and f''(x[1]) 
-bw.mse.pdf.asym=function(x, kernel='triweight', verbose=FALSE)
+bw.mse.pdf.asym.ucv=function(x, kernel='triweight', verbose=FALSE)
 {
 	nmax=512L;	nx=length(x); iter.max=1L; eps=1e-6
 	x.idx=if(nx<nmax) seq_len(nmax) else as.integer(round(seq.int(from=1L, to=nx, length.out=nmax))) 
@@ -95,6 +94,8 @@ bw.mse.pdf.asym=function(x, kernel='triweight', verbose=FALSE)
 	}
 	bw
 }
+
+bw.mse.pdf.asym = bw.mse.pdf.asym.ucv 
 
 bw.range=function(x, length=50L, lower=.05, upper=.95, safety=2)
 {
@@ -479,7 +480,7 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 	
 	this.call=match.call()
 	this.call[[1L]]=as.symbol('bw.smoothp')
-	this.call[['method']]='match.pear3gca'
+	this.call[['method']]='match.pear3'
 	this.call[['verbose']]=FALSE
 	start.bw=eval.parent(this.call)
 	
