@@ -19,6 +19,9 @@
 #endif
 
 extern void radixsort(int *, int , int *, int);
+extern double F77_NAME(sumsubmatsortedfort)(double *, int *, int *, int *);
+extern double F77_NAME(sumsubmatsortedfortkahan)(double *, int *, int *, int *);
+
 /*
 //void unisqeuc(double *x, int *nr,  double *dist)
 *********** CALL FROM R ***************
@@ -98,6 +101,35 @@ static R_INLINE double sumSubMatSorted( double const * const x,  int const * con
 //   This is about 3~5% faster than sumSubMat when N=30 and B=5000. 
 */
 {
+    double ans;
+    register unsigned int j, i, N2=(N<<1);
+    register int base;
+
+    ans = 0.0;
+    for(j=0; j<n-1; ++j){ /* // column index */
+        /*  base=((idx[j]*(N2-idx[j]-1))>>1)-N-1;   // part that does not involve row index */
+        base = (((N2-idx[j])*(idx[j]-1))>>1) - idx[j] - 1 ;  /* this should replace the previous line  */
+        for(i=j+1; i<n; ++i){  /* //  row index */
+              ans+= x [base + idx[i]];   // naive summation
+        }
+    }
+    return ans*2.0;
+}
+
+
+static R_INLINE double sumSubMatSortedKahan( double const * const x,  int const * const idx,  const int n,  const int N)
+/*
+// Input:
+//   x is a stacked vector of the lower triangle of distance mat of (N x N); 
+//     idx is a vector of "sorted" indices over which sum of x is taken (idx starts from 1 instead of 0);
+//   n is the length of idx; 
+//   N is the total sample size; 
+// Output: 
+//   returns sum(as.matrix(x)[idx, idx])
+// Note:
+//   This is about 3~5% faster than sumSubMat when N=30 and B=5000. 
+*/
+{
     double ans, compen, adjx, tmpAns;
     register unsigned int j, i, N2=(N<<1);
     register int base;
@@ -107,16 +139,17 @@ static R_INLINE double sumSubMatSorted( double const * const x,  int const * con
         /*  base=((idx[j]*(N2-idx[j]-1))>>1)-N-1;   // part that does not involve row index */
         base = (((N2-idx[j])*(idx[j]-1))>>1) - idx[j] - 1 ;  /* this should replace the previous line  */
         for(i=j+1; i<n; ++i){  /* //  row index */
-            /*  ans+= x [base + idx[i]];   // the following Kahan's algo recovers this line */
+            /*  ans+= x [base + idx[i]];   // the following Kahan's algo recovers this line 
+			  */
             adjx = x[base + idx[i]] - compen;
             tmpAns = ans + adjx;
             compen = (tmpAns - ans) - adjx;
             ans = tmpAns;
         }
     }
-/*    ans*=2.0;    */
     return ans*2.0;
 }
+
 
 #ifdef DEBUG
 void testSumSubMatSorted(double const * const x, int const * const idx, const int * const n, const int * const N, double  * const ans)
@@ -194,7 +227,12 @@ static R_INLINE SEXP mrppstats_listOfMatrix(double * ptrY, SEXP permMats, double
 #endif
         ptrPerm = INTEGER(VECTOR_ELT(permMats, t)); 
         for(b=0; b<B; ++b){
+			/* using inlined C code */
             ptrAns[b] += sumSubMatSorted(ptrY,  ptrPerm + (b * n)  , n, N) * fact;
+			
+			/* using extern Fortran code 
+			ptrAns[b] += F77_CALL(sumsubmatsortedfort)(ptrY,  ptrPerm + (b * n)  , &n, &N) * fact;
+			*/
         }
     }
     UNPROTECT(1);
