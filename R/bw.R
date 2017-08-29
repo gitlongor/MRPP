@@ -720,7 +720,7 @@ smoothp=function(x, bw=bw.mse.pdf.asym, kernel = c("gaussian", "biweight", 'triw
 	}else if(is.function(kernel)) Kernel = kernel
 	stopifnot(Kernel(-Inf)==0 && Kernel(Inf)==1)
 
-	midp = midp.empirical(x, eps)
+	midp = p.empirical(x, eps)
 	knots=x; n=length(knots); rm(x, eps)
 	f0=function(x)
 	{	nx=length(x)

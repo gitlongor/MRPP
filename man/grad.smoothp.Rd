@@ -16,27 +16,26 @@ Permutation-based variable importance measure
 \code{p.value} method for class \code{grad.smoothp} computes the approximate mid-p-values from smoothing. 
 }
 \usage{
-grad.smoothp(y, permutedTrt, bw, r=seq_len(NCOL(y)), test=FALSE, 
-        distObj=dist(y), mrpp.stats=NULL, 
-        kernel='triweight', weight.trt="df", adjust=NULL)
+grad.smoothp(y,  bw, kernel='triweight', adjust=NULL,
+	mrpp.stats=NULL, r=seq_len(y$R), test=FALSE)
 get.p.dd.dw(y, permutedTrt, r = seq_len(ncol(y)), weight.trt="df", eps=1e-8)
 \method{p.value}{grad.smoothp}(x, type=c("keep1","drop1","add1"), \dots)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{y}{ The response data matrix with each row being a data point and each column being a variable. 
+  \item{y}{ An \code{\link{mrpp}} object.
 }
-  \item{permutedTrt}{A list matricies that list all random treatment assignments to be used in the MRPP test. 
-}
+  %\item{permutedTrt}{A list matricies that list all random treatment assignments to be used in the MRPP test. 
+%}
   \item{r}{A positive integer vector, specifying variables for which variable importance measure is requested. 
 }
-  \item{test}{\code{TRUE} or \code{FALSE}. If \code{FALSE}, the first permutation in \code{permutedTrt} will be used as the original treatment assignment. If \code{TRUE}, each permutation in \code{permutedTrt} will be treated as if it is the original treatment assignment, useful for doing permutation tests using the computed variable importance measure as the test statistic.
+  \item{test}{\code{TRUE} or \code{FALSE}. If \code{FALSE}, the first permutation in \code{y$permutedTrt} will be used as the original treatment assignment. If \code{TRUE}, each permutation in \code{y$permutedTrt} will be treated as if it is the original treatment assignment, useful for doing permutation tests using the computed variable importance measure as the test statistic.
 }
-  \item{distObj}{The numeric vector computed from \code{dist(y)}, i.e., the lower triangle of the Euclidean distance matrix. 
-}
-  \item{mrpp.stats}{A vector of all observed MRPP test statistics. If this is \code{NULL}, then 
+  %\item{distObj}{The numeric vector computed from \code{dist(y)}, i.e., the lower triangle of the Euclidean distance matrix. 
+%}
+  \item{mrpp.stats}{An optional vector of all observed MRPP test statistics. If this is \code{NULL}, then 
   
- \code{mrpp.test.dist(distObj,permutedTrt=permutedTrt,weight.trt=weight.trt)$all.statistics}
+ \code{mrpp.test(y,method='permutation')$all.statistics}
 
   will be called to obtain it.  
 }
@@ -72,12 +71,12 @@ When \code{adjust='none'}, the partial derivatives of p-value with respect to we
 
 In either case, the \code{"parameters"} attribute will be set, which is a list with the following components: 
 \itemize{
-\item{\code{kernel}: a string of the name of the kernel;}
+\item{\code{kernel}: a string of the name of the kernel, or \code{NULL} when \code{bw=Inf};}
 \item{\code{weight.trt}: a numeric vector of treatment weights;}
 \item{\code{adjust}: a string of the name of adjustment.}
 }
 
-In addition, the \code{grad.smoothp} object also has the \code{mid} attribute set to the mid-p-value across the \code{r} dimensions.
+In addition, the \code{grad.smoothp} object also has the \code{midp} attribute set to the mid-p-value across the \code{r} dimensions.
 
 For \code{get.p.dd.dw}, the result is an \code{length(r)}-vector of importance measure. 
 
@@ -104,17 +103,18 @@ Long Qu
 set.seed(2340)
 x=matrix(rnorm(20*5),20)
 trt=gl(2,10)
-urand.bigz(0,seed=1032940L) # init seed
-pmat=permuteTrt(trt, 5e3L)		## use 5000 random permutations
-(ir1=grad.smoothp(x, pmat))
+mrpp.obj = mrpp(x, trt=trt, B=5e3L)
+(ir1=grad.smoothp(mrpp.obj))
 p.value(ir1, type="drop1")
 p.value(ir1, type="add1")
 p.value(ir1, type="keep1")
 
-grad.smoothp(x, pmat, adjust='weighted.mean')
-grad.smoothp(x, pmat, adjust='scale')
-ir2=get.p.dd.dw(x, pmat)
-cor(ir1, ir2, method="s")
+ir2=grad.smoothp(mrpp.obj, adjust='weighted.mean')
+ir3=grad.smoothp(mrpp.obj, adjust='scale')
+ir4=get.p.dd.dw(x, mrpp.obj$permutedTrt)
+ir5=grad.smoothp(mrpp.obj, adjust='log scale')
+ir6=grad.smoothp(mrpp.obj, bw=Inf)
+cor(cbind(ir1, ir2, ir3, ir4, ir5, ir6), method="s")
 
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the

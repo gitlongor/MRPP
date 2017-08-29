@@ -115,9 +115,9 @@ function (from = 1L, to = 1L, by = 1L, ...)
 }
 
 
-midp.empirical = function(x, eps=1e-8)
+p.empirical = function(x, eps=1e-8, midp=TRUE)
 {
-	mean(x<x[1L]-eps) + .5* mean(x>=x[1L]-eps & x<=x[1L]+eps)
+	mean(x<x[1L]-eps) + (1-.5*midp)* mean(x>=x[1L]-eps & x<=x[1L]+eps)
 }
 
 

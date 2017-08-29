@@ -1,3 +1,4 @@
+if(FALSE){
 
 .importance <-
 function(y, permutedTrt, bw, r=seq_len(NCOL(y)), test=FALSE, distFunc=dist, 
@@ -36,7 +37,7 @@ function(y, permutedTrt, bw, r=seq_len(NCOL(y)), test=FALSE, distFunc=dist,
 		dz.dw=.Call(mrppstats, all.ddelta.dw[,r.i], permutedTrt, weight.trt, PACKAGE='MRPP')
 		eval(expr)    ## this lines replace the above 3 lines
 	}
-    structure(drop(ans), parameters=pars, midp=midp.empirical(mrpp.stats), class='.importance')
+    structure(drop(ans), parameters=pars, midp=p.empirical(mrpp.stats), class='.importance')
 }
 
 grad.smoothp <-
@@ -58,7 +59,7 @@ function(y, permutedTrt, bw, r=seq_len(NCOL(y)), test=FALSE,
 	}
     ## min.wts=1e-8  ### this was handled by bw.safety()
 	if(is.null(mrpp.stats)) mrpp.stats=mrpp.test.dist(distObj,permutedTrt=permutedTrt,weight.trt=weight.trt, method='permutation')$all.statistics
-	pval0=midp.empirical(mrpp.stats)
+	pval0=p.empirical(mrpp.stats)
 	weight.trt = mrpp.weight.trt(weight.trt, trt.permutedTrt(permutedTrt))$weight.trt[names(permutedTrt)]
     B=length(mrpp.stats)
     b=if(isTRUE(test)) 1:B else 1L
@@ -176,7 +177,7 @@ function(y, permutedTrt, bw, r=seq_len(NCOL(y)), test=FALSE,
 {	bw=Inf; adjust='weighted.mean'; kernel=NULL
 
 	if(is.null(mrpp.stats)) mrpp.stats=mrpp.test.dist(distObj,permutedTrt=permutedTrt,weight.trt=weight.trt, method='permutation')$all.statistics
-	pval0=midp.empirical(mrpp.stats)
+	pval0=p.empirical(mrpp.stats)
 	weight.trt = mrpp.weight.trt(weight.trt, trt.permutedTrt(permutedTrt))$weight.trt[names(permutedTrt)]
     B=length(mrpp.stats)
     b=if(isTRUE(test)) 1:B else 1L
@@ -258,27 +259,6 @@ print(times)
     structure(drop(ans), parameters=pars, midp=pval0, class='grad.smoothp')
 }
 
-p.value.grad.smoothp = function(x, type=c('keep1','drop1','add1'),...)
-{
-	adj=attr(x, 'parameters')$adjust
-	if(!(adj %in% c('none','log scale'))) return(rep(NA_real_, length(x)))
-	type=match.arg(type)
-	x0=x; attributes(x0)=NULL
-	if(adj=='none'){
-		switch(type, 
-			drop1 = attr(x, 'midp') - x0, 
-			keep1 = attr(x, 'midp') - sum(x0) + x0, 
-			add1 = attr(x, 'midp') + x0
-		)
-	}else if(adj=='log scale'){
-		switch(type, 
-			drop1 = attr(x, 'midp') / x0, 
-			keep1 = attr(x, 'midp') * exp( -sum(log(x0)) + log(x0) ) , 
-			add1 = attr(x, 'midp') * x0
-		)
-	}else stop('"adjust" unsupported')
-}
-
 grad.smoothp.bw <-
 expression( ## simplified from grad.smoothp; allowing a vector of bw's; only used in bw.smoothp
 {
@@ -358,6 +338,29 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), test=FALSE,
     }
     drop(ans)
 }
+}
+
+p.value.grad.smoothp = function(x, type=c('keep1','drop1','add1'),...)
+{
+	adj=attr(x, 'parameters')$adjust
+	if(!(adj %in% c('none','log scale'))) return(rep(NA_real_, length(x)))
+	type=match.arg(type)
+	x0=x; attributes(x0)=NULL
+	if(adj=='none'){
+		switch(type, 
+			drop1 = attr(x, 'midp') - x0, 
+			keep1 = attr(x, 'midp') - sum(x0) + x0, 
+			add1 = attr(x, 'midp') + x0
+		)
+	}else if(adj=='log scale'){
+		switch(type, 
+			drop1 = attr(x, 'midp') / x0, 
+			keep1 = attr(x, 'midp') * exp( -sum(log(x0)) + log(x0) ) , 
+			add1 = attr(x, 'midp') * x0
+		)
+	}else stop('"adjust" unsupported')
+}
+
 
 if(FALSE){
     weight=matrix(NA_real_, B, length(b))   ## this may require large memory when test=TRUE
