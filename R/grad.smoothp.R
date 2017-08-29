@@ -3,9 +3,17 @@ function(y,  bw, kernel='triweight', adjust=NULL, mrpp.stats=NULL, r=seq_len(y$R
 ## y=N-by-p data matrix; b=permutation index for the 1st trt; r=dimension index; 
 {
 	if(missing(bw)) bw='sym1'
+	if(length(r)!=y$R){
+		y[['data.env']]$y=y[['data.env']]$y[,r,drop=FALSE]
+		y$R=length(r)
+		y$distObj=y$distFunc(y$y)
+		r=seq_len(y$R)
+	}	
 	if(is.numeric(bw)&&is.infinite(bw)&&bw>0){
 		this.call=as.list(match.call())
 		if('bw'%in%names(this.call)) this.call[['bw']]=NULL
+		if('adjust'%in%names(this.call)) this.call[['adjust']]=NULL
+		if('kernel'%in%names(this.call)) this.call[['kernel']]=NULL
 		this.call[[1L]]=NULL
 		return(do.call(grad.smoothp.Inf.mrpp, this.call, envir=parent.frame()))
 	}
@@ -15,11 +23,7 @@ function(y,  bw, kernel='triweight', adjust=NULL, mrpp.stats=NULL, r=seq_len(y$R
 		this.call[[1L]]=NULL
 		return(do.call(grad.smoothp.notest.mrpp, this.call,envir=parent.frame()))
 	}
-	if(length(r)!=y$R){
-		y[['data.env']]$y=y[['data.env']]$y[,r,drop=FALSE]
-		y$R=length(r)
-		y$distObj=y$distFunc(y$y)
-	}
+
 	if(is.null(mrpp.stats)) {
 		mrppt=mrpp.test(y, method='permutation'); 
 		mrpp.stats=mrppt$all.statistics
@@ -28,7 +32,7 @@ function(y,  bw, kernel='triweight', adjust=NULL, mrpp.stats=NULL, r=seq_len(y$R
 	weight.trt = y$weight.trt
     B=length(mrpp.stats)
     b=if(isTRUE(test)) 1:B else 1L
-    ans=matrix(NA_real_, length(b), length(r))
+    ans=matrix(NA_real_, length(b), y$R)
     N=y$nobs
 
 	if(is.character(bw))
@@ -65,7 +69,7 @@ function(y,  bw, kernel='triweight', adjust=NULL, mrpp.stats=NULL, r=seq_len(y$R
 			w2s=sqrt(.colSums(weight^2, B, length(b)))
 			expr = expression(ans[, r.i] <- .colSums(weight * (rep(dz.dw[b], each=B)-dz.dw), B, length(b))/sd(dz.dw)/w2s)
 	}else	expr = expression(ans[, r.i] <- .colSums(weight * (rep(dz.dw[b], each=B)-dz.dw), B, length(b)))
-	for(r.i in seq_along(r)){
+	for(r.i in seq_len(y$R)){
 		#dz.dw=.C('mrppstats',all.ddelta.dw[,r.i],permutedTrt,cperm.mat,nrow(permutedTrt),B,N,as.integer(weight.trt),ans=double(B),PACKAGE='MRPP',DUP=FALSE)$ans
 		dz.dw=.Call(mrppstats, all.ddelta.dw[,r.i], y$permutedTrt, weight.trt, PACKAGE='MRPP')
 #        for(b.i in 1:length(b)){
@@ -81,17 +85,10 @@ function(y,  bw, kernel='triweight', adjust=NULL, mrpp.stats=NULL, r=seq_len(y$R
 
 ## Liuhua's very fast version with bw=Inf, because no permutations are needed: 
 grad.smoothp.Inf.mrpp <-
-function(y, r=seq_len(y$R), test=FALSE, 
-        mrpp.stats=NULL, 
-        kernel='triweight', adjust=NULL)
+function(y, test=FALSE, mrpp.stats=NULL)
 ## y=N-by-p data matrix; b=permutation index for the 1st trt; r=dimension index; 
 {	bw=Inf; adjust='weighted.mean'; kernel=NULL
 
-	if(length(r)!=y$R){
-		y[['data.env']]$y=y[['data.env']]$y[,r,drop=FALSE]
-		y$R=length(r)
-		y$distObj=y$distFunc(y$y)
-	}
 	if(is.null(mrpp.stats)) {
 		mrppt=mrpp.test(y, method='permutation'); 
 		mrpp.stats=mrppt$all.statistics
@@ -100,16 +97,16 @@ function(y, r=seq_len(y$R), test=FALSE,
 	weight.trt = y$weight.trt
     B=length(mrpp.stats)
     b=if(isTRUE(test)) 1:B else 1L
-    ans=matrix(NA_real_, length(b), length(r))
+    ans=matrix(NA_real_, length(b), y$R)
     N=y$nobs
 
 	pars=list(kernel=kernel, weight.trt=weight.trt, adjust=adjust, bw=bw)
 	
-	all.ddelta.dw=apply(y$data.env$y[,r,drop=FALSE],2L,y$distFunc)^2/y$distObj*0.5
+	all.ddelta.dw=apply(y$y,2L,y$distFunc)^2/y$distObj*0.5
         all.ddelta.dw[is.nan(all.ddelta.dw)]=0
 	
-	for(r.i in seq_along(r)){
-		ans[, r.i]=.Call(mrppstats_subset, all.ddelta.dw[,r.i], y$permutedTrt, weight.trt, 1L, PACKAGE='MRPP') - mean(all.ddelta.dw[,r.i])
+	for(r.i in seq_len(y$R)){
+		ans[, r.i]=.Call(mrppstats_subset, all.ddelta.dw[,r.i], y$permutedTrt, weight.trt, b, PACKAGE='MRPP') - mean(all.ddelta.dw[,r.i])
 	}
 	
     structure(drop(ans), parameters=pars, midp=pval0, class='grad.smoothp')
@@ -118,16 +115,9 @@ function(y, r=seq_len(y$R), test=FALSE,
 
 
 grad.smoothp.notest.mrpp <-
-function(y, bw, r=seq_len(y$R), 
-        mrpp.stats=NULL, 
-        kernel='triweight', adjust=NULL)
+function(y, bw, mrpp.stats=NULL, kernel='triweight', adjust=NULL)
 ## y=N-by-p data matrix; b=permutation index for the 1st trt; r=dimension index; 
 {	if(missing(bw)) bw='sym1'
-	if(length(r)!=y$R){
-		y[['data.env']]$y=y[['data.env']]$y[,r,drop=FALSE]
-		y$R=length(r)
-		y$distObj=y$distFunc(y$y)
-	}
 	if(is.null(mrpp.stats)) {
 		mrppt=mrpp.test(y, method='permutation'); 
 		mrpp.stats=mrppt$all.statistics
@@ -135,7 +125,7 @@ function(y, bw, r=seq_len(y$R),
 	}else pval0=p.empirical(mrpp.stats,midp=FALSE)-as.numeric(0.5/y$nparts)
 	weight.trt = y$weight.trt
     B=length(mrpp.stats)
-    ans=matrix(NA_real_, 1L, length(r))
+    ans=matrix(NA_real_, 1L, y$R)
     N=y$nobs
 
 	if(is.character(bw)) # this slow when B is large
@@ -154,7 +144,7 @@ function(y, bw, r=seq_len(y$R),
 		  w.pos=w.pos/bw/B
 	}else w.pos=w.pos/sum(w.pos)
 	
-    all.ddelta.dw=apply(y$data.env$y[,r,drop=FALSE],2L,y$distFunc)^2/y$distObj*0.5   
+    all.ddelta.dw=apply(y$y,2L,y$distFunc)^2/y$distObj*0.5   
         all.ddelta.dw[is.nan(all.ddelta.dw)]=0
 	
 	if(adjust=='scale'){
@@ -163,7 +153,7 @@ function(y, bw, r=seq_len(y$R),
 	}else	expr = expression(ans[, r.i] <- sum(w.pos * (dz.dw[1L]-dz.dw) ) )
 
 	#the loop below is sufficiently fast, when compact kernel is used (i.e., w.idx is short)
-	for(r.i in seq_along(r)){
+	for(r.i in seq_len(y$R)){
 		dz.dw=.Call(mrppstats_subset, all.ddelta.dw[,r.i], y$permutedTrt, weight.trt, w.idx, PACKAGE='MRPP')
 		eval(expr)    
 	}
