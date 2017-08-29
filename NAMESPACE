@@ -51,6 +51,7 @@ export(
 
 S3method(mrpp, matrix)
 S3method(mrpp, dist)
+S3method(mrpp, formula)
 
 S3method(mrpp.test, formula)
 S3method(mrpp.test, dist)

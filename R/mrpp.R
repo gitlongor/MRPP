@@ -31,7 +31,7 @@
 	data.env=new.env(hash=FALSE, parent=constEnv)
 })
 
-mrpp <- function(y, trt, B, permutedTrt, weight.trt='df',...) UseMethod('mrpp')
+mrpp <- function(y, B, permutedTrt, weight.trt='df',distFunc=dist, ...) UseMethod('mrpp')
 
 mrpp.matrix <- eval(bquote(function(y, trt, B, permutedTrt, weight.trt='df', distFunc=dist,...)
 {	stopifnot(is.numeric(y))
@@ -93,6 +93,29 @@ mrpp.dist=eval(bquote(function(y, trt, B, permutedTrt, weight.trt='df', distFunc
 ) # of bquote
 ) # of eval
 
+
+mrpp.formula <-
+function(y, B, permutedTrt, weight.trt='df', distFunc=dist, ...) 
+{
+    if ((length(y) != 3L) || (length(attr(terms(y[-2L]), "term.labels")) != 1L)) 
+        stop("'formula' not yet supported")
+	ddd=list(...)
+	idx=names(ddd)%in%names(formals(model.frame.default))
+	mf.list=ddd[idx]; mf.list$formula=y
+    mf = do.call('model.frame.default', mf.list)
+	mrpp.list=ddd[!idx]
+	
+    resp.col <- attr(attr(mf, 'terms'), "response")
+	mrpp.list$y=mf[[ resp.col ]]
+	mrpp.list$trt=mf[[ -resp.col ]]
+	this.call=as.list(match.call(expand.dots=FALSE))
+	if('...'%in%names(this.call)) this.call[['...']]=NULL
+	this.call[['y']]=mf[[ resp.col ]]
+	this.call[['trt']]=mf[[ -resp.col ]]
+	this.call[[1L]]=NULL
+
+    do.call('mrpp.matrix', this.call)
+}
 
 `$.mrpp`=function(x, name)
 {# proper extraction of data.name component

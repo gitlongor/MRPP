@@ -3,6 +3,8 @@
 \alias{mrpp}
 \alias{mrpp.matrix}
 \alias{mrpp.dist}
+\alias{mrpp.formula}
+\alias{$.mrpp}
 %- Also NEED an "\alias" for EACH other topic documented here.
 \title{
 MRPP Object
@@ -11,16 +13,17 @@ MRPP Object
 The \code{"mrpp"} object is a setup that allows the multiresponse permutation procedure (MRPP) method. 
 }
 \usage{
-mrpp(y, trt, B, permutedTrt, weight.trt='df',...)
+mrpp(y, B, permutedTrt, weight.trt='df', distFunc=dist,...)
 
 \method{mrpp}{matrix}(y, trt, B, permutedTrt, weight.trt='df', distFunc=dist,...)
 \method{mrpp}{dist}(y, trt, B, permutedTrt, weight.trt='df', distFunc=dist, R, data, ...)
+\method{mrpp}{formula}(y,  B, permutedTrt, weight.trt='df', distFunc=dist, ...)
 
 \method{$}{mrpp}(x,name)
 }
 %- maybe also "usage" for other objects documented here.
 \arguments{
-  \item{y}{A numeric data matrix for \code{mrpp.matrix}, with rows being samples and columns being response variables. For \code{mrpp.dist}, this is a \code{\link{dist}} object containing the pairwise inter-sample distances. 
+  \item{y}{For \code{mrpp.matrix}, \code{y} is a numeric data matrix, with rows being samples and columns being response variables. For \code{mrpp.dist}, this is a \code{\link{dist}} object containing the pairwise inter-sample distances. For \code{mrpp.formula}, this is a two-sided formula. 
 }
   \item{trt}{A vector of treatment assignments. If missing, the first permutation in \code{permutedTrt} will be used as the original treatment assignment. As least one of \code{trt} or \code{permutedTrt} need to be given. 
 }
@@ -38,7 +41,7 @@ mrpp(y, trt, B, permutedTrt, weight.trt='df',...)
 }
  \item{data}{A numeric data matrix for \code{mrpp.matrix}, with rows being samples and columns being response variables. 
 }
-  \item{\dots}{Additional arguments to be passed on. 
+  \item{\dots}{For \code{mrpp.formula}, these are the additional arguments to be passed on to \code{\link{model.frame.default}} 
 }
   \item{x}{An \code{mrpp} object.
 }
@@ -129,6 +132,7 @@ mrpp.test(mrpp.obj2) # same as above
 mrpp.obj2$y # recovered data, typically not the same as x
 max(abs(dist(mrpp.obj2$y)-dist.x)) # max error of recovery of distances
 
+mrpp.obj3 = mrpp(x~trt, N=Inf) # equivalent formula interface
 }
 % Add one or more standard keywords, see file "KEYWORDS" in the
 % R documentation directory.
