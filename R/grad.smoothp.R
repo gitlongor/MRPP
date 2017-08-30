@@ -3,14 +3,14 @@ function(y,  bw, kernel='triweight', adjust=NULL, mrpp.stats=NULL, r=seq_len(y$R
 ## y=N-by-p data matrix; b=permutation index for the 1st trt; r=dimension index; 
 {
 	on.exit({ # recover original data.env
-			if(!is.null(y$data.env$y.bak)){
-				y$data.env$y=y$data.env$y.bak
-				rm(y.bak, envir=y$data.env)
+			if(!is.null(y$data.env$y.bakGradp)){
+				y$data.env$y=y$data.env$y.bakGradp
+				rm(y.bakGradp, envir=y$data.env)
 			}
 	})
 	if(missing(bw)) bw='sym1'
 	if(length(r)!=y$R){
-		y[['data.env']]$y.bak=y$y
+		y[['data.env']]$y.bakGradp=y$y
 		y[['data.env']]$y=y[['data.env']]$y[,r,drop=FALSE]
 		y$R=length(r)
 		y$distObj=y$distFunc(y$y)
@@ -22,12 +22,14 @@ function(y,  bw, kernel='triweight', adjust=NULL, mrpp.stats=NULL, r=seq_len(y$R
 		if('bw'%in%names(this.call)) this.call[['bw']]=NULL
 		if('adjust'%in%names(this.call)) this.call[['adjust']]=NULL
 		if('kernel'%in%names(this.call)) this.call[['kernel']]=NULL
+		if('r'%in%names(this.call)) this.call[['r']]=NULL
 		this.call[[1L]]=NULL
 		return(do.call(grad.smoothp.Inf.mrpp, this.call, envir=parent.frame()))
 	}
 	if(!isTRUE(test)){
 		this.call=as.list(match.call())
 		if('test'%in%names(this.call))this.call[['test']]=NULL
+		if('r'%in%names(this.call))this.call[['r']]=NULL
 		this.call[[1L]]=NULL
 		return(do.call(grad.smoothp.notest.mrpp, this.call,envir=parent.frame()))
 	}

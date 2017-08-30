@@ -19,7 +19,7 @@ mrpp.weight.trt=function(weight.trt, trt)
 }
 .pdfmethods=c('pearson3','pearson3gca','gammagca','permutation')
 .pdfnmoment=structure(c(3L, 4L, 4L, 0L), names=.pdfmethods)
-mrpp.test.mrpp = function(y, method='pearson3gca', eps=1e-8, ... )
+mrpp.test.mrpp = function(y, test.method='pearson3gca', eps=1e-8, ... )
 {
 	if(!missing(...)).NotYetUsed(..., error=FALSE)
 	dname.env=new.env(hash=FALSE, parent=globalenv())
@@ -30,7 +30,7 @@ mrpp.test.mrpp = function(y, method='pearson3gca', eps=1e-8, ... )
 		}))
 		,assign.env=dname.env)
 	
-	methods=unlist(strsplit(method[1L], ".", fixed=TRUE))
+	methods=unlist(strsplit(test.method[1L], ".", fixed=TRUE))
 	if(length(methods)>2L) stop('unknown method')
 	pdfmethod=.pdfmethods[pmatch(methods[1L], .pdfmethods)]
 	nmoms=.pdfnmoment[pdfmethod]
@@ -130,7 +130,7 @@ function(y, ...) {
 	
 	ddd=list(...)
 	ddd$y=y
-	idx=names(ddd)%in%names(formals(mrpp))
+	idx=names(ddd)%in%names(formals(mrpp.matrix))
 	mrpp.obj=do.call('mrpp', ddd[idx])
 	ans=do.call('mrpp.test.mrpp', c(list(y=mrpp.obj), ddd[!idx]))
 	delayedAssign('data.name', {

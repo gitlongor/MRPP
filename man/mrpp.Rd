@@ -120,10 +120,10 @@ mrpp.obj = mrpp(x, trt, B=Inf)
 identical(x, mrpp.obj$y) # mrpp.obj$y extracts mrpp.obj$data.env$y
 
 cumulant(mrpp.obj)
-mrpp.test(mrpp.obj, method='pearson3gca') # fast approximation w/o permutation
+mrpp.test(mrpp.obj, test.method='pearson3gca') # fast approximation w/o permutation
 str(mrpp.obj$permutedTrt) #now takes time to force the promise
 ls(mrpp.obj$permutedTrt.env)
-mrpp.test(mrpp.obj, method='permutation') 
+mrpp.test(mrpp.obj, test.method='permutation') 
 
 dist.x=dist(x)
 mrpp.obj2 = mrpp(dist.x, trt, B=Inf)

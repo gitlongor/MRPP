@@ -1,32 +1,37 @@
 mrppBVS <-
-function(y,permutedTrt, 
+function(y, #permutedTrt, 
          importance=c('grad.smoothp','grad.energy','p.grad.dist','approx.keep1'),
          inc.thresh=NULL, exc.thresh=0, size.inc=0L, stepwise=FALSE, 
 		 niter=Inf, verbose=FALSE, ...)
-## y is a data matrix, with col's being variables and rows being observations
+## y is an mrpp obj
 {
-print(proc.time())
-    if(!is.matrix(y))y=as.matrix(y)
+	y$data.env$y.bakBVS=y$y
+	on.exit({ # recover original data.env
+			if(!is.null(y$data.env$y.bakBVS)){
+				y$data.env$y=y$data.env$y.bakBVS
+				rm(y.bakBVS, envir=y$data.env)
+			}
+	})
+#print(proc.time())
     importance=match.arg(importance)
     if(is.null(inc.thresh)) inc.thresh=switch(importance,
 		grad.smoothp = 1, 
 		grad.energy = 0, 
 		approx.keep1 = , 
 		p.grad.dist = 0.05)
-    N=nrow(y)
-#    if(missing(cperm.mat)) cperm.mat=apply(permutedTrt,2,function(kk)(1:N)[-kk])
-    B=nperms.permutedTrt(permutedTrt)
-	ddd.mrpp=list(...)
-	ddd.mrpp$y=y
-	ddd.mrpp$permutedTrt=permutedTrt
-	ddd.mrpp$trt=NULL
-	ddd.mrpp$B=NULL
-	ddd.mrpp.idx=names(ddd.mrpp)%in%names(formals(mrpp.matrix))
-	mrpp.obj=do.call(mrpp, ddd.mrpp[ddd.mrpp.idx])
-	distFunc=mrpp.obj$distFunc
+#    N=y$nobs
 
-    ans=vector('list'); attr(ans, 'parameter')=list(importance=importance, inc.thresh=inc.thresh, exc.thresh=exc.thresh, size.inc=size.inc, stepwise=stepwise, niter=niter)
-    R=NCOL(y)
+#    B=nperms.permutedTrt(permutedTrt)
+#	ddd.mrpp=list(...)
+#	ddd.mrpp$y=y
+#	ddd.mrpp$permutedTrt=permutedTrt
+#	ddd.mrpp$trt=NULL
+#	ddd.mrpp$B=NULL
+#	ddd.mrpp.idx=names(ddd.mrpp)%in%names(formals(mrpp.matrix))
+#	mrpp.obj=do.call(mrpp, ddd.mrpp[ddd.mrpp.idx])
+	distFunc=y$distFunc
+
+    R=y$R
     idx=1:R  # inclusion set
     xcl=integer(0L)
     i=1L
@@ -39,26 +44,54 @@ print(proc.time())
 			  'Maximum number of iterations reached')
 	returnBVS=function(ret)structure(ret, class='mrppBVS')
 	
-	ddd.mrppt=list(...); ddd.mrppt$y=mrpp.obj; # ddd.mrppt$method='permutation'
-	ddd.mrppt.idx=names(ddd.mrppt)%in%names(formals(mrpp.test.mrpp))
-	ddd.mrppt=ddd.mrppt[ddd.mrppt.idx]
-	ddd.mrppt.method = if('method'%in%names(ddd.mrppt)) ddd.mrppt$method else NULL
+	ddd=list(...)
+	
+	frm.mrppt=formals(mrpp.test.mrpp)
+	test.method=if(is.null(ddd$test.method)) frm.mrppt$test.method else ddd$test.method
+	eps=if(is.null(ddd$eps)) frm.mrppt$eps else ddd$eps
+	
+	frm.gradp=formals(grad.smoothp)
+	bw=if(is.null(ddd$bw)) frm.gradp$bw else ddd$bw 
+	kernel=if(is.null(ddd$kernel)) frm.gradp$kernel else ddd$kernel
+	adjust=if(is.null(ddd$adjust)) frm.gradp$adjust else ddd$adjust
+	
+	ddd[['test.method']]=
+	ddd[['eps']]=
+	ddd[['bw']]=
+	ddd[['kernel']]=
+	ddd[['adjust']]=NULL
+	
+	if(length(ddd)>0L) warning('Unknown argument(s): ', names(ddd))
+	
+#	ddd.mrppt=list(...); ddd.mrppt$y=y; # ddd.mrppt$method='permutation'
+#	ddd.mrppt.idx=names(ddd.mrppt)%in%names(formals(mrpp.test.mrpp))
+#	ddd.mrppt=ddd.mrppt[ddd.mrppt.idx]
+#	ddd.mrppt.method = if('test.method'%in%names(ddd.mrppt)) ddd.mrppt$test.method else NULL
 	var.sign = integer(R)
 	var.rank = numeric(R)
 
-	ddd.grad=list(...); 
-	ddd.grad$y=matrix(NA_real_,0L,0L)
-	ddd.grad$permutedTrt=permutedTrt
-	ddd.grad$distObj=mrpp.obj$distObj
-	ddd.grad$mrpp.stats=numeric(0L)
+#	ddd.grad=list(...); 
+#	ddd.grad$y=y
+#	ddd.grad$permutedTrt=permutedTrt
+#	ddd.grad$distObj=mrpp.obj$distObj
+#	ddd.grad$mrpp.stats=numeric(0L)
 	if(importance=='grad.energy') {
-		ddd.grad$bw=Inf
-		ddd.grad$adjust='weighted.mean'
-	}else ddd.grad$adjust='log scale'
-	ddd.grad.idx=names(ddd.grad)%in%names(formals(grad.smoothp))
-	ddd.grad=ddd.grad[ddd.grad.idx]
+#		ddd.grad$bw=Inf
+#		ddd.grad$adjust='weighted.mean'
+		bw=Inf
+		adjust='weighted.mean'
+	}else if(is.null(adjust)) adjust='log scale'
+
+    ans=vector('list'); 
+	attr(ans, 'parameters')=list(
+		importance=importance, inc.thresh=inc.thresh, exc.thresh=exc.thresh, size.inc=size.inc, stepwise=stepwise, niter=niter, 
+		mrpp.test.options=list(test.method=test.method, eps=eps), 
+		grad.smoothp.options=list(bw=bw, adjust=adjust, kernel=kernel))
 	
-print(proc.time())
+#	ddd.grad.idx=names(ddd.grad)%in%names(formals(grad.smoothp))
+#	ddd.grad=ddd.grad[ddd.grad.idx]
+	
+#print(proc.time())
     repeat{
         if(verbose && (i%%verbose==0L)) {cat('iteration',i-1L,'...')
                     time0=proc.time()[3L]}
@@ -75,23 +108,23 @@ print(proc.time())
 			attr(ans, 'status')=c(attr(ans, 'status'), ret.msg[3])
             return(returnBVS(ans))
         }
-        dist0=distFunc(y[,idx,drop=FALSE])
-		#mrpp.obj$distObj=dist0; mrpp.obj$R=length(idx)
-		ddd.mrppt$y$distObj=dist0; ddd.mrppt$y$R=length(idx); ddd.mrppt$method='permutation'
-        mrpp.rslt=do.call(mrpp.test.mrpp, ddd.mrppt)
-        mrpp.stats0=mrpp.rslt$all.statistics
-		ddd.mrppt$method=ddd.mrppt.method
-        mrpp.rslt=do.call(mrpp.test.mrpp, ddd.mrppt)
+		
+		y$data.env$y=y$data.env$y.bakBVS[,idx,drop=FALSE]
+		y$R=length(idx); 
+		y$distObj=dist0=distFunc(y$y)
+		mrpp.stats0=.Call(mrppstats, y$distObj, y$permutedTrt, y$weight.trt,PACKAGE='MRPP')
+        mrpp.rslt=mrpp.test.mrpp(y,test.method=test.method, eps=eps)
         imptnc=switch(importance,
 			grad.smoothp=, 
 			grad.energy=,
 			approx.keep1 ={
-				ddd.grad$y=y[,idx,drop=FALSE]
-				ddd.grad$distObj=dist0
-				ddd.grad$mrpp.stats=mrpp.stats0
-				do.call('grad.smoothp', ddd.grad)
+				grad.smoothp.mrpp(y, bw=bw, kernel=kernel, adjust=adjust, mrpp.stats=mrpp.stats0, r=seq_len(y$R), test=FALSE)
+#				ddd.grad$y=y[,idx,drop=FALSE]
+#				ddd.grad$distObj=dist0
+#				ddd.grad$mrpp.stats=mrpp.stats0
+#				do.call('grad.smoothp', ddd.grad)
 			},
-            p.grad.dist =get.p.dd.dw(y[,idx,drop=FALSE],permutedTrt,...) # CHECKME
+            p.grad.dist =get.p.dd.dw(y$y,y$permutedTrt,...) # CHECKME
 		)
 		if(importance=='approx.keep1') imptnc=p.value(imptnc, type='keep1')
         var.ord=order(imptnc)
@@ -105,12 +138,15 @@ print(proc.time())
 #        idx=idx[imptnc<max(imptnc)] else idx=idx[imptnc<inc.thresh]
         if(exc.thresh>=0) {
             xcl=c(xcl, idx[imptnc>imptnc.threshold])
-            dist.del=distFunc(y[,xcl,drop=FALSE])
+            dist.del=distFunc(y$data.env$y.bakBVS[,xcl,drop=FALSE])
             if(all(!is.na(dist.del)) && length(xcl)>0L)
 #                ans[[i]]$deleted.p.value=mrpp.test.dist(dist.del, permutedTrt=permutedTrt)$p.value
                 #next.deleted.p=mrpp.test.dist(dist.del, permutedTrt=permutedTrt)$p.value
-				ddd.mrppt$y$distObj=dist.del; ddd.mrppt$y$R=length(xcl)
-				next.deleted.p=do.call(mrpp.test.mrpp, ddd.mrppt)$p.value
+				
+#				ddd.mrppt$y$distObj=dist.del; ddd.mrppt$y$R=length(xcl)
+#				next.deleted.p=do.call(mrpp.test.mrpp, ddd.mrppt)$p.value
+				y$distObj=dist.del; y$R=length(xcl)
+				next.deleted.p=mrpp.test.mrpp(y, test.method=test.method, eps=eps)$p.value
         }
 		
 		var.sign[idx]=-2L*(imptnc<=inc.thresh)+1L; var.sign[idx[imptnc==inc.thresh]]=0L

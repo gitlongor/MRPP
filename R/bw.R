@@ -168,7 +168,7 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 	nms = setdiff(names(formals(mrpp)), '...')
 	idx=names(lst)%in%nms
 	mrpp.obj = do.call('mrpp', lst[idx])
-	mrpp=mrpp.test(mrpp.obj, method='permutation')
+	mrpp=mrpp.test(mrpp.obj, test.method='permutation')
 	distObj=mrpp.obj$distObj
 	
 #	distObj = distFunc(y[,r,drop=FALSE])
@@ -395,13 +395,13 @@ function(y, start.bw = NULL, kernel='triweight',
 ## y mrpp object; r=dimension index; 
 {
 	on.exit({ # recover original data.env
-			if(!is.null(y$data.env$y.bak)){
-				y$data.env$y=y$data.env$y.bak
-				rm(y.bak, envir=y$data.env)
+			if(!is.null(y$data.env$y.bakBw)){
+				y$data.env$y=y$data.env$y.bakBw
+				rm(y.bakBw, envir=y$data.env)
 			}
 	})
 	if(length(r)!=y$R){
-		y$data.env$y.bak = y$y
+		y$data.env$y.bakBw = y$y
 		y[['data.env']]$y=y[['data.env']]$y[,r,drop=FALSE]
 		y$R=length(r)
 		y$distObj=y$distFunc(y$y)
@@ -409,7 +409,7 @@ function(y, start.bw = NULL, kernel='triweight',
 	}
 
 	if(is.null(mrpp.stats)) {
-		mrppt=mrpp.test(y, method='permutation'); 
+		mrppt=mrpp.test(y, test.method='permutation'); 
 		mrpp.stats=mrppt$all.statistics
 	}	
 	bw.method=match.arg(bw.method, choices=c('sym1','drop1','add1','keep1','amse(z[1])','pearson3','pearson3gca')) # 'dropadd1','dropaddsym1','ss.gradp',
@@ -425,7 +425,7 @@ function(y, start.bw = NULL, kernel='triweight',
 #	nms = setdiff(names(formals(mrpp)), '...')
 #	idx=names(lst)%in%nms
 #	mrpp.obj = do.call('mrpp', lst[idx])
-#	mrpp=mrpp.test(mrpp.obj, method='permutation')
+#	mrpp=mrpp.test(mrpp.obj, test.method='permutation')
 #	distObj=mrpp.obj$distObj
 	
 	
@@ -488,7 +488,7 @@ function(y, start.bw = NULL, kernel='triweight',
 			ord0=order(imp0)
 			r=unique(sort(ord0[round(seq.int(from=1L, to=R, length.out=n.subset))]))
 
-			if(is.null(y$data.env$y.bak)) y$data.env$y.bak = y$y
+			if(is.null(y$data.env$y.bakBw)) y$data.env$y.bakBw = y$y
 			y[['data.env']]$y=y[['data.env']]$y[,r,drop=FALSE]
 			y$R=length(r)
 			y$distObj=y$distFunc(y$y)
@@ -597,7 +597,7 @@ function(y, start.bw = NULL, kernel='triweight',
 			#mrpp.obj1$distObj=y$distFunc(y$data.env$y[,-r.i,drop=FALSE])
 			#mrpp.obj1$distObj=sqrt(distObj2-y$distFunc(y$data.env$y[,r.i,drop=FALSE])^2)
 			mrpp.obj1$distObj=sqrt(distObj2-gradEnv$all.uni.dist2[,r.i])
-			mrpp.test.mrpp(mrpp.obj1, method='pearson3')$p.value
+			mrpp.test.mrpp(mrpp.obj1, test.method='pearson3')$p.value
 		} # >97% of time is spent in mrpp.test.mrpp
 		drop1pval= sapply(r, drop1p)
 	}
@@ -607,7 +607,7 @@ function(y, start.bw = NULL, kernel='triweight',
 			#mrpp.obj1$distObj=y$distFunc(y$data.env$y[,c(r,r.i),drop=FALSE])
 			#mrpp.obj1$distObj=sqrt(distObj2+y$distFunc(y$data.env$y[,r.i,drop=FALSE])^2)
 			mrpp.obj1$distObj=sqrt(distObj2+gradEnv$all.uni.dist2[,r.i])
-			mrpp.test.mrpp(mrpp.obj1,method='pearson3')$p.value
+			mrpp.test.mrpp(mrpp.obj1,test.method='pearson3')$p.value
 		} 
 		add1pval=sapply(r, add1p)
 	}
@@ -615,7 +615,7 @@ function(y, start.bw = NULL, kernel='triweight',
 		mrpp.obj1$R=1L
 		keep1 = function(r.i){
 			mrpp.obj1$distObj[]=sqrt(gradEnv$all.uni.dist2[,r.i])
-			mrpp.test.mrpp(mrpp.obj1,method='pearson3')$p.value
+			mrpp.test.mrpp(mrpp.obj1,test.method='pearson3')$p.value
 		}
 		keep1pval=sapply(r, keep1)
 		#t(smps - gradEnv$ans%*%(1-diag(1, length(r), length(r))))

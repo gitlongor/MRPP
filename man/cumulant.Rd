@@ -130,7 +130,7 @@ apply(x, 2, kurtosis)
 
 trt=gl(2,n)
 mrpp.obj = mrpp(x, trt, B=Inf)
-mrpp.tst = mrpp.test(mrpp.obj, method="permutation")
+mrpp.tst = mrpp.test(mrpp.obj, test.method="permutation")
 
 mean(mrpp.obj) - mean(mrpp.tst$all.statistics)
 var(mrpp.obj) - mean((mrpp.tst$all.statistics-mean(mrpp.tst$all.statistics))^2)

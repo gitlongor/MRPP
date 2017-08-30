@@ -103,7 +103,7 @@ trt=gl(2,10)
 nparts( table(trt))		## 92378 partitions =  choose(20,10)/2
 urand.bigz(0,seed=1032940L) # init seed
 pmat=permuteTrt(trt, 5e2L)		## use 500 random permutations
-mrpp.test(dist(x), permutedTrt=pmat, weight.trt="df",method='perm') ## MRPP for all variables
+mrpp.test(dist(x), permutedTrt=pmat, weight.trt="df",test.method='perm') ## MRPP for all variables
 mrppBVS(x, pmat) ## backward selection of variables
 mrppBVS(x, pmat,stepwise=TRUE) ## backward selection of variables
 

@@ -35,13 +35,13 @@ get.p.dd.dw(y, permutedTrt, r = seq_len(ncol(y)), weight.trt="df", eps=1e-8)
 %}
   \item{mrpp.stats}{An optional vector of all observed MRPP test statistics. If this is \code{NULL}, then 
   
- \code{mrpp.test(y,method='permutation')$all.statistics}
+ \code{mrpp.test(y,test.method='permutation')$all.statistics}
 
   will be called to obtain it.  
 }
   \item{kernel}{A character scalar taking values in \code{\link{.smooth1.kernels}}.  
 }
-  \item{bw}{A numeric or character scalar. If being numeric, it gives the bandwidth used for kernel density estimation of \code{mrpp.stats}. This might be positive infinity. If \code{bw} is a character, it takes values as the \code{method} argument of \code{\link{bw.smoothp}}. 
+  \item{bw}{A numeric or character scalar. If being numeric, it gives the bandwidth used for kernel density estimation of \code{mrpp.stats}. This might be positive infinity. If \code{bw} is a character, it takes values as the \code{bw.method} argument of \code{\link{bw.smoothp}}. 
 }
 %  \item{cperm.mat}{}
   \item{weight.trt}{As in \code{\link{mrpp.test.dist}}.

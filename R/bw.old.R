@@ -122,14 +122,14 @@ bw.safety=function(x, kernel, nNonzero=3L, pdf.cut=1e-3)
 bw.smoothp.grid <-
 function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL, 
 	distFunc=dist,  kernel='triweight', 
-	method='sym1', verbose=TRUE, subset, adjust='none',...)
+	bw.method='sym1', verbose=TRUE, subset, adjust='none',...)
 ## y=N-by-p data matrix; b=permutation index for the 1st trt; r=dimension index; 
 {
-	method=match.arg(method, choices=c('sym1','drop1','add1','keep1','dropadd1','dropaddsym1','ss.gradp','amse(z[1])','pearson3','pearson3gca'))
+	bw.method=match.arg(bw.method, choices=c('sym1','drop1','add1','keep1','dropadd1','dropaddsym1','ss.gradp','amse(z[1])','pearson3','pearson3gca'))
 	adjust=match.arg(adjust, choices=c('none','log scale'))
     if(!is.matrix(y) && !is.data.frame(y)) y = as.matrix(y)
 	R=NCOL(y)
-	if(R==1L ) method='ss.gradp'
+	if(R==1L ) bw.method='amse(z[1])'
 
 	lst=list(...)
 	lst$y=y[,r,drop=FALSE]
@@ -138,7 +138,7 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 	nms = setdiff(names(formals(mrpp)), '...')
 	idx=names(lst)%in%nms
 	mrpp.obj = do.call('mrpp', lst[idx])
-	mrpp=mrpp.test(mrpp.obj, method='permutation')
+	mrpp=mrpp.test(mrpp.obj, test.method='permutation')
 	distObj=mrpp.obj$distObj
 	
 #	distObj = distFunc(y[,r,drop=FALSE])
@@ -162,7 +162,7 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 		box()
 		title(sub=sprintf('bandwidth = %.3g', ans))
 	})
-	if(method=='amse(z[1])'){
+	if(bw.method=='amse(z[1])'){
 		lst=list(...)
 		lst$x=mrpp$all.statistics
 		#lst$mrpp=mrpp.obj
@@ -190,12 +190,12 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 	n.bw=length(bw)
 	if(n.bw==0L) stop('bandwidth range is not suitable')
 	
-	if(method=='pearson3' || method=='pearson3gca') {
+	if(bw.method=='pearson3' || bw.method=='pearson3gca') {
 		cums=cumulant(mrpp(y[,r,drop=FALSE], permutedTrt=permutedTrt, weight.trt=weight.trt, distFunc=distFunc),order=1:4); 
 		cums[2L]=sqrt(cums[2L]); cums[3L]=cums[3L]/cums[2L]^3; cums[4L]=cums[4L]/cums[2L]^4
-		pdf0x = if(method=='pearson3') dpearson3(mrpp$all.statistics, cums[1L], cums[2L], cums[3L]) else 
+		pdf0x = if(bw.method=='pearson3') dpearson3(mrpp$all.statistics, cums[1L], cums[2L], cums[3L]) else 
 		dpearson3gca(mrpp$all.statistics, cums[1L], cums[2L], cums[3L], cums[4L]) 
-		ans=bw.matchpdf(mrpp$all.statistics, kernel=kernel, pdf=pdf0x, bw=bw, verbose=verbose, title=switch(method, pearson3="Match Pearson III Dist'n", pearson3gca="Match GCA Adjust. of Pearson III Dist'n"))
+		ans=bw.matchpdf(mrpp$all.statistics, kernel=kernel, pdf=pdf0x, bw=bw, verbose=verbose, title=switch(bw.method, pearson3="Match Pearson III Dist'n", pearson3gca="Match GCA Adjust. of Pearson III Dist'n"))
 		if(ans<lower.bound){
 			ans=lower.bound
 			if(verbose) warning('bandwidth selected is too small; replaced by a safer lower bound.')
@@ -206,7 +206,7 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 	
 	## pre-computing all.ddelta.dw in grad.smoothp
 	r.bak=r
-	if(method%in%c('sym1','drop1','add1','keep1','dropadd1','dropaddsym1','ss.gradp')) {
+	if(bw.method%in%c('sym1','drop1','add1','keep1','dropadd1','dropaddsym1','ss.gradp')) {
 		if(missing(subset)){
 			n.subset=round(100+.2*(length(r)-100))
 			if(length(r)<=100L) {
@@ -214,7 +214,7 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 			}else{
 				this.call=as.list(match.call())
 				this.call[[1L]]=
-				this.call$method=
+				this.call$bw.method=
 				this.call$verbose=
 				this.call$subset=
 				this.call$kernel=
@@ -237,7 +237,7 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 	gradEnv$scale=1
 	eval(grad.smoothp.bw, envir=gradEnv)
 	
-	if(method=='ss.gradp'){
+	if(bw.method=='ss.gradp'){
 		ss = rowSums(gradEnv$ans^2)
 		idx = which.max(ss)
 		ans=bw[idx]
@@ -267,7 +267,7 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 
 
 	mrpp.obj1=mrpp.obj
-	if(method%in%c('drop1','sym1','dropadd1', 'dropaddsym1')){
+	if(bw.method%in%c('drop1','sym1','dropadd1', 'dropaddsym1')){
 		drop1p = function(r.i){
 			#lst$y=distFunc(y[,r[-r.i],drop=FALSE])
 			#p.value(do.call('mrpp.test.dist', lst),type="midp")
@@ -277,7 +277,7 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 		}
 		drop1pval= sapply(seq_along(r), drop1p)
 	}
-	if(method%in%c('add1','sym1','dropadd1','dropaddsym1')){
+	if(bw.method%in%c('add1','sym1','dropadd1','dropaddsym1')){
 		add1p = function(r.i){
 			#lst$y=distFunc(y[,c(r,r[r.i]),drop=FALSE])
 			#p.value(do.call('mrpp.test.dist', lst),type="midp")
@@ -288,7 +288,7 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 		}
 		add1pval=sapply(seq_along(r), add1p)
 	}
-	if(method%in%c('keep1')){
+	if(bw.method%in%c('keep1')){
 		keep1 = function(r.i){
 			#lst$y=distFunc(y[,r[r.i],drop=FALSE])
 			#p.value(do.call('mrpp.test.dist', lst),type="midp")
@@ -301,7 +301,7 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 	}
 	pval0=p.value(mrpp, type='midp')
 	if(adjust=='none'){
-		sses = switch(method, 
+		sses = switch(bw.method, 
 			drop1= .rowSums((gradEnv$ans - (pval0 - drop1pval)[col(gradEnv$ans)])^2, n.bw, length(r)) ,
 			add1 = .rowSums((gradEnv$ans - (add1pval - pval0)[col(gradEnv$ans)])^2, n.bw, length(r)) , 
 			sym1 = .rowSums((gradEnv$ans - .5*(add1pval- drop1pval)[col(gradEnv$ans)])^2, n.bw, length(r)) , 
@@ -315,7 +315,7 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 	}else if(adjust=='log scale'){
 		log.p0=log(pval0)
 		gradEnv$ans = gradEnv$ans/pval0
-		sses = switch(method, 
+		sses = switch(bw.method, 
 			drop1= .rowSums((gradEnv$ans - (log.p0 - log(drop1pval))[col(gradEnv$ans)])^2, n.bw, length(r)) ,
 			add1 = .rowSums((gradEnv$ans - (log(add1pval) - log.p0)[col(gradEnv$ans)])^2, n.bw, length(r)) , 
 			sym1 = .rowSums((gradEnv$ans - .5*(log(add1pval)- log(drop1pval))[col(gradEnv$ans)])^2, n.bw, length(r)) , 
@@ -341,7 +341,7 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 		par(mfrow=1:2)
 
 		plot(log10(bw), sses, xlab='bandwidth', ylab='SS of approx errors', type='o', main='', axes=FALSE)
-		title(main=paste0('\nMethod: ',switch(method, drop1='Backward Difference', add1='Forward Difference', keep1='Keep 1 Variable', sym1='Central Difference', dropadd1='Backward + Forward Difference', dropaddsym1='Backward + Forward + Central Difference')))
+		title(main=paste0('\nMethod: ',switch(bw.method, drop1='Backward Difference', add1='Forward Difference', keep1='Keep 1 Variable', sym1='Central Difference', dropadd1='Backward + Forward Difference', dropaddsym1='Backward + Forward + Central Difference')))
 		#axis(3, at = log10(ans), labels=sprintf('%.3g',ans), col='red',col.ticks='red',col.axis='red')
 		axis(2)
 		ats=axTicks(1)
@@ -362,14 +362,14 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 bw.smoothp.optim <-
 function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL, 
 	distFunc=dist,  kernel='triweight', 
-	method='sym1', verbose=TRUE, subset, adjust='none',...)
+	bw.method='sym1', verbose=TRUE, subset, adjust='none',...)
 ## y=N-by-p data matrix; b=permutation index for the 1st trt; r=dimension index; 
 {
-	method=match.arg(method, choices=c('sym1','drop1','add1','keep1','dropadd1','dropaddsym1','ss.gradp','amse(z[1])','pearson3','pearson3gca'))
+	bw.method=match.arg(bw.method, choices=c('sym1','drop1','add1','keep1','dropadd1','dropaddsym1','ss.gradp','amse(z[1])','pearson3','pearson3gca'))
 	adjust=match.arg(adjust, choices=c('none','log scale'))
     if(!is.matrix(y) && !is.data.frame(y)) y = as.matrix(y)
 	R=NCOL(y)
-	if(R==1L ) method='ss.gradp'
+	if(R==1L ) bw.method='amse(z[1])'
 
 	lst=list(...)
 	lst$y=y[,r,drop=FALSE]
@@ -378,7 +378,7 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 	nms = setdiff(names(formals(mrpp)), '...')
 	idx=names(lst)%in%nms
 	mrpp.obj = do.call('mrpp', lst[idx])
-	mrpp=mrpp.test(mrpp.obj, method='permutation')
+	mrpp=mrpp.test(mrpp.obj, test.method='permutation')
 	distObj=mrpp.obj$distObj
 	
 	
@@ -395,7 +395,7 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 		box()
 		title(sub=sprintf('bandwidth = %.3g', ans))
 	})
-	if(method=='amse(z[1])'){
+	if(bw.method=='amse(z[1])'){
 		lst=list(...)
 		lst$x=mrpp$all.statistics
 		#lst$mrpp=mrpp.obj
@@ -419,12 +419,12 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 	weight.trt = attr(mrpp$parameter, 'weight.trt')
 
 
-	if(method=='pearson3' || method=='pearson3gca') {
+	if(bw.method=='pearson3' || bw.method=='pearson3gca') {
 		cums=cumulant(mrpp(y[,r,drop=FALSE], permutedTrt=permutedTrt, weight.trt=weight.trt, distFunc=distFunc),order=1:4); 
 		cums[2L]=sqrt(cums[2L]); cums[3L]=cums[3L]/cums[2L]^3; cums[4L]=cums[4L]/cums[2L]^4
-		pdf0x = if(method=='pearson3') dpearson3(mrpp$all.statistics, cums[1L], cums[2L], cums[3L]) else 
+		pdf0x = if(bw.method=='pearson3') dpearson3(mrpp$all.statistics, cums[1L], cums[2L], cums[3L]) else 
 		dpearson3gca(mrpp$all.statistics, cums[1L], cums[2L], cums[3L], cums[4L]) 
-		ans=bw.matchpdf(mrpp$all.statistics, kernel=kernel, pdf=pdf0x, bw=bw, verbose=verbose, title=switch(method, pearson3="Match Pearson III Dist'n", pearson3gca="Match GCA Adjust. of Pearson III Dist'n"))
+		ans=bw.matchpdf(mrpp$all.statistics, kernel=kernel, pdf=pdf0x, bw=bw, verbose=verbose, title=switch(bw.method, pearson3="Match Pearson III Dist'n", pearson3gca="Match GCA Adjust. of Pearson III Dist'n"))
 		if(ans<lower.bound){
 			ans=lower.bound
 			if(verbose) warning('bandwidth selected is too small; replaced by a safer lower bound.')
@@ -434,7 +434,7 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 	}
 	
 	r.bak=r
-	if(method%in%c('sym1','drop1','add1','keep1','dropadd1','dropaddsym1','ss.gradp')) {
+	if(bw.method%in%c('sym1','drop1','add1','keep1','dropadd1','dropaddsym1','ss.gradp')) {
 		if(missing(subset)){
 			n.subset=round(100+.2*(length(r)-100))
 			if(length(r)<=100L) {
@@ -442,7 +442,7 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 			}else{
 				this.call=as.list(match.call())
 				this.call[[1L]]=
-				this.call$method=
+				this.call$bw.method=
 				this.call$verbose=
 				this.call$subset=
 				this.call$kernel=
@@ -481,7 +481,7 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 	
 	this.call=match.call()
 	this.call[[1L]]=as.symbol('bw.smoothp')
-	this.call[['method']]='pearson3'
+	this.call[['bw.method']]='pearson3'
 	this.call[['verbose']]=FALSE
 	start.bw=eval.parent(this.call)
 	
@@ -501,7 +501,7 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 		scale=1/this.bw
 		ans=1/this.bw/gradEnv$B*(sum(w.pos)*gradEnv$dz.dw[1,]-colSums(w.pos*gradEnv$dz.dw[w.tf,,drop=FALSE]))
 	})
-	if(method=='ss.gradp'){
+	if(bw.method=='ss.gradp'){
 		objfunc=eval(bquote(function(logbw)
 		{
 			.(obj.common.expr)
@@ -543,34 +543,34 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 
 
 	mrpp.obj1=mrpp.obj
-	if(method%in%c('drop1','sym1','dropadd1', 'dropaddsym1')){
+	if(bw.method%in%c('drop1','sym1','dropadd1', 'dropaddsym1')){
 		mrpp.obj1$R=mrpp.obj$R-1L
 		drop1p = function(r.i){
 			mrpp.obj1$distObj=distFunc(y[,r[-r.i],drop=FALSE])
-			mrpp.test.mrpp(mrpp.obj1, method='pearson3')$p.value
+			mrpp.test.mrpp(mrpp.obj1, test.method='pearson3')$p.value
 		} # still time consuming
 		drop1pval= sapply(seq_along(r), drop1p)
 	}
-	if(method%in%c('add1','sym1','dropadd1','dropaddsym1')){
+	if(bw.method%in%c('add1','sym1','dropadd1','dropaddsym1')){
 		mrpp.obj1$R=mrpp.obj$R+1L
 		add1p = function(r.i){
 			mrpp.obj1$distObj=distFunc(y[,c(r,r[r.i]),drop=FALSE])
-			mrpp.test.mrpp(mrpp.obj1,method='pearson3')$p.value
+			mrpp.test.mrpp(mrpp.obj1,test.method='pearson3')$p.value
 		} # still time consuming
 		add1pval=sapply(seq_along(r), add1p)
 	}
-	if(method%in%c('keep1')){
+	if(bw.method%in%c('keep1')){
 		mrpp.obj1$R=1L
 		keep1 = function(r.i){
 			mrpp.obj1$distObj=distFunc(y[,r[r.i],drop=FALSE])
-			mrpp.test.mrpp(mrpp.obj1,method='pearson3')$p.value
+			mrpp.test.mrpp(mrpp.obj1,test.method='pearson3')$p.value
 		}
 		keep1pval=sapply(seq_along(r), keep1)
 		#t(smps - gradEnv$ans%*%(1-diag(1, length(r), length(r))))
 	}
 	pval0=p.value(mrpp, type='midp')
 	if(adjust=='none'){
-		sses.expr=switch(method, 
+		sses.expr=switch(bw.method, 
 			drop1 = quote(sum((ans - (pval0 - drop1pval))^2)), 
 			add1  = quote(sum((ans - (add1pval - pval0))^2)), 
 			sym1  = quote(sum((ans - .5*(add1pval - drop1pval))^2)), 
@@ -587,7 +587,7 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 		}))
 	}else if(adjust=='log scale'){
 		log.p0=log(pval0)
-		sses.expr=switch(method, 
+		sses.expr=switch(bw.method, 
 			drop1 = quote(sum((ans - (log.p0 - log(drop1pval)))^2)), 
 			add1  = quote(sum((ans - (log(add1pval) - log.p0))^2)), 
 			sym1  = quote(sum((ans - .5*(log(add1pval)- log(drop1pval)))^2)), 
@@ -623,7 +623,7 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 		par(mfrow=1:2)
 
 		plot(log10(bw), sses, xlab='bandwidth', ylab='SS of approx errors', type='o', main='', axes=FALSE)
-		title(main=paste0('\nMethod: ',switch(method, drop1='Backward Difference', add1='Forward Difference', keep1='Keep 1 Variable', sym1='Central Difference', dropadd1='Backward + Forward Difference', dropaddsym1='Backward + Forward + Central Difference')))
+		title(main=paste0('\nMethod: ',switch(bw.method, drop1='Backward Difference', add1='Forward Difference', keep1='Keep 1 Variable', sym1='Central Difference', dropadd1='Backward + Forward Difference', dropaddsym1='Backward + Forward + Central Difference')))
 		#axis(3, at = log10(ans), labels=sprintf('%.3g',ans), col='red',col.ticks='red',col.axis='red')
 		axis(2)
 		ats=axTicks(1)
