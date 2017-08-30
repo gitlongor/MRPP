@@ -41,13 +41,13 @@ mrpp.test.mrpp = function(y, method='pearson3gca', eps=1e-8, ... )
 		if(length(methods)==2L) kernel=.kernels[pmatch(methods[2L], .kernels)] else kernel=NULL
 	}
 	if( nmoms > 0L){# need moments
-		cums=cumulant(y, order=seq_len(nmoms))
+		cums=cumulant.mrpp(y, order=seq_len(nmoms))
 		cums[2L]=sqrt(cums[2L])
 		cums[-2:-1]=cums[-2:-1]/cums[2L]^(2+seq_len(nmoms-2L))
 		# cums =c(mean, sd, skew, exkurt)
 	}
 	if(pdfmethod%in%c('pearson3','pearson3gca','gammagca') && is.null(kernel)) {# no permutation
-		tmpPermutedTrt=permuteTrt(y$trt, B=1L)
+		tmpPermutedTrt=permuteTrt1(y$trt)
 		stats=.Call(mrppstats,y$distObj,tmpPermutedTrt, as.numeric(y$weight.trt), PACKAGE='MRPP')
 		B=1L
 	}else{
@@ -111,7 +111,8 @@ mrpp.test.mrpp = function(y, method='pearson3gca', eps=1e-8, ... )
 `$.mrpp.test`=function(x, name)
 {# proper extraction of data.name component
 	x=unclass(x)
-	ans=getElement(x, substitute(name))
+	#ans=getElement(x, substitute(name))
+	ans=x[[substitute(name), exact=FALSE]]
 	if(is.environment(ans)) ans$data.name else ans
 }
 

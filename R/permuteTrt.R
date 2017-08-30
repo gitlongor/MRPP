@@ -306,6 +306,16 @@ function(trt, B=100L)
         #}
 }
 
+permuteTrt1=function(trt)
+{# sementically equivalent to permuteTrt(trt, B=1L)
+	if(!is.factor(trt)) trt=as.factor(trt)
+    n=table(trt)
+    N=sum(n)
+    ordn=order(-n, names(n), decreasing=FALSE)
+	trt=ordered(trt, levels=names(n)[ordn])
+	ans=split(seq_len(N), trt)
+	structure(lapply(ans,as.matrix), class='permutedTrt')
+}
 
 nperms.permutedTrt=function(permutedTrt)
 {

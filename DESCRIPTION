@@ -1,8 +1,8 @@
 Package: MRPP
 Type: Package
 Title: Multiresponse Permutation Procedure and Variable Selection Methods
-Version: 1.1-20170829-1604
-Date: 2017-08-29
+Version: 1.1-20170830-1946
+Date: 2017-08-30
 Authors@R: c(
   person("Long", "Qu", role=c("aut", "cre","ctb",'trl'), email="rtistician@gmail.com"), 
   person("Liuhua", "Peng", role='aut', email='penglh@iastate.edu'), 
@@ -11,7 +11,7 @@ Authors@R: c(
   )
 Description: Multiresponse permutation procedure, permutation-based variable importance, backward response variable selection, penalized response variable selection, transformation of count data.
 Depends: R (>= 2.14.0), gmp
-Imports: partitions, QuasiSeq (>= 1.0.9), varComp (>= 0.2-0), moments, PDQutils, kedd, uniqueAtomMat
+Imports: partitions, QuasiSeq (>= 1.0.9), varComp (>= 0.2-0), moments, PDQutils, kedd, ks, uniqueAtomMat
 Suggests: microbenchmark, combinat
 NeedsCompilation: yes
 License: GPL (>=2)

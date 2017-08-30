@@ -222,6 +222,89 @@ krRkernel=eval(substitute(function(kernel=.kernels)
 ) # of eval
 attr(krRkernel,'srcref')=NULL
 
+ddkernel=eval(substitute(function(kernel=.kernels)
+{
+	kernel=match.arg(kernel)
+	ans=switch(kernel,
+		gaussian=,normal=function(x){
+			x2=x*x; #iroot.2pi=1/sqrt(2*base::pi)
+			-x*exp(-.5*x2) * iroot.2pi
+		},
+		cosine=function(x){
+			ans=numeric(length(x))
+			ax=abs(x)
+			idx=which(ax<1)
+			ans[idx]=-pipid8*sin(pid2*x[idx])
+			ans[ax==1]=NaN
+			attributes(ans)=attributes(x)
+			ans
+		},
+		uniform=, rectangular=function(x){
+			ans=numeric(length(x))
+			ans[abs(x)==1]=NaN
+			attributes(ans)=attributes(x)
+			ans
+		}, 
+		triangular=function(x){
+			ans=numeric(length(x))
+			ax=abs(x); idx=which(ax<1)
+			ans[idx]=-sign(x[idx])
+			ans[ax==1]=NaN
+			ans[x==0]=NaN
+			attributes(ans)=attributes(x)
+			ans
+		}, 
+		epanechnikov=,parabolic=function(x){
+			ans=numeric(length(x))
+			ax=abs(x); idx=which(ax<1)
+			ans[idx]=-1.5*x[idx]
+			ans[ax==1]=NaN
+			attributes(ans)=attributes(x)
+			ans
+		},
+		biweight=, quartic=function(x){
+			ans=numeric(length(x))
+			attributes(ans)=attributes(x)
+			ax=abs(x); idx=which(ax<1);x=x[idx]
+			ans[idx]=one5d4 * (x* x-1)*x
+			ans
+		},
+		triweight=function(x){
+			ans=numeric(length(x))
+			attributes(ans)=attributes(x)
+			ax=abs(x); idx=which(ax<1); 
+			x=x[idx]; x2=x^2
+			ans[idx]=none05d16 * x*(x2 -1)^2
+			ans
+		},
+		tricube=function(x){
+			ax=abs(x); idx=which(ax<1); 
+			ax=ax[idx]; ax2=ax^2; ax3=ax*ax2
+			ans=numeric(length(x))
+			ans[idx]=0.5*sign(x[idx])*none40d9* ax2*(ax3-1)^2
+			attributes(ans)=attributes(x)
+			ans
+		},
+		logistic=function(x){
+			# -2*sinh(x/2)^4/sinh(x)^3 # this over-flows earlier
+			sx2=sinh(x/2)
+			ans=-2*sx2*(sx2/sinh(x))^3
+			idx=abs(x)<.Machine$double.xmin*8
+			ans[idx]=-x[idx]/8 # linear approximation for x extremely close to 0
+			ans
+		},
+		sech=function(x){
+			-onedpi*tanh(x)/cosh(x)
+		}
+	) # of switch
+	attr(ans, 'srcref')=NULL
+	if(identical(environment(ans),sys.frame(sys.nframe()))) environment(ans)=pkgEnv
+	ans
+}, # of function
+constEnv) # of substitute
+) # of eval 
+attr(ddkernel,'srcref')=NULL
+
 d2dkernel=eval(substitute(function(kernel=.kernels)
 {
 	kernel=match.arg(kernel)
@@ -314,6 +397,7 @@ ckernel=fourier.kernel=eval(substitute(function(kernel= .kernels, root.2pi=FALSE
 	
 	ans=eval(substitute(switch(kernel,
 	gaussian=,normal=function(s) exp(-.5*s*s) *iroot.2pi.this,
+	dgaussian=,dnormal=function(s) exp(-.5*s*s)*s*(0-1i)*iroot.2pi.this,
 	cosine=function(s)	pipi*cos(s)/(pipi-4*s*s) * iroot.2pi.this, 
 	uniform = , rectangular = function(s){
 		sinc(s) * iroot.2pi.this
@@ -387,13 +471,19 @@ ckernel=fourier.kernel=eval(substitute(function(kernel= .kernels, root.2pi=FALSE
 ) # of eval 
 attr(ckernel,'srcref')=attr(fourier.kernel, 'srcref')=NULL
 
+cdkernel=fourier.dkernel=function(kernel= .kernels, root.2pi=FALSE, const=NULL)
+{
+	ans=fourier.kernel(kernel, root.2pi, const)
+	function(s) (0-1i)*s*ans(s)
+}
+
 mkernel=eval(substitute(function(kernel=.kernels, order=1:4, R=TRUE)
 {
 	kernel=match.arg(kernel)
 	if(any(order>4L)) order=order[order<=4]
 	ans=switch(kernel,
 		gaussian=,normal=c(0,1,0,3),
-		cosine=c(0, onem8dpi, 0, cos.4m),		
+		cosine=c(0, onem8dpi2, 0, cos.4m),		
 		uniform=,rectangular=c(0,oneThird,0,.2),
 		triangular=c(0,oneSixth,0,oneFifteenth),
 		epanechnikov=,parabolic=c(0,.2,0,thrd35),
@@ -497,6 +587,53 @@ dkde=function(x, bw=bw.nrd, kernel=.kernels, from=min(x)-3*median(bw), to=max(x)
 		#zetak=fft(zetalstar)*exp(1i*pi*kk)
 		zetak=fft(zetalstar)*c(1,-1)
 		ans[[i]] = approxfun(tk0, pmax.int(0,Re(zetak)), ties='ordered',yleft=0, yright=0)
+	}
+	structure(if(length(ans)==1L) ans[[1L]] else ans, 
+		environment=environment()
+	)
+}
+
+
+
+ddkde=function(x, bw=bw.nrd, kernel=.kernels, from=min(x)-3*median(bw), to=max(x)+3*median(bw))
+{# implementation based on FFT in Silverman 1984
+    if(is.character(bw)) bw=get(bw, mode='function')
+    if(is.function(bw))  bw=bw(x)
+	n=length(x)
+	from0=from; force(to)
+	x=x-from; to=to-from; from=0
+	M=nextn(n*2L, 2L)
+	delta=(to-from)/M
+	tk=seq.int(from=from, to=to, length.out=M+1L)
+	#cuts=as.integer(cut(x, tk))
+	cuts=findInterval(x, tk)
+		buf=integer(M)
+	ucut=.Call(radixSort_preallocMax, unique(cuts), buf, M)
+	xik=numeric(M+1L)
+		fcuts=factor(cuts,levels=ucut)
+		#attr(fcuts, 'class')='ordered'
+		#attr(fcuts,'levels')=ucut
+		xik[ucut]= sapply(split((tk[cuts+1L]-x)/n/delta^2, fcuts), sum)
+		xik[ucut+1L]=xik[ucut+1L] + sapply(split((x-tk[cuts])/n/delta^2, fcuts), sum)
+	xik=xik[1:M]
+	kk=seq_len(M)-1L
+	l=-M/2L+kk
+	
+	#Yl.bak=colMeans(xik*exp(1i*2*pi*(kk %o% l)/M))
+	#Yl=fft(xik/exp(1i*pi*kk), inverse = TRUE)/M
+	Yl=fft(xik*c(1,-1), inverse = TRUE)/M
+	
+	sl=2*pi*l/(to-from)
+	ftkern=fourier.dkernel(kernel, root.2pi=FALSE)
+	
+	tk0=tk[1:M]+from0; 
+	ans=vector('list', length(bw))
+	for(i in seq_along(bw)){
+		zetalstar=ftkern(bw[i]*sl) * Yl
+		#zetak.bak = colSums(exp((l%o%kk)/M*(1i)*-2*pi)*zetalstar) ## correct but slow
+		#zetak=fft(zetalstar)*exp(1i*pi*kk)
+		zetak=fft(zetalstar)*c(1,-1)
+		ans[[i]] = approxfun(tk0, Re(zetak)/bw[i], ties='ordered',yleft=0, yright=0)
 	}
 	structure(if(length(ans)==1L) ans[[1L]] else ans, 
 		environment=environment()

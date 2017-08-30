@@ -2,12 +2,20 @@ grad.smoothp.mrpp <-
 function(y,  bw, kernel='triweight', adjust=NULL, mrpp.stats=NULL, r=seq_len(y$R), test=FALSE)
 ## y=N-by-p data matrix; b=permutation index for the 1st trt; r=dimension index; 
 {
+	on.exit({ # recover original data.env
+			if(!is.null(y$data.env$y.bak)){
+				y$data.env$y=y$data.env$y.bak
+				rm(y.bak, envir=y$data.env)
+			}
+	})
 	if(missing(bw)) bw='sym1'
 	if(length(r)!=y$R){
+		y[['data.env']]$y.bak=y$y
 		y[['data.env']]$y=y[['data.env']]$y[,r,drop=FALSE]
 		y$R=length(r)
 		y$distObj=y$distFunc(y$y)
 		r=seq_len(y$R)
+
 	}	
 	if(is.numeric(bw)&&is.infinite(bw)&&bw>0){
 		this.call=as.list(match.call())
@@ -36,7 +44,7 @@ function(y,  bw, kernel='triweight', adjust=NULL, mrpp.stats=NULL, r=seq_len(y$R
     N=y$nobs
 
 	if(is.character(bw))
-		bw=bw.smoothp(y$data.env$y,permutedTrt=y$permutedTrt,r=r, kernel=kernel, weight.trt=weight.trt, method=bw, verbose=FALSE)
+		bw=bw.smoothp(y,kernel=kernel, bw.method=bw, verbose=FALSE)
 
 	if(is.null(adjust[1L])) adjust='none'
 	if(is.numeric(bw) && is.infinite(bw)) adjust='weighted.mean'
@@ -69,7 +77,7 @@ function(y,  bw, kernel='triweight', adjust=NULL, mrpp.stats=NULL, r=seq_len(y$R
 			w2s=sqrt(.colSums(weight^2, B, length(b)))
 			expr = expression(ans[, r.i] <- .colSums(weight * (rep(dz.dw[b], each=B)-dz.dw), B, length(b))/sd(dz.dw)/w2s)
 	}else	expr = expression(ans[, r.i] <- .colSums(weight * (rep(dz.dw[b], each=B)-dz.dw), B, length(b)))
-	for(r.i in seq_len(y$R)){
+	for(r.i in r){ # r=seq_len(R)
 		#dz.dw=.C('mrppstats',all.ddelta.dw[,r.i],permutedTrt,cperm.mat,nrow(permutedTrt),B,N,as.integer(weight.trt),ans=double(B),PACKAGE='MRPP',DUP=FALSE)$ans
 		dz.dw=.Call(mrppstats, all.ddelta.dw[,r.i], y$permutedTrt, weight.trt, PACKAGE='MRPP')
 #        for(b.i in 1:length(b)){
@@ -79,6 +87,7 @@ function(y,  bw, kernel='triweight', adjust=NULL, mrpp.stats=NULL, r=seq_len(y$R
 		eval(expr)    ## this lines replace the above 3 lines
 	}
 	if(adjust0=='log scale') ans=exp(ans/pval0)
+	#eval(recover.data.env)
     structure(drop(ans), parameters=pars, midp=pval0, class='grad.smoothp')
 }
 
@@ -129,7 +138,7 @@ function(y, bw, mrpp.stats=NULL, kernel='triweight', adjust=NULL)
     N=y$nobs
 
 	if(is.character(bw)) # this slow when B is large
-		bw=bw.smoothp(y$y,permutedTrt=y$permutedTrt,r=r, kernel=kernel, weight.trt=weight.trt, method=bw, verbose=FALSE)
+		bw=bw.smoothp(y, kernel=kernel,  bw.method=bw, verbose=FALSE)
 
 	if(is.null(adjust[1L])) adjust='none'
 	if(is.numeric(bw) && is.infinite(bw)) adjust='weighted.mean'

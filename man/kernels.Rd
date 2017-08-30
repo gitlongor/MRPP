@@ -3,6 +3,7 @@
 \alias{skernel}
 \alias{pkernel}
 \alias{dkernel}
+\alias{ddkernel}
 \alias{d2dkernel}
 \alias{fourier.kernel}
 \alias{ckernel}
@@ -13,6 +14,7 @@
 \alias{.smooth0.kernels}
 \alias{.smooth1.kernels}
 \alias{.smooth2.kernels}
+\alias{krRkernel}
 %- Also NEED an "\alias" for EACH other topic documented here.
 \title{
 Support Functions For Univariate Kernel Densities
@@ -20,10 +22,12 @@ Support Functions For Univariate Kernel Densities
 \description{
 \code{pkernel}, \code{dkernel} and \code{ckernel} return the cumulative distribution function, probability density function and characteristic function, respectively, for common univariate kernels specified by names. \code{fourier.kernel} is a synonym of \code{ckernel}. 
 
-\code{skernel} returns the support of the requested kernel. \code{d2dkernel} returns the 2nd derivative of the density of the requested kernel. 
+\code{skernel} returns the support of the requested kernel. \code{ddkernel} and \code{d2dkernel} return the 1st and the 2nd derivative of the density of the requested kernel, respectively.
 \code{mkernel} returns the raw moments of the requested kernel distribution. 
 
 \code{pkde} and \code{dkde} return the \emph{fitted} cumulative distribution function and probability density function. 
+
+\code{krRkernel} computes characteristic exponent and characteristic coefficients of a kernel distribution. 
 
 \code{.kernels} is a vector containing the names of the kernel functions currently supported. 
 \code{.smooth0.kernels} is a vector containing the names of the supported kernel functions that are continuous over the real line. 
@@ -33,6 +37,7 @@ Support Functions For Univariate Kernel Densities
 \usage{
 pkernel(kernel= .kernels)
 dkernel(kernel= .kernels)
+ddkernel(kernel=.kernels)
 d2dkernel(kernel=.kernels)
 ckernel(kernel= .kernels, root.2pi=FALSE, const=NULL)
 fourier.kernel(kernel= .kernels, root.2pi=FALSE, const=NULL)
@@ -42,6 +47,8 @@ mkernel(kernel=.kernels, order=1:4, R=TRUE)
 
 pkde(x, bw=bw.nrd, kernel=.kernels)
 dkde(x, bw=bw.nrd, kernel=.kernels,	from=min(x)-3*median(bw), to=max(x)+3*median(bw))
+
+krRkernel(kernel=.kernels)
 }
 %- maybe also "usage" for other objects documented here.
 \arguments{
@@ -89,7 +96,7 @@ Whenever the kernel has compact support, the support will be \code{[-1,1]}; thus
 The \code{pkde} implementation does \emph{not} make use of the fast Fourier transform (FFT); but the \code{dkde} uses FFT. 
 }
 \value{
-For \code{pkernel}, \code{dkernel}, \code{ckernel}, and \code{d2dkernel}, the result is a function (closure) that accepts a numeric vector as its argument, with formal arguments being \code{q}, \code{x}, \code{s}, and \code{x}, respectively.
+For \code{pkernel}, \code{dkernel}, \code{ckernel}, \code{ddkernel} and \code{d2dkernel}, the result is a function (closure) that accepts a numeric vector as its argument, with formal arguments being \code{q}, \code{x}, \code{s}, \code{x} and \code{x}, respectively.
 
 For \code{dkde}, if \code{length(bw)==1}, then the result is a function; otherwise, the result is a list of functions, corresponding to each bandwidth. In either case, the \code{attr(*, "environment")} attribute is set to the evaluation frame of \code{dkde}, allowing the access of some intermediate objects. 
 
@@ -98,6 +105,8 @@ For \code{mkernel}, the result is a numeric vector of the requested moments.
 For \code{skernel}, the result is a numeric vector of length 2, being the lower and upper bound of the (effective) support. 
 
 For \code{ckernel} and \code{fourier.kernel}, when the \code{const} is set to non-\code{NULL}, an additional attribute \code{const} will be set to a numeric vector requested. 
+
+\code{krRkernel} returns a named numeric vector with names being \code{"kr"} (characteristic coefficient, which is half of the 2nd order moment when \code{r=2}), \code{"r"} (characteristic exponent, which is 2 for all currently supported kernels), and \code{"R"} (which is the integral of squared kernel density). 
 }
 \references{
 \url{https://en.wikipedia.org/wiki/Kernel_(statistics)}

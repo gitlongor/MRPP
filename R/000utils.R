@@ -1,5 +1,7 @@
 constEnv=new.env(hash=TRUE, size=73L)
 pkgEnv=parent.env(constEnv)
+constEnv$onei=0+1i
+constEnv$nonei=0-1i
 constEnv$oneThird = 1/3
 constEnv$oneSixth = 1/6
 constEnv$twoThirds = 2/3
@@ -33,7 +35,7 @@ constEnv$halfIrootPi=.5/sqrt(base::pi)
 constEnv$halfm4dpipi=.5-4/base::pi^2
 constEnv$five7=5/7
 constEnv$three50d429=350/429
-constEnv$one75d247=175/249
+constEnv$one75d247=175/247
 constEnv$pipid6=base::pi^2/6
 constEnv$pipid8=base::pi^2/8
 constEnv$pipid16=base::pi^2/16
@@ -53,7 +55,7 @@ constEnv$logpi=log(base::pi)
 constEnv$fourdpi=4/base::pi
 constEnv$onedpi=1/base::pi
 # for mkernel
-constEnv$onem8dpi=1-8/base::pi
+constEnv$onem8dpi2=1-8/base::pi^2
 constEnv$cos.4m=with(constEnv, (384 - 48 *pipi + pipi*pipi)/pipi/pipi)
 constEnv$oneFifteenth=1/15
 constEnv$thrd35=3/35
