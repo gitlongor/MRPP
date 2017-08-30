@@ -35,7 +35,7 @@ function(y,  bw, kernel='triweight', adjust=NULL, mrpp.stats=NULL, r=seq_len(y$R
 	}
 
 	if(is.null(mrpp.stats)) {
-		mrppt=mrpp.test(y, method='permutation'); 
+		mrppt=mrpp.test(y, test.method='permutation'); 
 		mrpp.stats=mrppt$all.statistics
 	}
 	
@@ -45,18 +45,22 @@ function(y,  bw, kernel='triweight', adjust=NULL, mrpp.stats=NULL, r=seq_len(y$R
     ans=matrix(NA_real_, length(b), y$R)
     N=y$nobs
 
-	if(is.character(bw))
-		bw=bw.smoothp(y,kernel=kernel, bw.method=bw, verbose=FALSE)
-
 	if(is.null(adjust[1L])) adjust='none'
 	if(is.numeric(bw) && is.infinite(bw)) adjust='weighted.mean'
-	adjust=match.arg(adjust, c('none','weighted.mean','scale', 'log scale'))
+	adjust=match.arg(adjust, c('none','weighted.mean','scale', 'log scale', 'logit scale'))
+
+	if(is.character(bw))
+		bw=bw.smoothp(y,kernel=kernel, bw.method=bw, verbose=FALSE, 
+			scale=switch(adjust, none=,weighted.mean=,scale='raw',`log scale`='log',`logit scale`='logit'),
+			mrpp.stats=mrpp.stats
+		)
+
 
 	pval0=p.empirical(mrpp.stats,midp=FALSE)-as.numeric(0.5/y$nparts)
 
 	
 	pars=list(kernel=kernel, weight.trt=weight.trt, adjust=adjust, bw=bw)
-	adjust0=adjust; if(adjust=='log scale') adjust='none'
+	adjust0=adjust; if(adjust=='log scale' || adjust=='logit scale') adjust='none'
 #    weight=matrix(NA_real_, B, length(b))   ## this may require large memory when test=TRUE
 #    for(b.i in 1:length(b))
 #      weight[,b.i]=pmax(min.wts,dnorm((mrpp.stats[b[b.i]]-mrpp.stats),0,bw))
@@ -88,7 +92,9 @@ function(y,  bw, kernel='triweight', adjust=NULL, mrpp.stats=NULL, r=seq_len(y$R
 #        }
 		eval(expr)    ## this lines replace the above 3 lines
 	}
-	if(adjust0=='log scale') ans=exp(ans/pval0)
+	if(adjust0=='log scale') {
+		ans=exp(ans/pval0) 
+	}else if(adjust0=='logit scale') ans=exp(ans/pval0/(1-pval0))
 	#eval(recover.data.env)
     structure(drop(ans), parameters=pars, midp=pval0, class='grad.smoothp')
 }
@@ -101,7 +107,7 @@ function(y, test=FALSE, mrpp.stats=NULL)
 {	bw=Inf; adjust='weighted.mean'; kernel=NULL
 
 	if(is.null(mrpp.stats)) {
-		mrppt=mrpp.test(y, method='permutation'); 
+		mrppt=mrpp.test(y, test.method='permutation'); 
 		mrpp.stats=mrppt$all.statistics
 		pval0=p.value(mrppt, 'midp')
 	}else pval0=p.empirical(mrpp.stats,midp=FALSE)-as.numeric(0.5/y$nparts)
@@ -130,7 +136,7 @@ function(y, bw, mrpp.stats=NULL, kernel='triweight', adjust=NULL)
 ## y=N-by-p data matrix; b=permutation index for the 1st trt; r=dimension index; 
 {	if(missing(bw)) bw='sym1'
 	if(is.null(mrpp.stats)) {
-		mrppt=mrpp.test(y, method='permutation'); 
+		mrppt=mrpp.test(y, test.method='permutation'); 
 		mrpp.stats=mrppt$all.statistics
 		pval0=p.value(mrppt, 'midp')
 	}else pval0=p.empirical(mrpp.stats,midp=FALSE)-as.numeric(0.5/y$nparts)
@@ -139,15 +145,19 @@ function(y, bw, mrpp.stats=NULL, kernel='triweight', adjust=NULL)
     ans=matrix(NA_real_, 1L, y$R)
     N=y$nobs
 
-	if(is.character(bw)) # this slow when B is large
-		bw=bw.smoothp(y, kernel=kernel,  bw.method=bw, verbose=FALSE)
-
 	if(is.null(adjust[1L])) adjust='none'
 	if(is.numeric(bw) && is.infinite(bw)) adjust='weighted.mean'
-	adjust=match.arg(adjust, c('none','weighted.mean','scale', 'log scale'))
+	adjust=match.arg(adjust, c('none','weighted.mean','scale', 'log scale', 'logit scale'))
+
+	if(is.character(bw)) # this slow when B is large
+		bw=bw.smoothp(y, kernel=kernel,  bw.method=bw, verbose=FALSE, 
+			scale=switch(adjust, none=,weighted.mean=,scale='raw',`log scale`='log',`logit scale`='logit'),
+			mrpp.stats=mrpp.stats
+		)
+
 
 	pars=list(kernel=kernel, weight.trt=weight.trt, adjust=adjust, bw=bw)
-	adjust0=adjust; if(adjust=='log scale') adjust='none'
+	adjust0=adjust; if(adjust=='log scale' || adjust=='logit scale') adjust='none'
 	weight = dkernel(kernel)( (mrpp.stats-mrpp.stats[1L] )/ bw)
 	w.idx=which(weight>0)
 	w.pos=weight[w.idx]
@@ -169,7 +179,9 @@ function(y, bw, mrpp.stats=NULL, kernel='triweight', adjust=NULL)
 		eval(expr)    
 	}
 
-	if(adjust0=='log scale') ans=exp(ans/pval0)
+	if(adjust0=='log scale') {
+		ans=exp(ans/pval0)
+	}else if(adjust0=='logit scale') ans=exp(ans/pval0/(1-pval0))
     structure(drop(ans), parameters=pars, midp=pval0, class='grad.smoothp')
 }
 

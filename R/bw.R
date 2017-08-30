@@ -413,7 +413,7 @@ function(y, start.bw = NULL, kernel='triweight',
 		mrpp.stats=mrppt$all.statistics
 	}	
 	bw.method=match.arg(bw.method, choices=c('sym1','drop1','add1','keep1','amse(z[1])','pearson3','pearson3gca')) # 'dropadd1','dropaddsym1','ss.gradp',
-	scale=match.arg(scale, choices=c('raw','log'))
+	scale=match.arg(scale, choices=c('raw','log','logit'))
     
 	R=y$R
 	if(R==1L ) bw.method='ss.gradp'
@@ -523,6 +523,8 @@ function(y, start.bw = NULL, kernel='triweight',
 
 	dkern=dkernel(kernel)
 	ddkern=ddkernel(kernel)
+	adjust.string=switch(scale, raw='none', log='log scale', logit='logit scale')
+	pval0=p.empirical(mrpp.stats, midp=FALSE) - as.numeric(0.5/y$nparts)
 	obj.common.expr=quote({
 		niter<<-niter+1L
 		thisEnv$locs[[niter]]=this.bw=exp(logbw)
@@ -536,9 +538,14 @@ function(y, start.bw = NULL, kernel='triweight',
 		}
 		
 		ans=1/this.bw/gradEnv$B*(sum(w.pos)*gradEnv$dz.dw[1,]-colSums(w.pos*gradEnv$dz.dw[w.tf,,drop=FALSE]))
+		ans=ans/switch(adjust.string, 'none'=1, 'log scale'=pval0, 'logit scale'=pval0*(1-pval0))
+		ans=switch(adjust.string, 'none'=ans, 'log scale'=, 'logit scale'=exp(ans))
+		attr(ans, 'parameters')=list(adjust=adjust.string)
+		attr(ans, 'midp')=pval0
+		class(ans)='grad.smoothp'
 	})
 
-	if(bw.method=='ss.gradp'){ 
+	if(FALSE && bw.method=='ss.gradp'){ 
 # 		# this heuristic does not seem to work at all
 #		objfunc=eval(bquote(function(logbw)
 #		{
@@ -621,8 +628,20 @@ function(y, start.bw = NULL, kernel='triweight',
 		#t(smps - gradEnv$ans%*%(1-diag(1, length(r), length(r))))
 	}
 	
-	pval0=p.empirical(mrpp.stats, midp=FALSE) - as.numeric(0.5/y$nparts)
-	if(scale=='raw'){
+	sses.expr=switch(bw.method,
+		drop1=quote(sum((p.value.grad.smoothp(ans, type='drop1')-drop1pval)^2)),
+		add1 =quote(sum((p.value.grad.smoothp(ans, type='add1' )-add1pval)^2)),
+		keep1=quote(sum((p.value.grad.smoothp(ans, type='keep1')-keep1pval)^2)),
+		sym1 =quote(sum((0.5*(p.value.grad.smoothp(ans, type='add1' )
+		                     -p.value.grad.smoothp(ans, type='drop1'))
+						 -.5*(add1pval - drop1pval)
+						)^2))
+	)
+	objfunc=eval(bquote(function(logbw){
+		.(obj.common.expr)
+		thisEnv$sses[[niter]]=.(sses.expr)
+	}))
+	if(FALSE && scale=='raw'){
 		sses.expr=switch(bw.method, 
 			drop1 = quote(sum((ans - (pval0 - drop1pval))^2)), 
 			add1  = quote(sum((ans - (add1pval - pval0))^2)), 
@@ -638,7 +657,7 @@ function(y, start.bw = NULL, kernel='triweight',
 			.(obj.common.expr)
 			thisEnv$sses[[niter]]=.(sses.expr)
 		}))
-	}else if(scale=='log'){
+	}else if(FALSE && scale=='log'){
 		log.p0=log(pval0)
 		sses.expr=switch(bw.method, 
 			drop1 = quote(sum((ans - (log.p0 - log(drop1pval)))^2)), 
@@ -656,7 +675,8 @@ function(y, start.bw = NULL, kernel='triweight',
 			ans=ans/pval0
 			thisEnv$sses[[niter]]=.(sses.expr)
 		}))
-	}else stop('unknown "scale"')
+	} 
+	
 		attr(objfunc, 'srcref')=NULL
 		if(FALSE){
 			opt.rslt=suppressWarnings(optim(log(start.bw), objfunc, method='Nelder-Mead'))

@@ -105,16 +105,26 @@ x=matrix(rnorm(20*5),20)
 trt=gl(2,10)
 mrpp.obj = mrpp(x, trt=trt, B=5e3L)
 (ir1=grad.smoothp(mrpp.obj))
-p.value(ir1, type="drop1")
-p.value(ir1, type="add1")
-p.value(ir1, type="keep1")
 
 ir2=grad.smoothp(mrpp.obj, adjust='weighted.mean')
 ir3=grad.smoothp(mrpp.obj, adjust='scale')
 ir4=get.p.dd.dw(x, mrpp.obj$permutedTrt)
 ir5=grad.smoothp(mrpp.obj, adjust='log scale')
-ir6=grad.smoothp(mrpp.obj, bw=Inf)
-cor(cbind(ir1, ir2, ir3, ir4, ir5, ir6), method="s")
+ir6=grad.smoothp(mrpp.obj, adjust='logit scale')
+ir7=grad.smoothp(mrpp.obj, bw=Inf)
+cor(cbind(ir1, ir2, ir3, ir4, ir5, ir6, ir7), method="s")
+
+p.value(ir1, type="drop1")
+p.value(ir1, type="add1")
+p.value(ir1, type="keep1")
+
+p.value(ir5, type="drop1")
+p.value(ir5, type="add1")
+p.value(ir5, type="keep1")
+
+p.value(ir6, type="drop1")
+p.value(ir6, type="add1")
+p.value(ir6, type="keep1")
 
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the

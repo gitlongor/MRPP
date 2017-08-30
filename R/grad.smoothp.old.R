@@ -343,22 +343,30 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), test=FALSE,
 p.value.grad.smoothp = function(x, type=c('keep1','drop1','add1'),...)
 {
 	adj=attr(x, 'parameters')$adjust
-	if(!(adj %in% c('none','log scale'))) return(rep(NA_real_, length(x)))
+	
 	type=match.arg(type)
 	x0=x; attributes(x0)=NULL
+	midp=attr(x, 'midp')
+	
 	if(adj=='none'){
 		switch(type, 
-			drop1 = attr(x, 'midp') - x0, 
-			keep1 = attr(x, 'midp') - sum(x0) + x0, 
-			add1 = attr(x, 'midp') + x0
+			drop1 =midp - x0, 
+			keep1 =midp - sum(x0) + x0, 
+			add1 = midp + x0
 		)
 	}else if(adj=='log scale'){
 		switch(type, 
-			drop1 = attr(x, 'midp') / x0, 
-			keep1 = attr(x, 'midp') * exp( -sum(log(x0)) + log(x0) ) , 
-			add1 = attr(x, 'midp') * x0
+			drop1 =midp / x0, 
+			keep1 =midp / exp( sum(log(x0)) ) * x0, 
+			add1 = midp * x0
 		)
-	}else stop('"adjust" unsupported')
+	}else if(adj=='logit scale'){
+		switch(type,
+			drop1 = 1/(1+(1/midp -1) * x0 ), 
+			keep1 = 1/(1+(1/midp -1) * exp(sum(log(x0))) / x0),
+			add1  = 1/(1+(1/midp -1) / x0 )
+		)
+	}else return(rep(NA_real_, length(x)))
 }
 
 
