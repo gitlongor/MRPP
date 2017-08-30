@@ -1,4 +1,4 @@
-constEnv=new.env(hash=TRUE, size=73L)
+constEnv=new.env(hash=TRUE, size=75L)
 pkgEnv=parent.env(constEnv)
 constEnv$onei=0+1i
 constEnv$nonei=0-1i

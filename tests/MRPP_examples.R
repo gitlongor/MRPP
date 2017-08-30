@@ -44,24 +44,24 @@ mrpp.test(dist.x, permutedTrt=permutedTrt, method='permutation') # dist interfac
 permutedTrt=permuteTrt(trt, B=5000L) # could be slow if B is large; reuse this slow part
 ## 10 bandwidth selection method
 # promising ones: 
-bw.smoothp(x, permutedTrt, method='sym1', verbose=interactive())
-bw.smoothp(x, permutedTrt, method='dropadd1', verbose=interactive())
-bw.smoothp(x, permutedTrt, method='match.pear3', verbose=interactive())
-bw.smoothp(x, permutedTrt, method='match.pear3gca', verbose=interactive())
-bw.smoothp(x, permutedTrt, method='kde.mse1', verbose=interactive())
+bw.smoothp(x, permutedTrt, bw.method='sym1', verbose=interactive())
+bw.smoothp(x, permutedTrt, bw.method='dropadd1', verbose=interactive())
+bw.smoothp(x, permutedTrt, bw.method='pearson3', verbose=interactive())
+bw.smoothp(x, permutedTrt, bw.method='pearson3gca', verbose=interactive())
+bw.smoothp(x, permutedTrt, bw.method='mse(z[1])', verbose=interactive())
 # others
-bw.smoothp(x, permutedTrt, method='drop1', verbose=interactive())
-bw.smoothp(x, permutedTrt, method='add1', verbose=interactive())
-bw.smoothp(x, permutedTrt, method='dropaddsym1', verbose=interactive())
-bw.smoothp(x, permutedTrt, method='keep1', verbose=interactive())
-bw.smoothp(x, permutedTrt, method='ss.gradp', verbose=interactive())
+bw.smoothp(x, permutedTrt, bw.method='drop1', verbose=interactive())
+bw.smoothp(x, permutedTrt, bw.method='add1', verbose=interactive())
+bw.smoothp(x, permutedTrt, bw.method='dropaddsym1', verbose=interactive())
+bw.smoothp(x, permutedTrt, bw.method='keep1', verbose=interactive())
+bw.smoothp(x, permutedTrt, bw.method='ss.gradp', verbose=interactive())
 
 ####### COMPUTING VARIABLE IMPORTANCE
 ## precompute to save time: 
 mrpp.stats=mrpp.test(x,permutedTrt=permutedTrt,method='permutation')$all.statistics
 
 ## importance measures: 
-iota=grad.smoothp(x, permutedTrt=permutedTrt, mrpp.stats=mrpp.stats, bw='match.pear3gca', adjust='none') # the bw argument can be any of the above 10 methods, or a precomputed numeric value
+iota=grad.smoothp(x, permutedTrt=permutedTrt, mrpp.stats=mrpp.stats, bw='pearson3gca', adjust='none') # the bw argument can be any of the above 10 methods, or a precomputed numeric value
 p.value(iota, type='drop1') # approx drop-1 p-value using computed derivatives
 p.value(iota, type='add1') # approx add-1 p-value using computed derivatives
 p.value(iota, type='keep1') # approx keep-1 p-value using computed derivatives

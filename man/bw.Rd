@@ -15,7 +15,7 @@ Bandwidth Selection for Kernel Approximation to Discrete Cumulative Distribution
 \usage{
 %bw.mse.pdf.asym(x,iter.max=1L,eps=1e-6,start.bw=bw.nrd, verbose=FALSE)
 bw.smoothp(y, start.bw = NULL, kernel='triweight', 
-	bw.method='kde.mse1', scale='raw', verbose=TRUE, n.subset, 
+	bw.method='mse(z[1])', scale='raw', verbose=TRUE, n.subset, 
 	mrpp.stats=NULL, r=seq_len(y$R))
 bw.range(x, length=50L, lower=.05, upper=.95, safety=2)
 }
@@ -43,7 +43,7 @@ bw.range(x, length=50L, lower=.05, upper=.95, safety=2)
 %  \item{distFunc}{A function that returns a \code{"dist"} object, as in the \code{\link{dist}} function. 
 %}
 
-%  \item{\dots}{Additional arguments passed on to \code{\link{mrpp.test.dist}} or additional arguments for \code{bw.method="kde.mse1"}. See details.
+%  \item{\dots}{Additional arguments passed on to \code{\link{mrpp.test.dist}} or additional arguments for \code{bw.method="mse(z[1])"}. See details.
 %}
   \item{x}{A vector discrete statistics.
 }
@@ -71,13 +71,13 @@ For \code{bw.method},  currently supported values are as follows:
 
 \item\code{bw.method="keep1"}: The bandwidth best approximating univariate MRPP mid-p-values will be selected. 
 
-\item\code{bw.method='match.pear3'}: The bandwidth selected is such that the resulting kernel density estimate best approximates an initial density. The initial density is a Pearson type III distribution, whose first 3 moments match those of MRPP statistics exactly. See also \code{\link{dpearson3}}.
+\item\code{bw.method='pearson3'}: The bandwidth selected is such that the resulting kernel density estimate best approximates an initial density. The initial density is a Pearson type III distribution, whose first 3 moments match those of MRPP statistics exactly. See also \code{\link{dpearson3}}.
 
-\item\code{bw.method='match.pear3gca'}: The bandwidth selected is such that the resulting kernel density estimate best approximates an initial density. The initial density is the Gram-Charlier type A approximation (GCA) to the Pearson type III distribution. The first 4 moments of the GCA are expected to match those of MRPP statistics. See also \code{\link{dpearson3gca}}. 
+\item\code{bw.method='pearson3gca'}: The bandwidth selected is such that the resulting kernel density estimate best approximates an initial density. The initial density is the Gram-Charlier type A approximation (GCA) to the Pearson type III distribution. The first 4 moments of the GCA are expected to match those of MRPP statistics. See also \code{\link{dpearson3gca}}. 
 
 \item\code{bw.method="ss.gradp"}: The bandwidth that maximize the sum of squared derivatives of density of smoothed p-values will be selected.
 
-\item\code{bw.method="kde.mse1"}: The bandwidth selection problem for approximating permutation statistics is treated as if finding the bandwidth in kernel \dQuote{density} estimation and an asymptotically optimal bandwidth minimizing mean squared error at the first data point will be used. The procedure starts from plug-in estimates of bandwidths to estimate \eqn{f(x_1)} and \eqn{f''(x_1)} using \code{\link{hpi}}. The final optimal bandwidth will be computed as 
+\item\code{bw.method="mse(z[1])"}: The bandwidth selection problem for approximating permutation statistics is treated as if finding the bandwidth in kernel \dQuote{density} estimation and an asymptotically optimal bandwidth minimizing mean squared error at the first data point will be used. The procedure starts from plug-in estimates of bandwidths to estimate \eqn{f(x_1)} and \eqn{f''(x_1)} using \code{\link{hpi}}. The final optimal bandwidth will be computed as 
 \deqn{
 \left[\frac{R f(x_1)}{4N \lbrace k_2 f''(x_1) \rbrace^2} \right]^{1/5}
 }{
@@ -136,9 +136,9 @@ bw.smoothp(mrpp.obj, bw.method='drop1', verbose=interactive())
 bw.smoothp(mrpp.obj, bw.method='add1', verbose=interactive())
 bw.smoothp(mrpp.obj, bw.method='sym1', verbose=interactive())
 bw.smoothp(mrpp.obj, bw.method='keep1', verbose=interactive())
-bw.smoothp(mrpp.obj, bw.method='match.pear3', verbose=interactive())
-bw.smoothp(mrpp.obj, bw.method='match.pear3gca', verbose=interactive())
-bw.smoothp(mrpp.obj, bw.method='kde.mse1', verbose=interactive())
+bw.smoothp(mrpp.obj, bw.method='pearson3', verbose=interactive())
+bw.smoothp(mrpp.obj, bw.method='pearson3gca', verbose=interactive())
+bw.smoothp(mrpp.obj, bw.method='mse(z[1])', verbose=interactive())
 
 mrpp.tst=mrpp.test(mrpp.obj, method='permutation')
 summary( bw.range(mrpp.tst$all.statistics) )

@@ -33,7 +33,7 @@ bw.mse.pdf.asym.scott=function(x,iter.max=1L,eps=1e-6,start.bw, kernel='triweigh
 
 # starting from a bw that matches Pearson Type III dist'n
 # then using kernels with this bw to estimate f(x[x]) and f''(x[1]) 
-bw.mse.pdf.asym.pear3gca=function(x, mrpp,iter.max=1L,eps=1e-6,kernel='triweight', verbose=FALSE)
+bw.mse.pdf.asym.pearson3gca=function(x, mrpp,iter.max=1L,eps=1e-6,kernel='triweight', verbose=FALSE)
 {
 	cums=cumulant(mrpp, order=1:4)
 	cums[2L]=sqrt(cums[2L])
@@ -125,7 +125,7 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 	method='sym1', verbose=TRUE, subset, adjust='none',...)
 ## y=N-by-p data matrix; b=permutation index for the 1st trt; r=dimension index; 
 {
-	method=match.arg(method, choices=c('sym1','drop1','add1','keep1','dropadd1','dropaddsym1','ss.gradp','kde.mse1','match.pear3','match.pear3gca'))
+	method=match.arg(method, choices=c('sym1','drop1','add1','keep1','dropadd1','dropaddsym1','ss.gradp','mse(z[1])','pearson3','pearson3gca'))
 	adjust=match.arg(adjust, choices=c('none','log scale'))
     if(!is.matrix(y) && !is.data.frame(y)) y = as.matrix(y)
 	R=NCOL(y)
@@ -162,7 +162,7 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 		box()
 		title(sub=sprintf('bandwidth = %.3g', ans))
 	})
-	if(method=='kde.mse1'){
+	if(method=='mse(z[1])'){
 		lst=list(...)
 		lst$x=mrpp$all.statistics
 		#lst$mrpp=mrpp.obj
@@ -190,12 +190,12 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 	n.bw=length(bw)
 	if(n.bw==0L) stop('bandwidth range is not suitable')
 	
-	if(method=='match.pear3' || method=='match.pear3gca') {
+	if(method=='pearson3' || method=='pearson3gca') {
 		cums=cumulant(mrpp(y[,r,drop=FALSE], permutedTrt=permutedTrt, weight.trt=weight.trt, distFunc=distFunc),order=1:4); 
 		cums[2L]=sqrt(cums[2L]); cums[3L]=cums[3L]/cums[2L]^3; cums[4L]=cums[4L]/cums[2L]^4
-		pdf0x = if(method=='match.pear3') dpearson3(mrpp$all.statistics, cums[1L], cums[2L], cums[3L]) else 
+		pdf0x = if(method=='pearson3') dpearson3(mrpp$all.statistics, cums[1L], cums[2L], cums[3L]) else 
 		dpearson3gca(mrpp$all.statistics, cums[1L], cums[2L], cums[3L], cums[4L]) 
-		ans=bw.matchpdf(mrpp$all.statistics, kernel=kernel, pdf=pdf0x, bw=bw, verbose=verbose, title=switch(method, match.pear3="Match Pearson III Dist'n", match.pear3gca="Match GCA Adjust. of Pearson III Dist'n"))
+		ans=bw.matchpdf(mrpp$all.statistics, kernel=kernel, pdf=pdf0x, bw=bw, verbose=verbose, title=switch(method, pearson3="Match Pearson III Dist'n", pearson3gca="Match GCA Adjust. of Pearson III Dist'n"))
 		if(ans<lower.bound){
 			ans=lower.bound
 			if(verbose) warning('bandwidth selected is too small; replaced by a safer lower bound.')
@@ -365,7 +365,7 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 	method='sym1', verbose=TRUE, subset, adjust='none',...)
 ## y=N-by-p data matrix; b=permutation index for the 1st trt; r=dimension index; 
 {
-	method=match.arg(method, choices=c('sym1','drop1','add1','keep1','dropadd1','dropaddsym1','ss.gradp','kde.mse1','match.pear3','match.pear3gca'))
+	method=match.arg(method, choices=c('sym1','drop1','add1','keep1','dropadd1','dropaddsym1','ss.gradp','mse(z[1])','pearson3','pearson3gca'))
 	adjust=match.arg(adjust, choices=c('none','log scale'))
     if(!is.matrix(y) && !is.data.frame(y)) y = as.matrix(y)
 	R=NCOL(y)
@@ -395,7 +395,7 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 		box()
 		title(sub=sprintf('bandwidth = %.3g', ans))
 	})
-	if(method=='kde.mse1'){
+	if(method=='mse(z[1])'){
 		lst=list(...)
 		lst$x=mrpp$all.statistics
 		#lst$mrpp=mrpp.obj
@@ -419,12 +419,12 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 	weight.trt = attr(mrpp$parameter, 'weight.trt')
 
 
-	if(method=='match.pear3' || method=='match.pear3gca') {
+	if(method=='pearson3' || method=='pearson3gca') {
 		cums=cumulant(mrpp(y[,r,drop=FALSE], permutedTrt=permutedTrt, weight.trt=weight.trt, distFunc=distFunc),order=1:4); 
 		cums[2L]=sqrt(cums[2L]); cums[3L]=cums[3L]/cums[2L]^3; cums[4L]=cums[4L]/cums[2L]^4
-		pdf0x = if(method=='match.pear3') dpearson3(mrpp$all.statistics, cums[1L], cums[2L], cums[3L]) else 
+		pdf0x = if(method=='pearson3') dpearson3(mrpp$all.statistics, cums[1L], cums[2L], cums[3L]) else 
 		dpearson3gca(mrpp$all.statistics, cums[1L], cums[2L], cums[3L], cums[4L]) 
-		ans=bw.matchpdf(mrpp$all.statistics, kernel=kernel, pdf=pdf0x, bw=bw, verbose=verbose, title=switch(method, match.pear3="Match Pearson III Dist'n", match.pear3gca="Match GCA Adjust. of Pearson III Dist'n"))
+		ans=bw.matchpdf(mrpp$all.statistics, kernel=kernel, pdf=pdf0x, bw=bw, verbose=verbose, title=switch(method, pearson3="Match Pearson III Dist'n", pearson3gca="Match GCA Adjust. of Pearson III Dist'n"))
 		if(ans<lower.bound){
 			ans=lower.bound
 			if(verbose) warning('bandwidth selected is too small; replaced by a safer lower bound.')
@@ -481,7 +481,7 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 	
 	this.call=match.call()
 	this.call[[1L]]=as.symbol('bw.smoothp')
-	this.call[['method']]='match.pear3'
+	this.call[['method']]='pearson3'
 	this.call[['verbose']]=FALSE
 	start.bw=eval.parent(this.call)
 	
