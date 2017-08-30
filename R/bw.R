@@ -155,7 +155,7 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 	bw.method='sym1', verbose=TRUE, subset, adjust='none',...)
 ## y=N-by-p data matrix; b=permutation index for the 1st trt; r=dimension index; 
 {
-	bw.method=match.arg(bw.method, choices=c('sym1','drop1','add1','keep1','mse(z[1])','pearson3','pearson3gca')) # 'dropadd1','dropaddsym1', 'ss.gradp'
+	bw.method=match.arg(bw.method, choices=c('sym1','drop1','add1','keep1','amse(z[1])','pearson3','pearson3gca')) # 'dropadd1','dropaddsym1', 'ss.gradp'
 	adjust=match.arg(adjust, choices=c('none','log scale'))
     if(!is.matrix(y) && !is.data.frame(y)) y = as.matrix(y)
 	R=NCOL(y)
@@ -192,7 +192,7 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 		box()
 		title(sub=sprintf('bandwidth = %.3g', ans))
 	})
-	if(bw.method=='mse(z[1])'){
+	if(bw.method=='amse(z[1])'){
 		lst=list(...)
 		lst$x=mrpp$all.statistics
 		#lst$mrpp=mrpp.obj
@@ -391,7 +391,7 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), bw = NULL,
 
 bw.smoothp.optim.mrpp <-
 function(y, start.bw = NULL, kernel='triweight', 
-	bw.method='mse(z[1])', scale='raw', verbose=TRUE, n.subset, mrpp.stats=NULL, r=seq_len(y$R))
+	bw.method='amse(z[1])', scale='raw', verbose=TRUE, n.subset, mrpp.stats=NULL, r=seq_len(y$R))
 ## y mrpp object; r=dimension index; 
 {
 	on.exit({ # recover original data.env
@@ -412,7 +412,7 @@ function(y, start.bw = NULL, kernel='triweight',
 		mrppt=mrpp.test(y, method='permutation'); 
 		mrpp.stats=mrppt$all.statistics
 	}	
-	bw.method=match.arg(bw.method, choices=c('sym1','drop1','add1','keep1','mse(z[1])','pearson3','pearson3gca')) # 'dropadd1','dropaddsym1','ss.gradp',
+	bw.method=match.arg(bw.method, choices=c('sym1','drop1','add1','keep1','amse(z[1])','pearson3','pearson3gca')) # 'dropadd1','dropaddsym1','ss.gradp',
 	scale=match.arg(scale, choices=c('raw','log'))
     
 	R=y$R
@@ -442,7 +442,7 @@ function(y, start.bw = NULL, kernel='triweight',
 		box()
 		title(sub=sprintf('bandwidth = %.3g', ans))
 	})
-	if(bw.method=='mse(z[1])'){
+	if(bw.method=='amse(z[1])'){
 		ans=bw.mse.pdf.asym(mrpp.stats, kernel=kernel,verbose=verbose)
 		if(ans<lower.bound){
 			ans=lower.bound
@@ -518,7 +518,7 @@ function(y, start.bw = NULL, kernel='triweight',
 	
 	# starting values
 	if(is.null(start.bw)){
-		start.bw = bw.smoothp.optim.mrpp(y, kernel=kernel, bw.method='mse(z[1])', mrpp.stats=mrpp.stats, verbose=FALSE)
+		start.bw = bw.smoothp.optim.mrpp(y, kernel=kernel, bw.method='amse(z[1])', mrpp.stats=mrpp.stats, verbose=FALSE)
 	}else start.bw=start.bw[1L]
 
 	dkern=dkernel(kernel)

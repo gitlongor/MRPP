@@ -48,7 +48,7 @@ bw.smoothp(x, permutedTrt, bw.method='sym1', verbose=interactive())
 bw.smoothp(x, permutedTrt, bw.method='dropadd1', verbose=interactive())
 bw.smoothp(x, permutedTrt, bw.method='pearson3', verbose=interactive())
 bw.smoothp(x, permutedTrt, bw.method='pearson3gca', verbose=interactive())
-bw.smoothp(x, permutedTrt, bw.method='mse(z[1])', verbose=interactive())
+bw.smoothp(x, permutedTrt, bw.method='amse(z[1])', verbose=interactive())
 # others
 bw.smoothp(x, permutedTrt, bw.method='drop1', verbose=interactive())
 bw.smoothp(x, permutedTrt, bw.method='add1', verbose=interactive())
