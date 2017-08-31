@@ -1,3 +1,7 @@
+###  Pearson Type III distribution with mean, sd, & skew != 0 
+###   is identically distributed as 
+###  sd*( sign(skew)*X - 2/skew ) + mean, where 
+###   X ~ Gamma( shape = 4/skew^2, rate = 2/|skew| )
 pearson3.env=new.env(hash=FALSE)
 pearson3.env$pearson3.common=expression({
 	n=max(length(y),length(mean),length(sd),length(skew))
@@ -22,7 +26,7 @@ dpearson3=function(x, mean, sd, skew, log=FALSE)
 	eval(pearson3.common)
 	std=(y-mean)/sd
 	ans=ifelse(skew!=0,
-		dgamma(sign(skew)*(std+twoskew), twoskew2, scale=abs(skew*.5), log=log), 
+		dgamma(sign(skew)*(std+twoskew), twoskew2, scale=abs(skew2), log=log), 
 		dnorm(std, log=log)
 	)
 	if(log) ans-log(sd) else ans/sd 
@@ -33,7 +37,7 @@ d2dpearson3=function(x, mean, sd, skew)
 	y=x
 	eval(pearson3.common)
 	std=(x-mean)/sd
-	shape=k=twoskew2; scale=theta=abs(skew*.5)
+	shape=k=twoskew2; scale=theta=abs(skew2)
 	y=sign(skew)*(std+twoskew)
 	ifelse(skew!=0,
 		dgamma(y, shape=k, scale=theta)
