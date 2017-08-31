@@ -10,8 +10,8 @@ pearson3.env$rq.common=expression({
 	ifelse(skew>0, 
 		(y-twoskew)*sd+mean,
 	ifelse(skew<0,
-		mean-(y+twoskew)*sd+mean,
-		y*sd+mean,
+		mean-(y+twoskew)*sd,
+		y*sd+mean
 	))
 })
 pearson3.env$twoskew=pearson3.env$twoskew2=pearson3.env$skew2=NULL
