@@ -25,9 +25,9 @@ export(
 	mrpp,
 	mrpp.test, mrppBVS, mrppBVS.test, 
 	
-	bw.smoothp,	bw.range, 
+	bw.kdep,	bw.range, 
 	
-	grad.smoothp, get.p.dd.dw, 
+	grad.kdep, get.p.dd.dw, 
 	
 	permuteTrt, nperms.permutedTrt, ntrt.permutedTrt, trt.permutedTrt,
 	nparts, factorial.rising,
@@ -49,6 +49,7 @@ export(
 	var, sd, skewness, kurtosis, moment, cumulant, 
 	
 	dpearson3, ppearson3, qpearson3, rpearson3, 
+	dtlnorm, ptlnorm, qtlnorm, rtlnorm, 
 	dpearson3gca, ppearson3gca, dgammagca, pgammagca
 )
 
@@ -72,7 +73,7 @@ S3method(transform, numeric)
 
 S3method(print, mrppBVS)
 S3method(p.value, mrpp.test)
-S3method(p.value, grad.smoothp)
+S3method(p.value, grad.mrppp)
 
 S3method(`[[`, dist)
 S3method(`[`, permutedTrt)

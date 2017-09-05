@@ -1,120 +1,126 @@
 ###  Pearson Type III distribution with mean, sd, & skew != 0 
 ###   is identically distributed as 
-###  sd*( sign(skew)*X - 2/skew ) + mean, where 
-###   X ~ Gamma( shape = 4/skew^2, rate = 2/|skew| )
-pearson3.env=new.env(hash=FALSE)
-pearson3.env$pearson3.common=expression({
-	n=max(length(y),length(mean),length(sd),length(skew))
-	twoskew=2/skew
-	twoskew2=twoskew*twoskew
-	skew2=.5*skew
-	skew=rep_len(skew, n)
-})
-pearson3.env$rq.common=expression({
-	ifelse(skew>0, 
-		(y-twoskew)*sd+mean,
-	ifelse(skew<0,
-		mean-(y+twoskew)*sd,
-		y*sd+mean
-	))
-})
-pearson3.env$twoskew=pearson3.env$twoskew2=pearson3.env$skew2=NULL
+###  sd*sign(skew)*( X - 2/skew ) + mean, where 
+###   X ~ Gamma( shape = 4/skew^2, scale = 2/|skew| )
+###   with E(X)=2/|skew| and Var(X)=1
+.pearson3.common=quote({
+	N=max(length(arg),length(mean),length(sd),length(skew))
+	arg=rep_len(arg,N); mean=rep_len(mean,N);sd=rep_len(sd,N);skew=rep_len(skew,N)
 
-dpearson3=function(x, mean, sd, skew, log=FALSE)
+	scale = .5*abs(skew); shape = 1/(scale * scale ); gam.mu =1/scale
+})
+.pearson3.dp=quote({
+	std=(arg-mean)/sd
+	trans=sign(skew)*std + gam.mu
+})
+.pearson3.rq=quote({
+	ifelse(skew!=0,
+		sign(skew)*sd*(arg-gam.mu)+mean, 
+		sd*arg+mean
+	)
+})
+
+dpearson3=eval(bquote(function(x, mean, sd, skew, log=FALSE)
 {
-	y=x
-	eval(pearson3.common)
-	std=(y-mean)/sd
+	arg=x
+	.(.pearson3.common)
+	.(.pearson3.dp)
 	ans=ifelse(skew!=0,
-		dgamma(sign(skew)*(std+twoskew), twoskew2, scale=abs(skew2), log=log), 
+		dgamma(trans, shape, scale=scale, log=log), 
 		dnorm(std, log=log)
 	)
 	if(log) ans-log(sd) else ans/sd 
 }
+))
 
-d2dpearson3=function(x, mean, sd, skew)
-{
-	y=x
-	eval(pearson3.common)
-	std=(x-mean)/sd
+d2dpearson3=eval(bquote(function(x, mean, sd, skew)
+{#CHECKME
+	arg=x
+	.(.pearson3.common)
+	.(.pearson3.dp)
 	shape=k=twoskew2; scale=theta=abs(skew2)
-	y=sign(skew)*(std+twoskew)
 	ifelse(skew!=0,
-		dgamma(y, shape=k, scale=theta)
-		*(theta^-2-2*(k-1)/theta/y+(k-1)*(k-2)/y^2)
+		dgamma(trans, shape=shape, scale=scale)
+		*(scale^-2-2*(shape-1)/scale/trans+(shape-1)*(shape-2)/trans^2)
 		/sd^3, 
 		dnorm(std)*(std^2-1)/sd^3
 	)
 }
+))
 
-ppearson3=function(q, mean, sd, skew, lower.tail=TRUE, log.p=FALSE)
+ppearson3=eval(bquote(function(q, mean, sd, skew, lower.tail=TRUE, log.p=FALSE)
 {
-	y=q
-	eval(pearson3.common)
-	std=(y-mean)/sd
-	ifelse(skew>0,
-		pgamma(std+twoskew, twoskew2, scale=skew2, lower.tail=lower.tail, log.p=log.p), 
-	ifelse(skew<0,
-		pgamma(-std-twoskew, twoskew2, scale=-skew2, lower.tail=!lower.tail, log.p=log.p), 
+	arg=q
+	.(.pearson3.common)
+	.(.pearson3.dp)
+	ifelse(skew!=0,
+		pgamma(trans, shape, scale=scale, lower.tail=xor(skew<0,lower.tail), log.p=log.p), 
 		pnorm(std, lower.tail=lower.tail, log.p=log.p)
-	))
+	)
+}
+))
+
+qpearson3=eval(bquote(function(p, mean, sd, skew, lower.tail=TRUE, log.p=FALSE)
+{
+	arg=p
+	.(.pearson3.common)
+	arg=qgamma(arg, shape, scale=scale, lower.tail=xor(skew<0,lower.tail), log.p=log.p)
+	.(.pearson3.rq)
+}
+))
+
+rpearson3=eval(bquote(function(n, mean, sd, skew)
+{
+	arg=rep(n,n)
+	.(.pearson3.common)
+	arg=rgamma(n, shape, scale=scale)
+	.(.pearson3.rq)
+}
+))
+
+Rdpearson3=function(sd, skew, deriv.order=0, power=1)
+{#FIXME
+	y=deriv.order; mean=power #rename for .pearson3.common to work
+	.(.pearson3.common)
+	#rm(y,mean)
+	sig=rep_len(sd, n); pow=rep_len(power,n)
+	tworp1=rep_len(2*deriv.order+1,n); tworp1d2=.5*tworp1
+	ans=rep(NaN,n)
+	idx=twoskew2>tworp1d2
+	ans[idx]=
+	exp(-pow[idx]*log(2*base::pi)+
+		pow[idx]*tworp1[idx]*(log(abs(twoskew[idx]))-log(sig[idx]))+
+		pow[idx]*lbeta(tworp1d2[idx], twoskew2[idx]-tworp1d2[idx])
+	)
+	ans
 }
 
-qpearson3=function(p, mean, sd, skew, lower.tail=TRUE, log.p=FALSE)
+dpearson3gca=eval(bquote(function(x, mean, sd, skew, exkurt, log=FALSE)
 {
-	y=p
-	eval(pearson3.common)
-	y=qgamma(p, twoskew2, scale=abs(skew2), lower.tail=lower.tail, log.p=log.p)
-	eval(rq.common)
-}
-
-rpearson3=function(n, mean, sd, skew)
-{
-	y=rep_len(n,n); n0=n
-	eval(pearson3.common)
-	y=rgamma(n0, twoskew2, scale=abs(skew2))
-	eval(rq.common)
-}
-
-environment(dpearson3)=
-environment(ppearson3)=
-environment(qpearson3)=
-environment(d2dpearson3)=
-environment(rpearson3)=pearson3.env
-
-
-dpearson3gca=function(x, mean, sd, skew, exkurt, log=FALSE)
-{
-	y=x
-	eval(pearson3.common)
-	std=(y-mean)/sd
-	stdmoms=cumulant2moment(c(abs(twoskew),1,abs(skew[1L]),exkurt[1L]))
-	ans=ifelse(skew>0,
-		dapx_gca(std+twoskew, raw.moments=stdmoms,support=c(0,Inf),basis='gamma',basepar=list(shape= twoskew2, scale=skew2), log=log), 
-	ifelse(skew<0,
-		dapx_gca(-std-twoskew, raw.moments=stdmoms, support=c(0,Inf),basis='gamma', basepar=list(shape=twoskew2, scale=-skew2), log=log), 
-		dapx_gca(std, raw.moments=stdmoms, support=c(-Inf,Inf),basis='normal', log=log)
-	))
+	arg=x
+	.(.pearson3.common)
+	.(.pearson3.dp)
+	stdmoms=cumulant2moment(c(gam.mu,1,abs(skew[1L]),exkurt[1L]))
+	ans=ifelse(skew!=0,
+		dapx_gca(trans, raw.moments=stdmoms,support=c(0,Inf),basis='gamma',basepar=list(shape= shape, scale=scale), log=log), 
+		dapx_gca(std, raw.moments=cumulant2moment(c(0,1,0,exkurt[1L])), support=c(-Inf,Inf),basis='normal', log=log)
+	)
 	if(log) ans-log(sd) else ans/sd
 }
+))
 
-
-ppearson3gca=function(q, mean, sd, skew, exkurt, lower.tail=TRUE, log.p=FALSE)
+ppearson3gca=eval(bquote(function(q, mean, sd, skew, exkurt, lower.tail=TRUE, log.p=FALSE)
 {
-	y=q
-	eval(pearson3.common)
-	std=(y-mean)/sd
-	stdmoms=cumulant2moment(c(abs(twoskew),1,abs(skew[1L]),exkurt[1L]))
-	ifelse(skew>0,
-		papx_gca(std+twoskew, raw.moments=stdmoms,support=c(0,Inf),basis='gamma',basepar=list(shape= twoskew2, scale=skew2), lower.tail=lower.tail, log.p=log.p), 
-	ifelse(skew<0,
-		papx_gca(-std-twoskew, raw.moments=stdmoms, support=c(0,Inf),basis='gamma', basepar=list(shape=twoskew2, scale=-skew2), lower.tail=!lower.tail, log.p=log.p), 
-		papx_gca(std, raw.moments=stdmoms, support=c(-Inf,Inf),basis='normal', lower.tail=lower.tail, log.p=log.p)
-	))
+	arg=q
+	.(.pearson3.common)
+	.(.pearson3.dp)
+	stdmoms=cumulant2moment(c(gam.mu,1,abs(skew[1L]),exkurt[1L]))
+	ifelse(skew!=0,
+		papx_gca(trans, raw.moments=stdmoms,support=c(0,Inf),basis='gamma',basepar=list(shape= shape, scale=scale), lower.tail=xor(skew<0,lower.tail), log.p=log.p), 
+		papx_gca(std, raw.moments=cumulant2moment(c(0,1,0,exkurt[1L])), support=c(-Inf,Inf),basis='normal', lower.tail=lower.tail, log.p=log.p)
+	)
 }
-
-environment(dpearson3gca)=
-environment(ppearson3gca)=pearson3.env
+))
 
 dgammagca=function(x, mean, sd, skew, exkurt, log=FALSE)
 {
@@ -199,7 +205,7 @@ integrate(tmp4, -Inf, Inf,ek=2)
 dpearson3gca0=function(x, mean, sd, skew, exkurt, log=FALSE)
 {## direct implementation according to Berberan-Santos, 2006, Journ Math. Chemistry, 42, 585--593
 	y=x
-	eval(pearson3.common)
+	eval(.pearson3.common)
 	std=(y-mean)/sd
 	stdmoms=cumulant2moment(c(abs(twoskew),1,abs(skew[1L]),exkurt[1L]))
 	ask=abs(skew)
