@@ -76,6 +76,7 @@ mrpp.test.mrpp = function(y, test.method='pearson3gca', eps=1e-8, ... )
 		bw=bw.matchpdf(stats, kernel, pdf=switch(pdfmethod,
 			pearson3=dpearson3(stats, cums[1L], cums[2L], cums[3L]), 
 			pearson3gca=dpearson3gca(stats, cums[1L], cums[2L], cums[3L], cums[4L]), 
+			p3tlnormmix=dMixP3Tln(stats, cums[1L], cums[2L], cums[3L], cums[4L],proper=FALSE), 
 			tlnorm=dtlnorm(stats, cums[1L], cums[2L], cums[3L], cums[4L]),
 			gammagca=dgammagca(stats, cums[1L], cums[2L], cums[3L], cums[4L])
 			)
