@@ -580,7 +580,7 @@ dkde=function(x, bw=bw.nrd, kernel=.kernels, from, to, neval, eps=1e-3)
 	if(missing(from) || from>=rg.x[1L]) 
 		from=rg.x[1L]-supp.kern*median(bw)
 	if(missing(to) || to<=rg.x[2L]) 
-		to=rg.x[2L]-supp.kern*median(bw)
+		to=rg.x[2L]+supp.kern*median(bw)
 	from0=from; 
 	x=x-from; to=to-from; from=0
 	M=nextn(neval, 2L)
