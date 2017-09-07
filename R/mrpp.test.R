@@ -145,7 +145,7 @@ function(y, ...) {
 		,assign.env=ans[['data.name']])
     ans
 }))
-attr(mrpp.test.default, 'srcref')=NULL
+
 
 mrpp.test.formula <-
 function(y, ...) 
@@ -198,7 +198,7 @@ mrpp.test.dist <- eval(bquote(function(y, ...)
 		}, assign.env=ans[['data.name']])
 	ans
 }))
-attr(mrpp.test.dist, 'srcref')=NULL
+
 
 mrpp.test <-
 function(y,...) UseMethod("mrpp.test")
