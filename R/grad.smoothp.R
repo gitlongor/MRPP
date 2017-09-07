@@ -1,16 +1,16 @@
-grad.smoothp.mrpp <-
+grad.kdep.mrpp <-
 function(y,  bw, kernel='triweight', adjust=NULL, mrpp.stats=NULL, r=seq_len(y$R), test=FALSE)
 ## y=N-by-p data matrix; b=permutation index for the 1st trt; r=dimension index; 
 {
 	on.exit({ # recover original data.env
-			if(!is.null(y$data.env$y.bakGradp)){
-				y$data.env$y=y$data.env$y.bakGradp
-				rm(y.bakGradp, envir=y$data.env)
+			if(!is.null(y$data.env$y.bakGradKdeP)){
+				y$data.env$y=y$data.env$y.bakGradKdeP
+				rm(y.bakGradKdeP, envir=y$data.env)
 			}
 	})
 	if(missing(bw)) bw='sym1'
 	if(length(r)!=y$R){
-		y[['data.env']]$y.bakGradp=y$y
+		y[['data.env']]$y.bakGradKdeP=y$y
 		y[['data.env']]$y=y[['data.env']]$y[,r,drop=FALSE]
 		y$R=length(r)
 		y$distObj=y$distFunc(y$y)
@@ -24,14 +24,14 @@ function(y,  bw, kernel='triweight', adjust=NULL, mrpp.stats=NULL, r=seq_len(y$R
 		if('kernel'%in%names(this.call)) this.call[['kernel']]=NULL
 		if('r'%in%names(this.call)) this.call[['r']]=NULL
 		this.call[[1L]]=NULL
-		return(do.call(grad.smoothp.Inf.mrpp, this.call, envir=parent.frame()))
+		return(do.call(grad.kdep.Inf.mrpp, this.call, envir=parent.frame()))
 	}
 	if(!isTRUE(test)){
 		this.call=as.list(match.call())
 		if('test'%in%names(this.call))this.call[['test']]=NULL
 		if('r'%in%names(this.call))this.call[['r']]=NULL
 		this.call[[1L]]=NULL
-		return(do.call(grad.smoothp.notest.mrpp, this.call,envir=parent.frame()))
+		return(do.call(grad.kdep.notest.mrpp, this.call,envir=parent.frame()))
 	}
 
 	if(is.null(mrpp.stats)) {
@@ -50,7 +50,7 @@ function(y,  bw, kernel='triweight', adjust=NULL, mrpp.stats=NULL, r=seq_len(y$R
 	adjust=match.arg(adjust, c('none','weighted.mean','scale', 'log scale', 'logit scale'))
 
 	if(is.character(bw))
-		bw=bw.smoothp(y,kernel=kernel, bw.method=bw, verbose=FALSE, 
+		bw=bw.kdep(y,kernel=kernel, bw.method=bw, verbose=FALSE, 
 			scale=switch(adjust, none=,weighted.mean=,scale='raw',`log scale`='log',`logit scale`='logit'),
 			mrpp.stats=mrpp.stats
 		)
@@ -96,12 +96,12 @@ function(y,  bw, kernel='triweight', adjust=NULL, mrpp.stats=NULL, r=seq_len(y$R
 		ans=exp(ans/pval0) 
 	}else if(adjust0=='logit scale') ans=exp(ans/pval0/(1-pval0))
 	#eval(recover.data.env)
-    structure(drop(ans), parameters=pars, midp=pval0, class='grad.smoothp')
+    structure(drop(ans), parameters=pars, midp=pval0, class=c('grad.kdep','grad.mrpp'))
 }
 
 
 ## Liuhua's very fast version with bw=Inf, because no permutations are needed: 
-grad.smoothp.Inf.mrpp <-
+grad.kdep.Inf.mrpp <-
 function(y, test=FALSE, mrpp.stats=NULL)
 ## y=N-by-p data matrix; b=permutation index for the 1st trt; r=dimension index; 
 {	bw=Inf; adjust='weighted.mean'; kernel=NULL
@@ -126,12 +126,12 @@ function(y, test=FALSE, mrpp.stats=NULL)
 		ans[, r.i]=.Call(mrppstats_subset, all.ddelta.dw[,r.i], y$permutedTrt, weight.trt, b, PACKAGE='MRPP') - mean(all.ddelta.dw[,r.i])
 	}
 	
-    structure(drop(ans), parameters=pars, midp=pval0, class='grad.smoothp')
+    structure(drop(ans), parameters=pars, midp=pval0, class=c('grad.kdep','grad.mrpp'))
 }
 
 
 
-grad.smoothp.notest.mrpp <-
+grad.kdep.notest.mrpp <-
 function(y, bw, mrpp.stats=NULL, kernel='triweight', adjust=NULL)
 ## y=N-by-p data matrix; b=permutation index for the 1st trt; r=dimension index; 
 {	if(missing(bw)) bw='sym1'
@@ -150,7 +150,7 @@ function(y, bw, mrpp.stats=NULL, kernel='triweight', adjust=NULL)
 	adjust=match.arg(adjust, c('none','weighted.mean','scale', 'log scale', 'logit scale'))
 
 	if(is.character(bw)) # this slow when B is large
-		bw=bw.smoothp(y, kernel=kernel,  bw.method=bw, verbose=FALSE, 
+		bw=bw.kdep(y, kernel=kernel,  bw.method=bw, verbose=FALSE, 
 			scale=switch(adjust, none=,weighted.mean=,scale='raw',`log scale`='log',`logit scale`='logit'),
 			mrpp.stats=mrpp.stats
 		)
@@ -182,7 +182,7 @@ function(y, bw, mrpp.stats=NULL, kernel='triweight', adjust=NULL)
 	if(adjust0=='log scale') {
 		ans=exp(ans/pval0)
 	}else if(adjust0=='logit scale') ans=exp(ans/pval0/(1-pval0))
-    structure(drop(ans), parameters=pars, midp=pval0, class='grad.smoothp')
+    structure(drop(ans), parameters=pars, midp=pval0, class=c('grad.kdep','grad.mrpp'))
 }
 
-grad.smoothp = grad.smoothp.mrpp
+grad.kdep = grad.kdep.mrpp
