@@ -78,22 +78,23 @@ rpearson3=eval(bquote(function(n, mean, sd, skew)
 }
 ))
 
-Rdpearson3=function(sd, skew, deriv.order=0, power=1)
-{#FIXME
-	y=deriv.order; mean=power #rename for .pearson3.common to work
+Rdpearson3=eval(bquote(function(sd, skew, deriv.order=0, power=1)
+{#Find [ R(f^(deriv.order) ]^power
+ # where f is the pdf of pearson3 distribution with sd and skew
+	arg=deriv.order; mean=power #rename for .pearson3.common to work
 	.(.pearson3.common)
-	#rm(y,mean)
-	sig=rep_len(sd, n); pow=rep_len(power,n)
-	tworp1=rep_len(2*deriv.order+1,n); tworp1d2=.5*tworp1
-	ans=rep(NaN,n)
-	idx=twoskew2>tworp1d2
+	pow=mean
+	tworp1=2*arg+1; tworp1d2=.5*tworp1
+	ans=rep(Inf,N)
+	idx=shape>tworp1d2
 	ans[idx]=
 	exp(-pow[idx]*log(2*base::pi)+
-		pow[idx]*tworp1[idx]*(log(abs(twoskew[idx]))-log(sig[idx]))+
-		pow[idx]*lbeta(tworp1d2[idx], twoskew2[idx]-tworp1d2[idx])
+		pow[idx]*tworp1[idx]*(log(abs(gam.mu[idx]))-log(sd[idx]))+
+		pow[idx]*lbeta(tworp1d2[idx], shape[idx]-tworp1d2[idx])
 	)
 	ans
 }
+))
 
 ExKurtPearson3=eval(bquote(function(skew)
 {
