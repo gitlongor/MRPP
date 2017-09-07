@@ -42,7 +42,7 @@ export(
 	
 	.kernels, .smooth0.kernels, .smooth1.kernels, .smooth2.kernels, 
 	pkernel, dkernel,d2dkernel,ddkernel, skernel,mkernel, ckernel, pkde, dkde, fourier.kernel,
-	krRkernel,
+	Rkernel,
 	
 	p.value, 
 	

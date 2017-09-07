@@ -14,7 +14,7 @@
 \alias{.smooth0.kernels}
 \alias{.smooth1.kernels}
 \alias{.smooth2.kernels}
-\alias{krRkernel}
+\alias{Rkernel}
 %- Also NEED an "\alias" for EACH other topic documented here.
 \title{
 Support Functions For Univariate Kernel Densities
@@ -27,7 +27,7 @@ Support Functions For Univariate Kernel Densities
 
 \code{pkde} and \code{dkde} return the \emph{fitted} cumulative distribution function and probability density function. 
 
-\code{krRkernel} computes characteristic exponent and characteristic coefficients of a kernel distribution. 
+\code{Rkernel} computes roughness of (derivatives) of kernel function. 
 
 \code{.kernels} is a vector containing the names of the kernel functions currently supported. 
 \code{.smooth0.kernels} is a vector containing the names of the supported kernel functions that are continuous over the real line. 
@@ -46,9 +46,8 @@ skernel(kernel=.kernels, eps=1e-3)
 mkernel(kernel=.kernels, order=1:4, R=TRUE)
 
 pkde(x, bw=bw.nrd, kernel=.kernels)
-dkde(x, bw=bw.nrd, kernel=.kernels,	from=min(x)-3*median(bw), to=max(x)+3*median(bw))
-
-krRkernel(kernel=.kernels)
+dkde(x, bw=bw.nrd, kernel=.kernels,	from, to, neval, eps=1e-3)
+Rkernel(kernel=.kernels)
 }
 %- maybe also "usage" for other objects documented here.
 \arguments{
@@ -68,7 +67,9 @@ krRkernel(kernel=.kernels)
 }
   \item{bw}{A positive vector indicating the bandwidth to be used in kernel density estimation. Alternatively, this can be a function that computes the bandwidth, or the character name of such a function. 
 }
-  \item{from,to}{Numeric scalars, the left and right boundaries within which the estimated density is to be evaluated, as in \code{\link{density}}.
+  \item{from,to}{Numeric scalars, the left and right boundaries within which the estimated density is to be evaluated, as in \code{\link{density}}. When missing, they are determined by extending the minimum and maximum of \code{x} by \code{s*bw}, where \code{s} is the effective support boundary reported by \code{skernel(kernel, eps)[2L]}.
+}
+  \item{neval}{An positive integer, the number of evaluation points, as in \code{\link{density}}. When missing, this is chosen as the minimum of 1024 and \code{nextn(2*lenght(x),2L)}.
 }
 }
 \format{
@@ -106,8 +107,9 @@ For \code{skernel}, the result is a numeric vector of length 2, being the lower 
 
 For \code{ckernel} and \code{fourier.kernel}, when the \code{const} is set to non-\code{NULL}, an additional attribute \code{const} will be set to a numeric vector requested. 
 
-\code{krRkernel} returns a named numeric vector with names being \code{"kr"} (characteristic coefficient, which is half of the 2nd order moment when \code{r=2}), \code{"r"} (characteristic exponent, which is 2 for all currently supported kernels), and \code{"R"} (which is the integral of squared kernel density). 
+\code{Rkernel} returns a named numeric vector of the same length as \code{deriv.order}, with names being \code{as.character(deriv.order)}. This is the integral of the square of the \code{deriv.order}th derivative of the density of the kernel.
 }
+
 \references{
 \url{https://en.wikipedia.org/wiki/Kernel_(statistics)}
 

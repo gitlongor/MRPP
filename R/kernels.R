@@ -425,8 +425,9 @@ ckernel=fourier.kernel=eval(substitute(function(kernel= .kernels, root.2pi=FALSE
 	},
 	triweight = function(s){
 		cs=cos(s); ss=sin(s);
-		s2=s*s; s4=s2*s2; s6=s4*s2; 
-		ans=(105*(s2*s*cs + 15*(ss -s*cs) - 6*s2*ss))/(s6*s) *iroot.2pi.this
+		s2=s*s; #s4=s2*s2; s6=s4*s2; 
+		ans=105 * (s*(s2-15)*cs + (15-6*s2) *ss)  /(s2*s2*s2*s) *iroot.2pi.this
+		#ans=(105*(s2*s*cs + 15*(ss -s*cs) - 6*s2*ss))/(s6*s) *iroot.2pi.this
 		idx=which(abs(s)<1e-1) ## close to 0/0 region
 		ans[idx]=(1 + s2[idx]*( s2[idx]*(one792 - s2[idx]*one61776) -one18))* iroot.2pi.this
 		ans
@@ -477,7 +478,7 @@ cdkernel=fourier.dkernel=function(kernel= .kernels, root.2pi=FALSE, const=NULL)
 	function(s) (0-1i)*s*ans(s)
 }
 
-mkernel=eval(substitute(function(kernel=.kernels, order=1:4, R=TRUE)
+mkernel=eval(substitute(function(kernel=.kernels, order=1:4)
 {
 	kernel=match.arg(kernel)
 	if(any(order>4L)) order=order[order<=4]
@@ -494,14 +495,33 @@ mkernel=eval(substitute(function(kernel=.kernels, order=1:4, R=TRUE)
 		sech=c(0, pipid4, 0, pi4.5d16)
 	)
 	ans=ans[order]; names(ans)=as.character(order)
-	if(isTRUE(R) || length(order)==0L){
-		ans=c(ans, krRkernel(kernel)['R'])
-	}
 	ans
 } # of function
 ,constEnv) # of substitute
 ) # of eval
 attr(mkernel,'srcref')=NULL
+
+Rkernel=eval(substitute(function(kernel=.kernels, deriv.order=0:2)
+{
+	if(any(deriv.order>2L)) deriv.order=deriv.order[deriv.order<=2]
+	ans=switch(kernel,
+		gaussian=,normal=c(halfIrootPi,fourthIrootPi,three8thIrootPi),
+		cosine=c(pipid16, pi4d64, pi6d256),		
+		uniform=,rectangular=c(.5,0,0),
+		triangular=c(twoThirds, 2, 0),
+		epanechnikov=,parabolic=c(0.6,1.5,4.5),
+		biweight=, quartic=c(five7,one5d7,2.5),
+		triweight=c(three50d429,three5d11,35),
+		tricube=c(one75d247,four20d187,sev840d243),
+		logistic=c(oneSixth, oneThirtieth, oned42),
+		sech=c(twodpipi, twoThirdsdpipi, one4d15dpipi)
+	)
+	names(ans)=as.character(0:2)
+	ans[as.character(deriv.order)]
+}
+,constEnv)
+)
+attr(Rkernel, 'srcref')=NULL
 
 
 pkde=function(x, bw=bw.nrd, kernel=.kernels)
@@ -548,14 +568,22 @@ dkde=function(x, bw=bw.nrd, kernel=.kernels)
 }
 }
 
-dkde=function(x, bw=bw.nrd, kernel=.kernels, from=min(x)-3*median(bw), to=max(x)+3*median(bw))
+dkde=function(x, bw=bw.nrd, kernel=.kernels, from, to, neval, eps=1e-3)
 {# implementation based on FFT in Silverman 1984
     if(is.character(bw)) bw=get(bw, mode='function')
     if(is.function(bw))  bw=bw(x)
 	n=length(x)
-	from0=from; force(to)
+	## the following two lines were added to avoid any element of cuts being 0
+	if(missing(neval)) neval=min(1024L, nextn(length(x)*2L,2L)) 
+	supp.kern=skernel(kernel, eps)[2L]
+	rg.x=range(x)
+	if(missing(from) || from>=rg.x[1L]) 
+		from=rg.x[1L]-supp.kern*median(bw)
+	if(missing(to) || to<=rg.x[2L]) 
+		to=rg.x[2L]-supp.kern*median(bw)
+	from0=from; 
 	x=x-from; to=to-from; from=0
-	M=nextn(n*2L, 2L)
+	M=nextn(neval, 2L)
 	delta=(to-from)/M
 	tk=seq.int(from=from, to=to, length.out=M+1L)
 	#cuts=as.integer(cut(x, tk))
@@ -596,7 +624,7 @@ dkde=function(x, bw=bw.nrd, kernel=.kernels, from=min(x)-3*median(bw), to=max(x)
 
 
 ddkde=function(x, bw=bw.nrd, kernel=.kernels, from=min(x)-3*median(bw), to=max(x)+3*median(bw))
-{# implementation based on FFT in Silverman 1984
+{# implementation based on FFT in Silverman 1986 book
     if(is.character(bw)) bw=get(bw, mode='function')
     if(is.function(bw))  bw=bw(x)
 	n=length(x)
