@@ -40,7 +40,7 @@ function(y, permutedTrt, bw, r=seq_len(NCOL(y)), test=FALSE, distFunc=dist,
     structure(drop(ans), parameters=pars, midp=p.empirical(mrpp.stats), class='.importance')
 }
 
-grad.smoothp <-
+grad.kdep <-
 function(y, permutedTrt, bw, r=seq_len(NCOL(y)), test=FALSE, 
         distObj=dist(y), mrpp.stats=NULL, 
         kernel='triweight', weight.trt="df", adjust=NULL)
@@ -49,12 +49,12 @@ function(y, permutedTrt, bw, r=seq_len(NCOL(y)), test=FALSE,
 	if(missing(bw)) bw='sym1'
 	if(is.numeric(bw)&&is.infinite(bw)&&bw>0){
 		this.call=match.call()
-		this.call[[1L]]=as.symbol('grad.smoothp.Inf')
+		this.call[[1L]]=as.symbol('grad.kdep.Inf')
 		return(eval.parent(this.call))
 	}
 	if(!isTRUE(test)){
 		this.call=match.call()
-		this.call[[1L]]=as.symbol('grad.smoothp.notest')
+		this.call[[1L]]=as.symbol('grad.kdep.notest')
 		return(eval.parent(this.call))
 	}
     ## min.wts=1e-8  ### this was handled by bw.safety()
@@ -69,7 +69,7 @@ function(y, permutedTrt, bw, r=seq_len(NCOL(y)), test=FALSE,
     #if(missing(cperm.mat)) cperm.mat=apply(permutedTrt,2,function(kk)(1:N)[-kk])
 
 	if(is.character(bw))
-		bw=bw.smoothp(y,permutedTrt=permutedTrt,r=r, kernel=kernel, weight.trt=weight.trt, method=bw, verbose=FALSE)
+		bw=bw.kdep(y,permutedTrt=permutedTrt,r=r, kernel=kernel, weight.trt=weight.trt, method=bw, verbose=FALSE)
 
 	if(is.null(adjust[1L])) adjust='none'
 	if(is.numeric(bw) && is.infinite(bw)) adjust='weighted.mean'
@@ -113,10 +113,10 @@ function(y, permutedTrt, bw, r=seq_len(NCOL(y)), test=FALSE,
 	}
 #print(times)
 	if(adjust0=='log scale') ans=exp(ans/pval0)
-    structure(drop(ans), parameters=pars, midp=pval0, class='grad.smoothp')
+    structure(drop(ans), parameters=pars, midp=pval0, class='grad.kdep')
 }
 
-grad.smoothp.notest <-
+grad.kdep.notest <-
 function(y, permutedTrt, bw, r=seq_len(NCOL(y)), test=FALSE, 
         distObj=dist(y), mrpp.stats=NULL, 
         kernel='triweight', weight.trt="df", adjust=NULL)
@@ -132,7 +132,7 @@ function(y, permutedTrt, bw, r=seq_len(NCOL(y)), test=FALSE,
     N=as.integer(nrow(y))
 
 	if(is.character(bw)) # this slow when B is large
-		bw=bw.smoothp(y,permutedTrt=permutedTrt,r=r, kernel=kernel, weight.trt=weight.trt, method=bw, verbose=FALSE)
+		bw=bw.kdep(y,permutedTrt=permutedTrt,r=r, kernel=kernel, weight.trt=weight.trt, method=bw, verbose=FALSE)
 
 	if(is.null(adjust[1L])) adjust='none'
 	if(is.numeric(bw) && is.infinite(bw)) adjust='weighted.mean'
@@ -165,11 +165,11 @@ function(y, permutedTrt, bw, r=seq_len(NCOL(y)), test=FALSE,
 	}
 #print(times)
 	if(adjust0=='log scale') ans=exp(ans/pval0)
-    structure(drop(ans), parameters=pars, midp=pval0, class='grad.smoothp')
+    structure(drop(ans), parameters=pars, midp=pval0, class='grad.kdep')
 }
 
 ## Liuhua's very fast version with bw=Inf, because no permutations are needed: 
-grad.smoothp.Inf <-
+grad.kdep.Inf <-
 function(y, permutedTrt, bw, r=seq_len(NCOL(y)), test=FALSE, 
         distObj=dist(y), mrpp.stats=NULL, 
         kernel='triweight', weight.trt="df", adjust=NULL)
@@ -196,10 +196,10 @@ function(y, permutedTrt, bw, r=seq_len(NCOL(y)), test=FALSE,
 		ans[, r.i]=.Call(mrppstats, all.ddelta.dw[,r.i], permutedTrt1, weight.trt, PACKAGE='MRPP') - mean(all.ddelta.dw[,r.i])
 	}
 	
-    structure(drop(ans), parameters=pars, midp=pval0, class='grad.smoothp')
+    structure(drop(ans), parameters=pars, midp=pval0, class='grad.kdep')
 }
 
-grad.smoothp.mrpp <-
+grad.kdep.mrpp <-
 function(y,  bw, r=seq_len(y$R), test=FALSE, 
          mrpp.stats=NULL, 
         kernel='triweight', adjust=NULL)
@@ -216,7 +216,7 @@ function(y,  bw, r=seq_len(y$R), test=FALSE,
 
 	if(missing(bw)) bw='sym1'
 	if(is.character(bw))
-		bw=bw.smoothp(y,permutedTrt=permutedTrt,r=r, kernel=kernel, weight.trt=weight.trt, method=bw, verbose=FALSE)
+		bw=bw.kdep(y,permutedTrt=permutedTrt,r=r, kernel=kernel, weight.trt=weight.trt, method=bw, verbose=FALSE)
 
 	if(is.null(adjust[1L])) adjust='none'
 	if(is.numeric(bw) && is.infinite(bw)) adjust='weighted.mean'
@@ -256,11 +256,11 @@ function(y,  bw, r=seq_len(y$R), test=FALSE,
 	}
 print(times)
 	if(adjust0=='log scale') ans=exp(ans/pval0)
-    structure(drop(ans), parameters=pars, midp=pval0, class='grad.smoothp')
+    structure(drop(ans), parameters=pars, midp=pval0, class='grad.kdep')
 }
 
-grad.smoothp.bw <-
-expression( ## simplified from grad.smoothp; allowing a vector of bw's; only used in bw.smoothp
+grad.kdep.bw <-
+expression( ## simplified from grad.kdep; allowing a vector of bw's; only used in bw.kdep
 {
     B=length(mrpp.stats)
 	n.bw=length(bw)
@@ -284,7 +284,7 @@ hessian.smoothp <-
 function(y, permutedTrt, r=seq_len(NCOL(y)), test=FALSE, 
         distObj=dist(y), 
         mrpp.stats=mrpp.test.dist(distObj,permutedTrt=permutedTrt,weight.trt=weight.trt)$all.statistics,
-        kernel='triweight', bw=bw.mse.pdf.asym(mrpp.stats), #cperm.mat, 
+        kernel='triweight', bw=bw.amse.pdf(mrpp.stats), #cperm.mat, 
         weight.trt="df", scale=1, standardized=FALSE)
 ## y=N-by-p data matrix; r=dimension index; 
 {
@@ -340,7 +340,7 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), test=FALSE,
 }
 }
 
-p.value.grad.smoothp = function(x, type=c('keep1','drop1','add1'),...)
+p.value.grad.mrppp = function(x, type=c('keep1','drop1','add1'),...)
 {
 	adj=attr(x, 'parameters')$adjust
 	
