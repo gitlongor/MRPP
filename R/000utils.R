@@ -1,4 +1,4 @@
-constEnv=new.env(hash=TRUE, size=75L)
+constEnv=new.env(hash=TRUE, size=87L)
 pkgEnv=parent.env(constEnv)
 constEnv$onei=0+1i
 constEnv$nonei=0-1i
@@ -32,14 +32,26 @@ constEnv$one6=1/6; constEnv$seven360=7/360; constEnv$three1d15120=31/15120
 constEnv$two80d9=280/9
 # for krRkernel
 constEnv$halfIrootPi=.5/sqrt(base::pi)
+constEnv$fourthIrootPi=.25/sqrt(base::pi)
+constEnv$three8thIrootPi=.375/sqrt(base::pi)
 constEnv$halfm4dpipi=.5-4/base::pi^2
 constEnv$five7=5/7
+constEnv$one5d7=15/7
 constEnv$three50d429=350/429
+constEnv$three5d11=35/11
 constEnv$one75d247=175/247
+constEnv$four20d187=420/187
+constEnv$sev840d243=7840/243
+constEnv$oneThirtieth=1/30
+constEnv$oned42=1/42
 constEnv$pipid6=base::pi^2/6
 constEnv$pipid8=base::pi^2/8
 constEnv$pipid16=base::pi^2/16
+constEnv$pi4d64=base::pi^4/64
+constEnv$pi6d256=base::pi^6/265
 constEnv$twodpipi=2/base::pi^2
+constEnv$twoThirdsdpipi=1.5/base::pi^2
+constEnv$one4d15dpipi=14/15/base::pi^2
 # for d2dkernel
 constEnv$one5d4=15/4
 constEnv$none05d16=-105/16
@@ -174,14 +186,13 @@ vech=function(x){
 .smooth0.kernels=c(.smooth1.kernels, 'epanechnikov','parabolic','triangular','cosine')
 .kernels=c(.smooth0.kernels, 'uniform', 'rectangular')
 
-sinc =eval(substitute(function(x){
+sinc =eval(bquote(function(x){
 	s2=x*x; 
 	ans=sin(x)/x 
 	idx=which(abs(x)<1e-2) ## close to 0/0 region: taylor series
-	ans[idx]=(1 - s2[idx]*oneSixth + s2[idx]*s2[idx]*one120)
+	ans[idx]=(1 - s2[idx]*.(oneSixth) + s2[idx]*s2[idx]*.(one120))
 	ans		
 },
 constEnv))
-attr(sinc, 'srcref')=NULL
 
 ilogit=make.link('logit')$linkinv
