@@ -77,7 +77,18 @@ ExKurtTlnorm=eval(bquote(function(skew)
 }
 ))
 
-
+## Note: Suppose conditioning on Z~Bernoulli(p), 
+## and X|Z=1 ~F_1 and X|Z=0 ~ F_0.  Let k_n denote the nth cumulant. 
+## If E(F_1) = E(F_0), then 
+##     E(X)=p E(F_1) + (1-p) E(F_0), 
+##     V(X)=p V(F_1) + (1-p) V(F_0), 
+##     k_3(X) = p k_3(F_1) + (1-p) k_3(F_0), 
+##     k_4(X) = p k_4(F_1) + (1-p) k_4(F_0) + 3p(1-p) ( V(F_1) - V(F_2) )^2 .
+## If further V(F_1) = V(F_0), then further
+##     k_4(X) = p k_4(F_1) + (1-p) k_4(F_0), 
+##     skew(X) = p skew(F_1) + (1-p) skew(F_0),
+##     kurt(X) = p kurt(F_1) + (1-p) kurt(F_0),
+##     exKurt(X) = p exKurt(F_1) + (1-p) exKurt(F_0).
 dMixP3Tln=eval(bquote(function(x, mean, sd, skew, exkurt, log=FALSE, proper=FALSE)
 {
 	ek.tln=ExKurtTlnorm(skew)
