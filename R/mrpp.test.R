@@ -17,8 +17,8 @@ mrpp.weight.trt=function(weight.trt, trt)
 	names(weight.trt)=names(tabtrt)
 	list(wtmethod=wtmethod, weight.trt=weight.trt)
 }
-.pdfmethods=c('pearson3','pearson3gca','tlnorm','gammagca','permutation')
-.pdfnmoment=structure(c(3L, 4L, 3L, 4L, 0L), names=.pdfmethods)
+.pdfmethods=c('p3tlnormmix','pearson3','pearson3gca','tlnorm','gammagca','permutation')
+.pdfnmoment=structure(c(4L, 3L, 4L, 3L, 4L, 0L), names=.pdfmethods)
 mrpp.test.mrpp = function(y, test.method='pearson3gca', eps=1e-8, ... )
 {
 	if(!missing(...)).NotYetUsed(..., error=FALSE)
@@ -46,7 +46,7 @@ mrpp.test.mrpp = function(y, test.method='pearson3gca', eps=1e-8, ... )
 		cums[-2:-1]=cums[-2:-1]/cums[2L]^(2+seq_len(nmoms-2L))
 		# cums =c(mean, sd, skew, exkurt)
 	}
-	if(pdfmethod%in%c('pearson3','pearson3gca','tlnorm','gammagca') && is.null(kernel)) {# no permutation
+	if(pdfmethod%in%c('pearson3','pearson3gca','tlnorm','p3tlnormmix','gammagca') && is.null(kernel)) {# no permutation
 		tmpPermutedTrt=permuteTrt1(y$trt) # avoids evaluation fo permutedTrt
 		stats=.Call(mrppstats,y$distObj,tmpPermutedTrt, as.numeric(y$weight.trt), PACKAGE='MRPP')
 		B=1L
@@ -59,6 +59,7 @@ mrpp.test.mrpp = function(y, test.method='pearson3gca', eps=1e-8, ... )
 		pearson3=ppearson3(stats[1L], cums[1L], cums[2L], cums[3L]), 
 		pearson3gca=ppearson3gca(stats[1L], cums[1L], cums[2L], cums[3L], cums[4L]),
 		tlnorm=ptlnorm(stats[1L], cums[1L], cums[2L], cums[3L]), 
+		p3tlnormmix=pMixP3Tln(stats[1L], cums[1L], cums[2L], cums[3L], cums[4L],proper=FALSE), 
 		gammagca=pgammagca(stats[1L], cums[1L], cums[2L], cums[3L], cums[4L]), 
 		permutation=,
 		permutation.midp=mean(stats[1L]-stats>=-eps),
@@ -84,7 +85,7 @@ mrpp.test.mrpp = function(y, test.method='pearson3gca', eps=1e-8, ... )
 	pval.method.string=gsub(" +", " ", paste0(collapse=" ", c(
 		sprintf("%d-sample MRPP test with", y$ntrt),
 		switch(pdfmethod, 
-			pearson3=, pearson3gca=, tlnorm=, gammagca=local({c(
+			pearson3=, pearson3gca=, tlnorm=, p3tlnormmix=, gammagca=local({c(
 			'approximate p-value method', 
 			dQuote(if(is.null(kernel)) pdfmethod else paste0(c(pdfmethod, kernel), collapse="."))
 			)}),

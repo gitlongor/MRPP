@@ -95,6 +95,14 @@ Rdpearson3=function(sd, skew, deriv.order=0, power=1)
 	ans
 }
 
+ExKurtPearson3=eval(bquote(function(skew)
+{
+	arg=mean=sd=skew
+	.(.pearson3.common)
+	6/shape
+}
+))
+
 dpearson3gca=eval(bquote(function(x, mean, sd, skew, exkurt, log=FALSE)
 {
 	arg=x

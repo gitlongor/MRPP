@@ -68,3 +68,40 @@ rtlnorm=eval(bquote(function(n, mean, sd, skew)
 	.(.tlnorm.rq)
 }
 ))
+
+ExKurtTlnorm=eval(bquote(function(skew)
+{
+	arg=mean=sd=skew
+	.(.tlnorm.common)
+	as.function(polynomial(c(-6,0,3,2,1)))(expsig2)
+}
+))
+
+
+dMixP3Tln=eval(bquote(function(x, mean, sd, skew, exkurt, log=FALSE, proper=FALSE)
+{
+	ek.tln=ExKurtTlnorm(skew)
+	ek.p3=ExKurtPearson3(skew)
+	prop.p3=(exkurt-ek.tln)/(ek.p3-ek.tln)
+	if(!proper || (0<prop.p3 && prop.p3<1)) {
+		ans=dpearson3(x,mean,sd,skew)*prop.p3+dtlnorm(x,mean,sd,skew)*(1-prop.p3)
+		if(isTRUE(log))log(ans) else ans 
+	}else if(prop.p3<=0){
+		dtlnorm(x,mean,sd,skew,log)
+	}else dpearson3(x,mean,sd,skew,log)
+}
+))
+
+pMixP3Tln=eval(bquote(function(q, mean, sd, skew, exkurt, lower.tail=TRUE, log.p=FALSE, proper=TRUE)
+{
+	ek.tln=ExKurtTlnorm(skew)
+	ek.p3=ExKurtPearson3(skew)
+	prop.p3=(exkurt-ek.tln)/(ek.p3-ek.tln)
+	if(!proper || (0<prop.p3 && prop.p3<1)) {
+		ans=ppearson3(q,mean,sd,skew,lower.tail)*prop.p3+ptlnorm(q,mean,sd,skew,lower.tail)*(1-prop.p3)
+		if(isTRUE(log.p))log(ans) else ans 
+	}else if(prop.p3<=0){
+		ptlnorm(q,mean,sd,skew,lower.tail,log.p)
+	}else ppearson3(q,mean,sd,skew,lower.tail,log.p)
+}
+))
