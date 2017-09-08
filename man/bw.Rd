@@ -1,23 +1,23 @@
 \name{bandwidth}
 \Rdversion{1.1}
-%\alias{bw.mse.pdf.asym}
-\alias{bw.smoothp}
+%\alias{bw.amse.pdf}
+\alias{bw.kdep}
 \alias{bw.range}
 %- Also NEED an "\alias" for EACH other topic documented here.
 \title{
 Bandwidth Selection for Kernel Approximation to Discrete Cumulative Distribution Functions
 }
 \description{
-\code{bw.smoothp} chooses bandwidth based on the derivative of smoothed permutation p-values. 
+\code{bw.kdep} chooses bandwidth based on the derivative of smoothed permutation p-values. 
 
 \code{bw.range} returns a vector of candidate bandwidths that cover a large range of reasonable values. 
 }
 \usage{
-%bw.mse.pdf.asym(x,iter.max=1L,eps=1e-6,start.bw=bw.nrd, verbose=FALSE)
-bw.smoothp(y, start.bw = NULL, kernel='triweight', 
-	bw.method='amse(z[1])', scale='raw', verbose=TRUE, n.subset, 
+%bw.amse.pdf(x,iter.max=1L,eps=1e-6,start.bw=bw.nrd, verbose=FALSE)
+bw.kdep(y, start.bw = NULL, kernel='triweight', 
+	bw.method='amse(z[1]).pearson3', scale='raw', verbose=TRUE, n.subset, 
 	mrpp.stats=NULL, r=seq_len(y$R))
-bw.range(x, length=50L, lower=.05, upper=.95, safety=2)
+bw.range(x, kernel, length=15L, var.infl=0.1)
 }
 %- maybe also "usage" for other objects documented here.
 \arguments{
@@ -49,11 +49,12 @@ bw.range(x, length=50L, lower=.05, upper=.95, safety=2)
 }
   \item{length}{A positive integer, specifying the number of candidate bandwidths to be searched from. 
 }
-  \item{lower, upper}{Numeric values between 0 and 1, indicate the quantiles. See details. 
+%  \item{lower, upper}{Numeric values between 0 and 1, indicate the quantiles. See details. 
+%}
+%  \item{safety}{A positive number, indicating the safety zone to be expanded. See details. 
+%}
+  \item{var.infl}{A positive numeric value. The variance of the estimated distribution using the kernel method is always larger than the sample variance by a quantity proportional to squared bandwidth. \code{var.infl} specifies the maximal percentage of such inflation of variance. By providing an upper bound of such inflation of variance, a corresponding upper bound of sensible bandwidths can be found. With the default 10\% variance inflation, the difference between the estimated kernel density (oversmoothed) and a fine histogram of data is usually visually discernable and visually unappealling. 
 }
-  \item{safety}{A positive number, indicating the safety zone to be expanded. See details. 
-}
-
 }
 \details{
 For \code{bw.method},  currently supported values are as follows: 
@@ -65,26 +66,48 @@ For \code{bw.method},  currently supported values are as follows:
 
 \item\code{bw.method="sym1"}: The bandwidth selected is such that the resulting derivative will best approximate two-sided symmetric finite difference. 
 
-\item\code{bw.method="dropadd1"}: The bandwidth selected is such that the resulting derivative will minimize the sum of squared approximation errors of both backward and forward finite difference. 
+%\item\code{bw.method="dropadd1"}: The bandwidth selected is such that the resulting derivative will minimize the sum of squared approximation errors of both backward and forward finite difference. 
 
-\item\code{bw.method="dropaddsym1"}: The bandwidth selected is such that the resulting derivative will minimize the sum of squared approximation errors of backward,  forward and symmetric finite difference. 
+%\item\code{bw.method="dropaddsym1"}: The bandwidth selected is such that the resulting derivative will minimize the sum of squared approximation errors of backward,  forward and symmetric finite difference. 
 
 \item\code{bw.method="keep1"}: The bandwidth best approximating univariate MRPP mid-p-values will be selected. 
 
 \item\code{bw.method='pearson3'}: The bandwidth selected is such that the resulting kernel density estimate best approximates an initial density. The initial density is a Pearson type III distribution, whose first 3 moments match those of MRPP statistics exactly. See also \code{\link{dpearson3}}.
 
+\item\code{bw.method='tlnorm'}: The bandwidth selected is such that the resulting kernel density estimate best approximates an initial density. The initial density is affine transformed log-normal distribution, whose first 3 moments match those of MRPP statistics exactly. See also \code{\link{dtlnorm}}.
+
 \item\code{bw.method='pearson3gca'}: The bandwidth selected is such that the resulting kernel density estimate best approximates an initial density. The initial density is the Gram-Charlier type A approximation (GCA) to the Pearson type III distribution. The first 4 moments of the GCA are expected to match those of MRPP statistics. See also \code{\link{dpearson3gca}}. 
 
-\item\code{bw.method="ss.gradp"}: The bandwidth that maximize the sum of squared derivatives of density of smoothed p-values will be selected.
+\item\code{bw.method='p3tlnormmix'}: The bandwidth selected is such that the resulting kernel density estimate best approximates an initial density. The initial density is a mixture of Pearson type III distribution and an affine transformed log-normal distribution. The first 4 moments of the mixture are expected to match those of MRPP statistics. See also \code{\link{dpearson3}} and \code{\link{dtlnorm}}. 
 
-\item\code{bw.method="amse(z[1])"}: The bandwidth selection problem for approximating permutation statistics is treated as if finding the bandwidth in kernel \dQuote{density} estimation and an asymptotically optimal bandwidth minimizing mean squared error at the first data point will be used. The procedure starts from plug-in estimates of bandwidths to estimate \eqn{f(x_1)} and \eqn{f''(x_1)} using \code{\link{hpi}}. The final optimal bandwidth will be computed as 
+%\item\code{bw.method="ss.gradp"}: The bandwidth that maximize the sum of squared derivatives of density of smoothed p-values will be selected.
+
+\item\code{bw.method="amise.WJ"}: The bandwith selection problem for approximating permutation statistics is treated as if finding the bandwidth in kernel \dQuote{density} estimation and an asymptotically optimal bandwidth minimizing asymptotic mean integrated squared error (AMISE) will be used. The procedure uses Wand and Jones' plug-in estimates of bandwidths computed \code{\link{hpi}}, which is based on the \code{"gaussian"} kernel. The result is then converted to the requested kernel.
+
+\item\code{bw.method="amise.pearson3"}: The bandwith selection problem for approximating permutation statistics is treated as if finding the bandwidth in kernel \dQuote{density} estimation and an asymptotically optimal bandwidth minimizing asymptotic mean integrated squared error (AMISE) will be used. The procedure first assumes a reference Pearson type III distribution that matches the first three moments exactly to estimate \eqn{R(f'')}{R(f'')}, where \code{f''} is the second derivative of the assumed density of test statistics. If this value is non-finite, the Wand and Jones' plug-in estimates of bandwidths computed by \code{\link{hpi}} will be used. The result is then plugged into formula
+
+\deqn{\lbrace \frac{R(K)}{R(f'') N V(K)} \rbrace^{1/5}}{( (R(K)/R(f'')/N/V(K))^(1/5)}
+
+where \code{R(K)} is the \emph{roughness} of kernel \code{K} computed by \code{\link{Rkernel}}, \code{V(K)} is the variance of kernel \code{K} computed by  \code{\link{mkernel}}, and \code{N} is the number of permutation statistics.
+
+\item\code{bw.method="amse(z[1]).WJ"}: The bandwidth selection problem for approximating permutation statistics is treated as if finding the bandwidth in kernel \dQuote{density} estimation and an asymptotically optimal bandwidth minimizing asymptotic mean squared error (AMSE) at the first data point will be used. The procedure starts from Wand and Jones' plug-in estimates of bandwidths to estimate \eqn{f(x_1)} and \eqn{f''(x_1)} using \code{\link{hpi}}, with \code{'epanechnikov'} and \code{'triweight'} kernels used, respectively. The final optimal bandwidth will be computed as 
 \deqn{
-\left[\frac{R f(x_1)}{4N \lbrace k_2 f''(x_1) \rbrace^2} \right]^{1/5}
+\left[\frac{R(K) f(x_1)}{N \lbrace V(K) f''(x_1) \rbrace^2} \right]^{1/5}
 }{
-( {R f(x_1)} / [4 N {k_2 f''(x_1)}^2] )^{1/5}
+( {R(K) f(x_1)} / [ N {V(K) f''(x_1)}^2] )^{1/5}
 }
-where \code{R} and \code{k_2} are constants determined by the \code{kernel} under use (c.f. \code{\link{krRkernel}}), \code{N} is the number of permutation statistics and \code{f} and \code{f''} are the estimates of the density and its second derivative. This formula corrects a typo in Parzen (1962). 
+where \code{R(K)} is the \emph{roughness} of kernel \code{K} computed by \code{\link{Rkernel}}, \code{V(K)} is the variance of kernel \code{K} computed by  \code{\link{mkernel}}, \code{N} is the number of permutation statistics and \code{f} and \code{f''} are the estimates of the density and its second derivative. This formula corrects a typo in Parzen (1962). 
+
+
+\item\code{bw.method="amse(z[1]).pearson3"}: The bandwidth selection problem for approximating permutation statistics is treated as if finding the bandwidth in kernel \dQuote{density} estimation and an asymptotically optimal bandwidth minimizing asymptotic mean squared error (AMSE) at the first data point will be used. The procedure starts from Wand and Jones' plug-in estimates of bandwidths to estimate \eqn{f(x_1)} and \eqn{f''(x_1)} the method described for the \code{amise.pearson3} method, with \code{'epanechnikov'} and \code{'triweight'} kernels used, respectively. The final optimal bandwidth will be computed as 
+\deqn{
+\left[\frac{R(K) f(x_1)}{N \lbrace V(K) f''(x_1) \rbrace^2} \right]^{1/5}
+}{
+( {R(K) f(x_1)} / [ N {V(K) f''(x_1)}^2] )^{1/5}
 }
+where \code{R(K)} is the \emph{roughness} of kernel \code{K} computed by \code{\link{Rkernel}}, \code{V(K)} is the variance of kernel \code{K} computed by  \code{\link{mkernel}}, \code{N} is the number of permutation statistics and \code{f} and \code{f''} are the estimates of the density and its second derivative. This formula corrects a typo in Parzen (1962). 
+}
+
 
 %Details of the \code{\dots} argument are as follows: 
 %\describe{
@@ -97,17 +120,6 @@ where \code{R} and \code{k_2} are constants determined by the \code{kernel} unde
 
 %}
 
-\code{bw.range} is currently implemented as 
-\preformatted{
-bw.range=function(x, length=50L, lower=.05, upper=.95, safety=2)
-{
-	uniqstat=sort(unique(x))
-	lo = quantile(diff(uniqstat), lower)
-	hi = diff(quantile(uniqstat, prob=c(lower, upper)))
-	lf = log10(safety)
-	10^seq.int(from=log10(lo)-lf, to=log10(hi)+lf, length.out=length)
-}
-}
 }
 
 \value{
@@ -132,16 +144,21 @@ set.seed(2340)
 x=matrix(rnorm(20*5),20)
 trt=gl(2,10)
 mrpp.obj=mrpp(x, trt, B=5e3L)	## use 5000 random permutations
-bw.smoothp(mrpp.obj, bw.method='drop1', verbose=interactive())
-bw.smoothp(mrpp.obj, bw.method='add1', verbose=interactive())
-bw.smoothp(mrpp.obj, bw.method='sym1', verbose=interactive())
-bw.smoothp(mrpp.obj, bw.method='keep1', verbose=interactive())
-bw.smoothp(mrpp.obj, bw.method='pearson3', verbose=interactive())
-bw.smoothp(mrpp.obj, bw.method='pearson3gca', verbose=interactive())
-bw.smoothp(mrpp.obj, bw.method='amse(z[1])', verbose=interactive())
+bw.kdep(mrpp.obj, bw.method='drop1', verbose=interactive())
+bw.kdep(mrpp.obj, bw.method='add1', verbose=interactive())
+bw.kdep(mrpp.obj, bw.method='sym1', verbose=interactive())
+bw.kdep(mrpp.obj, bw.method='keep1', verbose=interactive())
+bw.kdep(mrpp.obj, bw.method='pearson3', verbose=interactive())
+bw.kdep(mrpp.obj, bw.method='tlnorm', verbose=interactive())
+bw.kdep(mrpp.obj, bw.method='p3tlnormmix', verbose=interactive())
+bw.kdep(mrpp.obj, bw.method='pearson3gca', verbose=interactive())
+bw.kdep(mrpp.obj, bw.method='amse(z[1]).WJ', verbose=interactive())
+bw.kdep(mrpp.obj, bw.method='amse(z[1]).pearson3', verbose=interactive())
+bw.kdep(mrpp.obj, bw.method='amise.WJ', verbose=interactive())
+bw.kdep(mrpp.obj, bw.method='amise.pearson3', verbose=interactive())
 
-mrpp.tst=mrpp.test(mrpp.obj, method='permutation')
-summary( bw.range(mrpp.tst$all.statistics) )
+mrpp.tst=mrpp.test(mrpp.obj, test.method='permutation')
+summary( bw.range(mrpp.tst$all.statistics, kernel='biweight') )
 
 
 }

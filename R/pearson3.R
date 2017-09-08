@@ -109,9 +109,9 @@ dpearson3gca=eval(bquote(function(x, mean, sd, skew, exkurt, log=FALSE)
 	arg=x
 	.(.pearson3.common)
 	.(.pearson3.dp)
-	stdmoms=cumulant2moment(c(gam.mu,1,abs(skew[1L]),exkurt[1L]))
+	stdmoms=cumulant2moment(c(gam.mu[1L],1,abs(skew[1L]),exkurt[1L]))
 	ans=ifelse(skew!=0,
-		dapx_gca(trans, raw.moments=stdmoms,support=c(0,Inf),basis='gamma',basepar=list(shape= shape, scale=scale), log=log), 
+		dapx_gca(trans, raw.moments=stdmoms,support=c(0,Inf),basis='gamma',basepar=list(shape= shape[1L], scale=scale[1L]), log=log), 
 		dapx_gca(std, raw.moments=cumulant2moment(c(0,1,0,exkurt[1L])), support=c(-Inf,Inf),basis='normal', log=log)
 	)
 	if(log) ans-log(sd) else ans/sd

@@ -1,7 +1,7 @@
 \name{MRPP importance}
 \Rdversion{1.1}
-\alias{grad.smoothp}
-\alias{p.value.grad.smoothp}
+\alias{grad.kdep}
+\alias{p.value.grad.kdep}
 \alias{hessian.smoothp}
 \alias{get.p.dd.dw}
 %- Also NEED an '\alias' for EACH other topic documented here.
@@ -9,17 +9,17 @@
 Permutation-based variable importance measure
 }
 \description{
-\code{grad.smoothp} computes variable importance measure of partial derivative of continuous approximation to MRPP p-values with respect to hypothetical weights. 
+\code{grad.kdep} computes variable importance measure of partial derivative of continuous approximation to MRPP p-values with respect to hypothetical weights. 
 
 \code{get.p.dd.dw} computes variable importance measure by using partial derivative of distance function with respect to hypothetical weights as the new distance function in MRPP
 
-\code{p.value} method for class \code{grad.smoothp} computes the approximate mid-p-values from smoothing. 
+\code{p.value} method for class \code{grad.kdep} computes the approximate mid-p-values from smoothing. 
 }
 \usage{
-grad.smoothp(y,  bw, kernel='triweight', adjust=NULL,
+grad.kdep(y,  bw, kernel='triweight', adjust=NULL,
 	mrpp.stats=NULL, r=seq_len(y$R), test=FALSE)
 get.p.dd.dw(y, permutedTrt, r = seq_len(ncol(y)), weight.trt="df", eps=1e-8)
-\method{p.value}{grad.smoothp}(x, type=c("keep1","drop1","add1"), \dots)
+\method{p.value}{grad.kdep}(x, type=c("keep1","drop1","add1"), \dots)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -49,7 +49,7 @@ get.p.dd.dw(y, permutedTrt, r = seq_len(ncol(y)), weight.trt="df", eps=1e-8)
   \item{adjust}{Either \code{NULL} or a character scalar being one of \code{c('none','weighted.mean','scale','log scale')}. See details. 
 }
   \item{eps}{A small positive tolerance, the same as described in \code{\link{mrpp.test}}. }
-  \item{x}{An \code{"grad.smoothp"} object returned from calling \code{grad.smooothp}.
+  \item{x}{An \code{"grad.kdep"} object returned from calling \code{grad.smooothp}.
 }
   \item{type}{A character scalar, being one of \code{c("keep1","drop1","add1")}, specifying the type of approximated mid-p-values using gradients. 
 }
@@ -58,7 +58,7 @@ get.p.dd.dw(y, permutedTrt, r = seq_len(ncol(y)), weight.trt="df", eps=1e-8)
 }
 
 \details{
-\code{grad.smoothp} first uses kernel density estimator to approximate the distribution of \code{mrpp.stats} and obtain a continuous approximate p-value for the MRPP test. Then it computes the partial derivative of the approximate p-value with respect to the hypothetical weight of each variable, evaluated at weight 1. 
+\code{grad.kdep} first uses kernel density estimator to approximate the distribution of \code{mrpp.stats} and obtain a continuous approximate p-value for the MRPP test. Then it computes the partial derivative of the approximate p-value with respect to the hypothetical weight of each variable, evaluated at weight 1. 
 That is, if the partial derivative is negatively large, then the corresponding variable will be more important, because increasing its weight will quickly decreasing the approximate MRPP p-value. Vice versa. 
 
 When \code{adjust='none'}, the partial derivatives of p-value with respect to weights will be returned. When \code{adjust='weighted.mean'}, the partial derivatives will be treated as a weighted average, i.e., will be divided by total weights. When \code{adjust='scale'}, they are further divided standard deviations. When \code{adjust='log scale'}, the partial derivatives are first computed on the log p-value scale and the results are then exponentiated. When \code{adjust=NULL}, then as long as \code{bw} being used is finite, \code{adjust='none'} will be the default setting; otherwise, \code{adjust='weighted.mean'} will be the default setting. 
@@ -67,7 +67,7 @@ When \code{adjust='none'}, the partial derivatives of p-value with respect to we
 }
 
 \value{
-\code{grad.smoothp} returns an object of class \code{"grad.smoothp"}. This is an \code{length(r)}-vector of importance measure when \code{test} is \code{FALSE}.  When \code{test} is \code{TRUE}, this will be an \code{B}-by-\code{length(r)} matrix of importance measure, where \code{B} is the number of permutations in \code{permutedTrt}. The (\code{i,j})th element is the importance measure for the \code{r[j]}th variable when the \code{i}th column of each component of \code{permutedTrt} is treated as the original treatment assignment. 
+\code{grad.kdep} returns an object of class \code{"grad.kdep"}. This is an \code{length(r)}-vector of importance measure when \code{test} is \code{FALSE}.  When \code{test} is \code{TRUE}, this will be an \code{B}-by-\code{length(r)} matrix of importance measure, where \code{B} is the number of permutations in \code{permutedTrt}. The (\code{i,j})th element is the importance measure for the \code{r[j]}th variable when the \code{i}th column of each component of \code{permutedTrt} is treated as the original treatment assignment. 
 
 In either case, the \code{"parameters"} attribute will be set, which is a list with the following components: 
 \itemize{
@@ -76,17 +76,17 @@ In either case, the \code{"parameters"} attribute will be set, which is a list w
 \item{\code{adjust}: a string of the name of adjustment.}
 }
 
-In addition, the \code{grad.smoothp} object also has the \code{midp} attribute set to the mid-p-value across the \code{r} dimensions.
+In addition, the \code{grad.kdep} object also has the \code{midp} attribute set to the mid-p-value across the \code{r} dimensions.
 
 For \code{get.p.dd.dw}, the result is an \code{length(r)}-vector of importance measure. 
 
-For \code{p.value.grad.smoothp}, the result is a numeric vector of approximate mid-p-values when \code{x} is produced by a call to \code{grad.smoothp} with \code{adjust="none"}. Otherwise, a vector of \code{NA_real_}'s. 
+For \code{p.value.grad.kdep}, the result is a numeric vector of approximate mid-p-values when \code{x} is produced by a call to \code{grad.kdep} with \code{adjust="none"}. Otherwise, a vector of \code{NA_real_}'s. 
 }
 
 \note{
-When \code{test} is \code{TRUE} and when the number of permutations is large, \code{grad.smoothp} will consume a large amount of memory. 
+When \code{test} is \code{TRUE} and when the number of permutations is large, \code{grad.kdep} will consume a large amount of memory. 
 
-The result from \code{p.value.grad.smoothp} is only approximate. There is no guarantee that the approximate mid-p-values lie between 0 and 1. 
+The result from \code{p.value.grad.kdep} is only approximate. There is no guarantee that the approximate mid-p-values lie between 0 and 1. 
 }
 
 \references{
@@ -104,14 +104,14 @@ set.seed(2340)
 x=matrix(rnorm(20*5),20)
 trt=gl(2,10)
 mrpp.obj = mrpp(x, trt=trt, B=5e3L)
-(ir1=grad.smoothp(mrpp.obj))
+(ir1=grad.kdep(mrpp.obj))
 
-ir2=grad.smoothp(mrpp.obj, adjust='weighted.mean')
-ir3=grad.smoothp(mrpp.obj, adjust='scale')
+ir2=grad.kdep(mrpp.obj, adjust='weighted.mean')
+ir3=grad.kdep(mrpp.obj, adjust='scale')
 ir4=get.p.dd.dw(x, mrpp.obj$permutedTrt)
-ir5=grad.smoothp(mrpp.obj, adjust='log scale')
-ir6=grad.smoothp(mrpp.obj, adjust='logit scale')
-ir7=grad.smoothp(mrpp.obj, bw=Inf)
+ir5=grad.kdep(mrpp.obj, adjust='log scale')
+ir6=grad.kdep(mrpp.obj, adjust='logit scale')
+ir7=grad.kdep(mrpp.obj, bw=Inf)
 cor(cbind(ir1, ir2, ir3, ir4, ir5, ir6, ir7), method="s")
 
 p.value(ir1, type="drop1")

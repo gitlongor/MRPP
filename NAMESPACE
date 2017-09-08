@@ -10,6 +10,7 @@ importFrom(PDQutils, moment2cumulant,cumulant2moment,dapx_gca,papx_gca)
 importFrom(kedd, h.amise, h.ucv)
 importFrom(ks, hpi)
 importFrom(uniqueAtomMat, duplicated.matrix)
+importFrom(polynom, polynomial)
 
   importFrom("grDevices", "dev.new")
   importFrom("graphics", "abline", "axTicks", "axis", "box", "curve",
@@ -73,7 +74,7 @@ S3method(transform, numeric)
 
 S3method(print, mrppBVS)
 S3method(p.value, mrpp.test)
-S3method(p.value, grad.mrppp)
+S3method(p.value, grad.kdep)
 
 S3method(`[[`, dist)
 S3method(`[`, permutedTrt)

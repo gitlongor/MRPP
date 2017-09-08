@@ -340,7 +340,7 @@ function(y, permutedTrt, r=seq_len(NCOL(y)), test=FALSE,
 }
 }
 
-p.value.grad.mrppp = function(x, type=c('keep1','drop1','add1'),...)
+p.value.grad.kdep = function(x, type=c('keep1','drop1','add1'),...)
 {
 	adj=attr(x, 'parameters')$adjust
 	
