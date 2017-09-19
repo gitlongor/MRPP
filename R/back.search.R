@@ -1,7 +1,7 @@
 mrppBVS <-
 function(y, #permutedTrt, 
-         importance=c('grad.smoothp','grad.energy','p.grad.dist','approx.keep1'),
-         inc.thresh=NULL, exc.thresh=0, size.inc=0L, stepwise=FALSE, 
+         importance=c('grad.kdep','grad.energy','p.grad.dist','approx.keep1'),
+         inc.thresh=NULL, exc.thresh=0.1, size.inc=0L, stepwise=FALSE, 
 		 niter=Inf, verbose=FALSE, ...)
 ## y is an mrpp obj
 {
@@ -15,7 +15,7 @@ function(y, #permutedTrt,
 #print(proc.time())
     importance=match.arg(importance)
     if(is.null(inc.thresh)) inc.thresh=switch(importance,
-		grad.smoothp = 1, 
+		grad.kdep = 1, 
 		grad.energy = 0, 
 		approx.keep1 = , 
 		p.grad.dist = 0.05)
@@ -50,7 +50,7 @@ function(y, #permutedTrt,
 	test.method=if(is.null(ddd$test.method)) frm.mrppt$test.method else ddd$test.method
 	eps=if(is.null(ddd$eps)) frm.mrppt$eps else ddd$eps
 	
-	frm.gradp=formals(grad.smoothp)
+	frm.gradp=formals(grad.kdep)
 	bw=if(is.null(ddd$bw)) frm.gradp$bw else ddd$bw 
 	kernel=if(is.null(ddd$kernel)) frm.gradp$kernel else ddd$kernel
 	adjust=if(is.null(ddd$adjust)) frm.gradp$adjust else ddd$adjust
@@ -86,9 +86,9 @@ function(y, #permutedTrt,
 	attr(ans, 'parameters')=list(
 		importance=importance, inc.thresh=inc.thresh, exc.thresh=exc.thresh, size.inc=size.inc, stepwise=stepwise, niter=niter, 
 		mrpp.test.options=list(test.method=test.method, eps=eps), 
-		grad.smoothp.options=list(bw=bw, adjust=adjust, kernel=kernel))
+		grad.kdep.options=list(bw=bw, adjust=adjust, kernel=kernel))
 	
-#	ddd.grad.idx=names(ddd.grad)%in%names(formals(grad.smoothp))
+#	ddd.grad.idx=names(ddd.grad)%in%names(formals(grad.kdep))
 #	ddd.grad=ddd.grad[ddd.grad.idx]
 	
 #print(proc.time())
@@ -115,14 +115,14 @@ function(y, #permutedTrt,
 		mrpp.stats0=.Call(mrppstats, y$distObj, y$permutedTrt, y$weight.trt,PACKAGE='MRPP')
         mrpp.rslt=mrpp.test.mrpp(y,test.method=test.method, eps=eps)
         imptnc=switch(importance,
-			grad.smoothp=, 
+			grad.kdep=, 
 			grad.energy=,
 			approx.keep1 ={
-				grad.smoothp.mrpp(y, bw=bw, kernel=kernel, adjust=adjust, mrpp.stats=mrpp.stats0, r=seq_len(y$R), test=FALSE)
+				grad.kdep.mrpp(y, bw=bw, kernel=kernel, adjust=adjust, mrpp.stats=mrpp.stats0, r=seq_len(y$R), test=FALSE)
 #				ddd.grad$y=y[,idx,drop=FALSE]
 #				ddd.grad$distObj=dist0
 #				ddd.grad$mrpp.stats=mrpp.stats0
-#				do.call('grad.smoothp', ddd.grad)
+#				do.call('grad.kdep', ddd.grad)
 			},
             p.grad.dist =get.p.dd.dw(y$y,y$permutedTrt,...) # CHECKME
 		)

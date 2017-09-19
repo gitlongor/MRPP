@@ -264,7 +264,7 @@ function(y, trt, B=nparts(table(trt)), permutedTrt, weight.trt="df", eps=1e-8, s
     tabtrt=table(trt)
     ntrt=length(tabtrt)
 
-    dp.dw=grad.smoothp(y, permutedTrt, test = TRUE, weight.trt=weight.trt)  # B x R matrix
+    dp.dw=grad.kdep(y, permutedTrt, test = TRUE, weight.trt=weight.trt)  # B x R matrix
     sparMinMax=apply(dp.dw, 1L, smrpp.defaultSpar, nspar=3L, ...)
     sparMin=min(sparMinMax[1L,])
     if(missing(spar)){
@@ -389,7 +389,7 @@ function(y, trt, B=nparts(table(trt)), permutedTrt, weight.trt="df",  outerStat=
     tabtrt=table(trt)
     ntrt=length(tabtrt)
 
-    dp.dw=grad.smoothp(y, permutedTrt, test = TRUE, weight.trt=weight.trt)  # B x R matrix
+    dp.dw=grad.kdep(y, permutedTrt, test = TRUE, weight.trt=weight.trt)  # B x R matrix
 #    sparMinMax=apply(dp.dw, 1L, smrppInitSpar, nspar=3L, ...)
 #    sparMin=max(sparMinMax[1L,])
     sparMin=max(apply(dp.dw, 1L, min)) #sparMinMax[1L,])

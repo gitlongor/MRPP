@@ -24,14 +24,14 @@ function(y,  bw, kernel='triweight', adjust=NULL, mrpp.stats=NULL, r=seq_len(y$R
 		if('kernel'%in%names(this.call)) this.call[['kernel']]=NULL
 		if('r'%in%names(this.call)) this.call[['r']]=NULL
 		this.call[[1L]]=NULL
-		return(do.call(grad.kdep.Inf.mrpp, this.call, envir=parent.frame()))
+		return(do.call('grad.kdep.Inf.mrpp', this.call, envir=parent.frame()))
 	}
 	if(!isTRUE(test)){
 		this.call=as.list(match.call())
 		if('test'%in%names(this.call))this.call[['test']]=NULL
 		if('r'%in%names(this.call))this.call[['r']]=NULL
 		this.call[[1L]]=NULL
-		return(do.call(grad.kdep.notest.mrpp, this.call,envir=parent.frame()))
+		return(do.call('grad.kdep.notest.mrpp', this.call,envir=parent.frame()))
 	}
 
 	if(is.null(mrpp.stats)) {

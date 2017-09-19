@@ -1,6 +1,6 @@
 mrppBVS.test<-
 function(y,permutedTrt, Bperm=nperms.permutedTrt(permutedTrt), 
-         importance=c('grad.smoothp','grad.energy','p.grad.dist','approx.keep1'),
+         importance=c('grad.kdep','grad.energy','p.grad.dist','approx.keep1'),
          inc.thresh=NULL, exc.thresh=0, size.inc=1L, stepwise=FALSE, 
 		 niter=Inf, verbose=FALSE, ...)
 {
