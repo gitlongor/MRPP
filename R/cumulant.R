@@ -96,7 +96,7 @@ cumulant.default=function(x, order=1:4, ...)
 	ans = c(0, moment2cumulant(mu.raw[-1L]))
 	structure(ans[order+1L], names=as.character(order))
 }
-cumulant.mrpp=eval(substitute(	
+cumulant.mrpp=eval(bquote(	
 	function(x, order=1:4,...)
 	{
 		order=as.integer(order)
@@ -123,9 +123,9 @@ cumulant.mrpp=eval(substitute(
 		nc=function(n, C)factorial.rising(max(0,n-C+1L), C)
 		`%//%`=function(numer, denom)ifelse(denom==0L, 0, as.numeric(numer/denom))
 		Ncs=integer(8L)
-		if( N > rising.fact.int.bound[switch(mOrd, 2L, 4L, 6L, 8L)] ) 
+		if( N > .(rising.fact.int.bound)[switch(mOrd, 2L, 4L, 6L, 8L)] ) 
 			Ncs=as.bigq(Ncs)
-		if(FALSE && max(n) > rising.fact.int.bound[switch(mOrd, 2L, 4L, 6L, 8L)] ){
+		if(FALSE && max(n) > .(rising.fact.int.bound)[switch(mOrd, 2L, 4L, 6L, 8L)] ){
 			`The "cumulant" function for large sample sizes`=function().NotYetImplemented()
 			`The "cumulant" function for large sample sizes`()
 		}
@@ -239,10 +239,10 @@ cumulant.mrpp=eval(substitute(
 				d1*sum(dmat * ddmat), 
 				d1*sum(d1I^3)
 			)
-			Pa4 = drop(.order4.S2P.mat %*% Sa4)
-			Pa4 = c(Pa4,  d1^4 - .order4.f.alpha %*% Pa4 )
+			Pa4 = drop(.(.order4.S2P.mat) %*% Sa4)
+			Pa4 = c(Pa4,  d1^4 - .(.order4.f.alpha) %*% Pa4 )
 			tmp= # avoiding division by 0
-			Ds=c(zeros, Pa4[.order4.P2D.ord]%//%Ncs[rep(2:8,c(1L,3L,7L,6L,4L,1L,1L))])
+			Ds=c(zeros, Pa4[.(.order4.P2D.ord)]%//%Ncs[rep(2:8,c(1L,3L,7L,6L,4L,1L,1L))])
 			
 			Ez3100=tcrossprod(w3%//%n2.3, weight.trt%//%n2) * (
 				4*n2.o.n2*Ds[17L] +
@@ -303,7 +303,7 @@ cumulant.mrpp=eval(substitute(
 		}
 		ans
 	} ## of function
-  ,constEnv) ## of substitute
+  ,constEnv) ## of bquote
 ) ## of eval
 
 if(FALSE){
