@@ -152,11 +152,18 @@ if(interactive()){
 	curve(pkernel('logi')(x),-2,2, add=TRUE, col=5)
 }
 if(interactive()){
-	curve(fourier.kernel('gau')(x),-20,20, ylim=c(-.05,1/sqrt(2*base::pi)))
+	curve(fourier.kernel('gau')(x),-20,20, ylim=c(-.1,1))
 	curve(fourier.kernel('biw')(x),-20,20, add=TRUE, col=2)
 	curve(fourier.kernel('triw')(x),-20,20, add=TRUE, col=3)
 	curve(fourier.kernel('tric')(x),-20,20, add=TRUE, col=4)
 	curve(fourier.kernel('logi')(x),-20,20, add=TRUE, col=5)
+}
+if(interactive()){
+	curve(fourier.kernel('gau')(x),-.05,.05, ylim=c(.995,1))
+	curve(fourier.kernel('biw')(x),-.05,.05, add=TRUE, col=2)
+	curve(fourier.kernel('triw')(x),-.05,.05, add=TRUE, col=3)
+	curve(fourier.kernel('tric')(x),-.05,.05, add=TRUE, col=4)
+	curve(fourier.kernel('logi')(x),-.05,.05, add=TRUE, col=5)
 }
 set.seed(23425)
 x=rnorm(100)
